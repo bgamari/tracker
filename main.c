@@ -83,7 +83,7 @@ int main(void) {
     int nleds = 4, i = 0;
     ser1 = Serial_Init(0, 115200);
     ser3 = Serial_Init(2, 115200);
-    spi_init();
+    dac_spi_init();
     //i2s_init();
 
     // UART1 (Beagle)
