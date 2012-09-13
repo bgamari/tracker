@@ -13,6 +13,8 @@ OBJECTS = main.o dac.o
 ARCH = stm32/udaq
 #ARCH = atsam3s/openmodule
 
+PROJECT_LIBS = -lm
+
 # Programming language for this project (C for C, CPP for C++)
 LANGUAGE = C
 
@@ -20,6 +22,7 @@ LANGUAGE = C
 DEBUG = -g3
 OPTIMIZATION = 0
 CFLAGS = -std=c99
+LDFLAGS = -lm
 
 ########################################################################
 

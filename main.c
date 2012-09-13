@@ -20,6 +20,7 @@
 
 #include "libmanyuc.h"
 #include "dac.h"
+#include <math.h>
 
 Serial_t ser1, ser3;
 
@@ -123,6 +124,7 @@ int main(void) {
     // with a delay of 0.2s among operations.
     // This goes on indefinitely
     Serial_Put_Bytes(ser1, 0, "non-dma\n", sizeof("non-dma\n"));
+    float t = 0;
     while (1) {
 #if 0
         for (i = 0; i < nleds; i++) {
@@ -135,8 +137,10 @@ int main(void) {
         }
         Serial_Put_Bytes(ser1, NONBLOCKING, "hello world!\n", sizeof("hello world!\n"));
 #endif
-        ADC1->CR2 |= ADC_CR2_JSWSTART; // Start ADC conversion
-        updates[0].value += 0x1000;
+        //ADC1->CR2 |= ADC_CR2_JSWSTART; // Start ADC conversion
+        updates[0].value = 0x7fff * 0.5*(sin(t) + 1);
+        //updates[0].value += 0x100;
+        t += 1e-4;
         set_dac(3, updates);
     }
 }
