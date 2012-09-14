@@ -1,16 +1,24 @@
 #include "tracker.h"
 #include "feedback.h"
+#include "dac.h"
 
 #define N_INPUTS 4
+#define N_OUTPUTS 4
 #define BUFFER_DEPTH 1000
 
-struct sample_t {
-  uint16_t samples[N_INPUTS];
+struct adc_sample_t {
+  uint16_t channel[N_INPUTS];
 };
 
-static struct sample_t sample_buffer[BUFFER_DEPTH] __attribute__((section (".dma_data"))) = { 0 };
+static struct adc_sample_t sample_buffer[BUFFER_DEPTH] __attribute__((section (".dma_data"))) = { 0 };
 static volatile unsigned int buffer_start_time = 0;
 
+struct dac_update_t updates[] = {
+    { channel_a, 0x4400 },
+    { channel_b, 0x4400 },
+    { channel_c, 0x4400 },
+    { channel_d, 0x4400 },
+};
 
 enum sample_time_t {
     SAMPLE_TIME_3_CYCLES = 0x0,
@@ -134,18 +142,22 @@ void feedback_init()
     NVIC_EnableIRQ(TIM2_IRQn);
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
     TIM2->DIER = TIM_DIER_UIE;
-    TIM2->ARR = 10000;
+    TIM2->ARR = 1000;
     TIM2->CR1 = TIM_CR1_ARPE;
     TIM2->CR1 |= TIM_CR1_CEN;
 }
 
-void feedback_iter()
+void do_feedback()
 {
-
+    unsigned int n = BUFFER_DEPTH - DMA2_Stream4->NDTR / N_INPUTS - 1;
+    struct adc_sample_t sample = sample_buffer[n];
+    for (int i=0; i<4; i++)
+        updates[i].value = sample.channel[i] << 4;
+    set_dac(4, updates);
 }
 
 void TIM2_IRQHandler()
 {
     TIM2->SR &= ~TIM_SR_UIF;
-    feedback_iter();
+    do_feedback();
 }

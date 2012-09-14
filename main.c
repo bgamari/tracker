@@ -22,22 +22,10 @@
 #include "libmanyuc.h"
 
 #include "tracker.h"
-#include "dac.h"
 #include "beagle_spi.h"
 #include "feedback.h"
 
 Serial_t ser1, ser3;
-
-struct dac_update_t updates[] = {
-    { channel_a, 0x4400 },
-    { channel_b, 0x4400 },
-    { channel_c, 0x4400 },
-    { channel_d, 0x4400 },
-    { channel_e, 0x4400 },
-    { channel_f, 0x4400 },
-    { channel_g, 0x4400 },
-    { channel_g, 0x4400 },
-};
 
 /* This example turns all 4 leds on and then off */
 int main(void) {
@@ -84,11 +72,6 @@ int main(void) {
         }
         Serial_Put_Bytes(ser1, NONBLOCKING, "hello world!\n", sizeof("hello world!\n"));
 #endif
-        //ADC1->CR2 |= ADC_CR2_JSWSTART; // Start ADC conversion
-        updates[0].value = 0x7fff * 0.5*(sin(t) + 1);
-        //updates[0].value += 0x100;
-        t += 1e-4;
-        set_dac(3, updates);
     }
 }
 
