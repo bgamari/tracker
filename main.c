@@ -20,6 +20,7 @@
 
 #include "libmanyuc.h"
 #include "dac.h"
+#include "beagle_spi.h"
 #include <math.h>
 
 Serial_t ser1, ser3;
@@ -93,11 +94,7 @@ int main(void) {
     // UART3
     Pin_Init(ARM_PB10, 1, Alt7);
     Pin_Init(ARM_PB11, 1, Alt7);
-    // SPI1 (Beagle)
-    Pin_Init(ARM_PA4, 1, Alt5);
-    Pin_Init(ARM_PA5, 1, Alt5);
-    Pin_Init(ARM_PA6, 1, Alt5);
-    Pin_Init(ARM_PA7, 1, Alt5);
+    beagle_spi_init();
 
     // ADC
     Pin_Init(ARM_PA0, 1, Analog); // ADC123_IN0
@@ -119,6 +116,7 @@ int main(void) {
     set_sample_times(SAMPLE_TIME_28_CYCLES);
     adc_channel_t channels[] = { 0, 1, 2, 3 };
     set_injected_sequence(ADC1, 4, channels);
+    ADC1->CR2 |= ADC_CR2_JSWSTART; // Start ADC conversion
 
     // Turn all leds on and then off,
     // with a delay of 0.2s among operations.
@@ -145,13 +143,15 @@ int main(void) {
     }
 }
 
-
+unsigned int sample_n = 0;
 void ADC_IRQHandler() {
     char tmp[64];
-    int n = snprintf(tmp, 64, "ADC: %d, %d, %d, %d\n",
-                     ADC1->JDR1, ADC1->JDR2, ADC1->JDR3, ADC1->JDR4);
+    //int n = snprintf(tmp, 64, "ADC: %d, %d, %d, %d\n",
+    //                 ADC1->JDR1, ADC1->JDR2, ADC1->JDR3, ADC1->JDR4);
     //Serial_Put_Bytes(ser1, 0, tmp, n);
+    sample_n++;
     ADC1->SR = 0;
+    ADC1->CR2 |= ADC_CR2_JSWSTART; // Start ADC conversion
 }
 
 // vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
