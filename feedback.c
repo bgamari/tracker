@@ -127,8 +127,6 @@ void DMA2_Stream4_IRQHandler() {
     unsigned int length = msTicks - buffer_start_time;
     buffer_start_time = msTicks;
     DMA2->HIFCR = 0xff;
-    char msg[] = "done\n";
-    Serial_Put_Bytes(ser1, NONBLOCKING, msg, sizeof(msg));
 }
 
 void ADC_IRQHandler() {
