@@ -94,6 +94,8 @@ void adc_init()
     Pin_Init(ARM_PA3, 1, Analog); // ADC123_IN3
     Pin_Init(ARM_PB0, 1, Analog); // ADC12_IN8
     Pin_Init(ARM_PB1, 1, Analog); // ADC12_IN9
+    Pin_Init(ARM_PC2, 1, Analog); // ADC123_IN12
+    Pin_Init(ARM_PC3, 1, Analog); // ADC123_IN13
     Pin_Init(ARM_PC4, 1, Analog); // ADC12_IN14
     Pin_Init(ARM_PC5, 1, Analog); // ADC12_IN15
 
