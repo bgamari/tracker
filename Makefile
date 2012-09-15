@@ -20,8 +20,8 @@ LANGUAGE = C
 
 # Compiling options
 DEBUG = -g3
-OPTIMIZATION = 0
-CFLAGS = -std=c99
+OPTIMIZATION = 3
+CFLAGS = -std=gnu99
 LDFLAGS = -lm
 
 ########################################################################

@@ -42,6 +42,8 @@ void set_dac(unsigned int n, struct dac_update_t *updates)
 {
     // TODO: Check for existing transaction
     //while (!(SPI2->SR & SPI_SR_TXE));
+    if (!(SPI2->SR & SPI_SR_TXE))
+        while (1);
 
     fill_cmd_buffer(n, updates);
     send_cmd_buffer();
