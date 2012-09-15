@@ -149,7 +149,8 @@ void feedback_init()
 
 void do_feedback()
 {
-    unsigned int n = BUFFER_DEPTH - DMA2_Stream4->NDTR / N_INPUTS - 1;
+    unsigned int n = 2*BUFFER_DEPTH - DMA2_Stream4->NDTR / N_INPUTS - 2;
+    n %= BUFFER_DEPTH;
     struct adc_sample_t sample = sample_buffer[n];
     for (int i=0; i<4; i++)
         updates[i].value = sample.channel[i] << 4;
