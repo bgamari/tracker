@@ -155,11 +155,16 @@ void feedback_init()
     feedback_gains[2][2] = 0.8 * 0xffff;
 }
 
-void do_feedback()
+struct adc_sample_t *get_last_sample()
 {
     unsigned int n = 2*BUFFER_DEPTH - DMA2_Stream4->NDTR / N_INPUTS - 2;
     n %= BUFFER_DEPTH;
-    struct adc_sample_t sample = sample_buffer[n];
+    return &sample_buffer[n];
+}
+
+void do_feedback()
+{
+    struct adc_sample_t sample = *get_last_sample();
     for (int i=0; i<N_OUTPUTS; i++) {
         unsigned int tmp = 0;
         for (unsigned int j=0; j<N_INPUTS; j++) 
