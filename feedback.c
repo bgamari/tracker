@@ -15,7 +15,7 @@ static volatile unsigned int buffer_start_time = 0;
 
 static struct adc_sample_t pos_buffer[BUFFER_DEPTH] __attribute__((section (".dma_data"))) = { 0 };
 
-static signed _Fract feedback_gains[N_INPUTS][N_OUTPUTS];
+static signed int feedback_gains[N_INPUTS][N_OUTPUTS];
 
 struct dac_update_t updates[] = {
     { channel_a, 0x4400 },
@@ -150,9 +150,9 @@ void feedback_init()
     TIM2->CR1 = TIM_CR1_ARPE;
     TIM2->CR1 |= TIM_CR1_CEN;
 
-    feedback_gains[0][0] = 0.5;
-    feedback_gains[1][1] = 0.2;
-    feedback_gains[2][2] = 0.8;
+    feedback_gains[0][0] = 0.5 * 0xffff;
+    feedback_gains[1][1] = 0.2 * 0xffff;
+    feedback_gains[2][2] = 0.8 * 0xffff;
 }
 
 void do_feedback()
@@ -161,10 +161,10 @@ void do_feedback()
     n %= BUFFER_DEPTH;
     struct adc_sample_t sample = sample_buffer[n];
     for (int i=0; i<N_OUTPUTS; i++) {
-        unsigned _Fract tmp = 0;
+        unsigned int tmp = 0;
         for (unsigned int j=0; j<N_INPUTS; j++) 
             tmp += feedback_gains[j][i] * sample.channel[i] / 0x1000;
-        updates[i].value = tmp * 0xffff;
+        updates[i].value = tmp;
     }
     set_dac(4, updates);
 }
