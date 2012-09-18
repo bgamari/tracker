@@ -60,9 +60,9 @@ void feedback_init()
 
 void feedback_start()
 {
-    adc_buffer_full_cb = adc_buffer_full;
-    adc_overflow_cb = adc_overflow;
-    adc_dma_start(BUFFER_DEPTH, sample_buffer, TRIGGER_CONTINUOUS);
+    adc1.buffer_full_cb = adc_buffer_full;
+    adc1.overflow_cb = adc_overflow;
+    adc_dma_start(&adc1, BUFFER_DEPTH, sample_buffer, TRIGGER_CONTINUOUS);
     TIM2->CR1 |= TIM_CR1_CEN;
     feedback_running = true;
 }
@@ -70,13 +70,13 @@ void feedback_start()
 void feedback_stop()
 {
     TIM2->CR1 &= ~TIM_CR1_CEN;
-    adc_dma_stop();
+    adc_dma_stop(&adc1);
     feedback_running = false;
 }
     
 void do_feedback()
 {
-    struct adc_sample_t sample = *adc_get_last_sample();
+    struct adc_sample_t sample = adc_get_last_sample(&adc1);
     for (int i=0; i<N_OUTPUTS; i++) {
         unsigned int tmp = 0;
         for (unsigned int j=0; j<N_INPUTS; j++) 

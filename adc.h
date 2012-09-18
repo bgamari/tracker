@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include "tracker.h"
 
 typedef unsigned int adc_channel_t;
@@ -19,15 +20,30 @@ enum sample_time_t {
     SAMPLE_TIME_480_CYCLES,
 };
 
-extern void (*adc_overflow_cb)();
-extern void (*adc_buffer_full_cb)();
+struct adc_t {
+    ADC_TypeDef *adc;
+
+    // DMA state
+    DMA_TypeDef *dma;
+    DMA_Stream_TypeDef *dma_stream;
+    uint8_t dma_channel;
+    bool dma_started;
+    struct adc_sample_t *buffer;
+    unsigned int buffer_nsamps;
+
+    // Callbacks
+    void (*overflow_cb)();
+    void (*buffer_full_cb)();
+};
+
+extern struct adc_t adc1, adc2;
 
 void adc_init();
 
-void adc_set_sample_times(ADC_TypeDef *adc,
+void adc_set_sample_times(struct adc_t *adc,
                           enum sample_time_t sample_time);
 
-void adc_set_regular_sequence(ADC_TypeDef *adc,
+void adc_set_regular_sequence(struct adc_t *adc,
                               unsigned int num_samples,
                               adc_channel_t channels[]);
 
@@ -40,12 +56,13 @@ enum adc_trigger_t {
   TRIGGER_CONTINUOUS,
 };
 
-int adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf,
+int adc_dma_start(struct adc_t *adc,
+                  unsigned int nsamples, struct adc_sample_t *buf,
                   enum adc_trigger_t trigger);
 
-void adc_trigger();
+void adc_trigger(struct adc_t *adc);
 
-void adc_dma_stop();
+void adc_dma_stop(struct adc_t *adc);
 
-struct adc_sample_t *adc_get_last_sample();
+struct adc_sample_t adc_get_last_sample();
 
