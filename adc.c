@@ -11,7 +11,7 @@ void (*adc_buffer_full_cb)();
 static struct adc_sample_t *buffer;
 static unsigned int buffer_nsamps;
 
-void set_sample_times(enum sample_time_t sample_time)
+void adc_set_sample_times(enum sample_time_t sample_time)
 {
     unsigned int tmp = 0;
     for (int i = 0; i < 8; i++) {
