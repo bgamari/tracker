@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include "tracker.h"
 #include "feedback.h"
 #include "adc.h"
@@ -8,6 +10,8 @@ static struct adc_sample_t sample_buffer[BUFFER_DEPTH] __attribute__((section ("
 static volatile unsigned int buffer_start_time = 0;
 
 static struct adc_sample_t pos_buffer[BUFFER_DEPTH] __attribute__((section (".dma_data"))) = { 0 };
+
+static bool feedback_running = false;
 
 static signed int feedback_gains[N_INPUTS][N_OUTPUTS];
 
@@ -37,7 +41,6 @@ void feedback_init()
     TIM2->DIER = TIM_DIER_UIE;
     TIM2->ARR = 100;
     TIM2->CR1 = TIM_CR1_ARPE;
-    TIM2->CR1 |= TIM_CR1_CEN;
 
     Pin_Init(ARM_PA0, 1, Analog); // ADC123_IN0
     Pin_Init(ARM_PA1, 1, Analog); // ADC123_IN1
@@ -50,18 +53,27 @@ void feedback_init()
     Pin_Init(ARM_PC4, 1, Analog); // ADC12_IN14
     Pin_Init(ARM_PC5, 1, Analog); // ADC12_IN15
 
-    adc_channel_t channels[] = { 0, 1, 2, 12 };
-    adc_set_sample_times(ADC1, SAMPLE_TIME_84_CYCLES);
-    adc_set_regular_sequence(ADC1, 4, channels);
-    adc_init();
-    adc_buffer_full_cb = adc_buffer_full;
-    adc_overflow_cb = adc_overflow;
-
     feedback_gains[0][0] = 0.5 * 0xffff;
     feedback_gains[1][1] = 0.2 * 0xffff;
     feedback_gains[2][2] = 0.8 * 0xffff;
 }
 
+void feedback_start()
+{
+    adc_buffer_full_cb = adc_buffer_full;
+    adc_overflow_cb = adc_overflow;
+    adc_dma_start(BUFFER_DEPTH, sample_buffer, TRIGGER_CONTINUOUS);
+    TIM2->CR1 |= TIM_CR1_CEN;
+    feedback_running = true;
+}
+
+void feedback_stop()
+{
+    TIM2->CR1 &= ~TIM_CR1_CEN;
+    adc_dma_stop();
+    feedback_running = false;
+}
+    
 void do_feedback()
 {
     struct adc_sample_t sample = *adc_get_last_sample();

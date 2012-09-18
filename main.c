@@ -23,9 +23,12 @@
 
 #include "tracker.h"
 #include "beagle_spi.h"
+#include "adc.h"
 #include "feedback.h"
 
 Serial_t ser1, ser3;
+
+adc_channel_t channels[] = { 0, 1, 2, 12 };
 
 /* This example turns all 4 leds on and then off */
 int main(void) {
@@ -40,6 +43,8 @@ int main(void) {
     ser1 = Serial_Init(0, 115200);
     ser3 = Serial_Init(2, 115200);
 
+    SYSCFG->CMPCR = 0x1; // Enable I/O compensation cell
+
     // UART1 (Beagle)
     Pin_Init(ARM_PA9, 1, Alt7);
     Pin_Init(ARM_PA10, 1, Alt7);
@@ -48,12 +53,16 @@ int main(void) {
     Pin_Init(ARM_PB11, 1, Alt7);
 
     beagle_spi_init();
+
     adc_init();
+    adc_set_sample_times(ADC1, SAMPLE_TIME_84_CYCLES);
+    adc_set_regular_sequence(ADC1, 4, channels);
+
     dac_spi_init();
     //dac_i2s_init();
     feedback_init();
 
-    SYSCFG->CMPCR = 0x1; // Enable I/O compensation cell
+    feedback_start();
 
     // Turn all leds on and then off,
     // with a delay of 0.2s among operations.
