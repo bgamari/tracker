@@ -35,6 +35,7 @@ void raster_scan(struct raster_scan_t *scan)
 
 void TIM4_IRQHandler()
 {
+    TIM4->SR = 0;
     if (idx_y == cur_scan.size_y) {
         TIM4->CR1 &= ~TIM_CR1_CEN;
         event_fire(&scan_done);
