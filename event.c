@@ -14,5 +14,6 @@ void event_wait(struct event_t *event)
 {
   while (!event->fired)
     __asm__("wfi\n");
+  event->fired = false;
 }
 
