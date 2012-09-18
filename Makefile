@@ -27,7 +27,7 @@ LDFLAGS = -lm
 ########################################################################
 
 # Path to the compiler and library
-LIB_BASE := ../libmanyuc/src
+LIB_BASE := libmanyuc/src
 
 # Include libmanyuc's Makefile to take care of the rest
 include $(LIB_BASE)/Makefile
