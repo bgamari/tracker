@@ -1,5 +1,8 @@
 #include "adc.h"
 
+void (*adc_overflow_cb)();
+void (*adc_buffer_full_cb)();
+
 static struct adc_sample_t *buffer;
 
 void set_sample_times(enum sample_time_t sample_time)
@@ -80,3 +83,18 @@ void adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf)
     DMA2_Stream4->CR |= DMA_SxCR_EN;
     ADC1->CR2 |= ADC_CR2_DDS | ADC_CR2_DMA | ADC_CR2_CONT | ADC_CR2_SWSTART;
 }
+
+void DMA2_Stream4_IRQHandler() {
+    DMA2->HIFCR = 0xff;
+    if (adc_buffer_full_cb)
+        adc_buffer_full_cb();
+}
+
+void ADC_IRQHandler() {
+    if (ADC1->SR & ADC_SR_OVR) {
+        ADC1->SR &= ~ADC_SR_OVR;
+        if (adc_overflow_cb)
+            adc_overflow_cb();
+    }
+}
+

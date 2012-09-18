@@ -19,6 +19,9 @@ enum sample_time_t {
     SAMPLE_TIME_480_CYCLES,
 };
 
+extern void (*adc_overflow_cb)();
+extern void (*adc_buffer_full_cb)();
+
 void adc_init();
 
 void set_sample_times(enum sample_time_t sample_time);

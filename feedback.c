@@ -18,18 +18,16 @@ struct dac_update_t updates[] = {
     { channel_d, 0x4400 },
 };
 
-void DMA2_Stream4_IRQHandler() {
+void adc_buffer_full()
+{
     unsigned int length = msTicks - buffer_start_time;
     buffer_start_time = msTicks;
-    DMA2->HIFCR = 0xff;
 }
 
-void ADC_IRQHandler() {
-    if (ADC1->SR & ADC_SR_OVR) {
-        char *msg = "adc-overrun\n";
-        ADC1->SR &= ~ADC_SR_OVR;
-        Serial_Put_Bytes(ser1, NONBLOCKING, msg, sizeof(msg));
-    }
+void adc_overflow()
+{
+    char *msg = "adc-overrun\n";
+    Serial_Put_Bytes(ser1, NONBLOCKING, msg, sizeof(msg));
 }
 
 void feedback_init()
@@ -57,6 +55,8 @@ void feedback_init()
     set_injected_sequence(ADC1, 4, channels);
     set_regular_sequence(ADC1, 4, channels);
     adc_init();
+    adc_buffer_full_cb = adc_buffer_full;
+    adc_overflow_cb = adc_overflow;
 
     feedback_gains[0][0] = 0.5 * 0xffff;
     feedback_gains[1][1] = 0.2 * 0xffff;
@@ -87,3 +87,4 @@ void TIM2_IRQHandler()
     TIM2->SR &= ~TIM_SR_UIF;
     do_feedback();
 }
+
