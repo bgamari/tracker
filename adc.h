@@ -26,10 +26,6 @@ void adc_init();
 
 void set_sample_times(enum sample_time_t sample_time);
 
-void set_injected_sequence(ADC_TypeDef *adc,
-                           unsigned int num_samples,
-                           adc_channel_t channels[]);
-
 void set_regular_sequence(ADC_TypeDef *adc,
                           unsigned int num_samples,
                           adc_channel_t channels[]);

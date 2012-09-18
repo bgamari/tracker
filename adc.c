@@ -22,22 +22,6 @@ void set_sample_times(enum sample_time_t sample_time)
     ADC1->SMPR2 = tmp;
 }
 
-void set_injected_sequence(ADC_TypeDef *adc,
-                           unsigned int num_samples,
-                           adc_channel_t channels[])
-{
-    if (num_samples == 0)
-        return;
-    if (num_samples > 4)
-        num_samples = 4;
-    adc->JSQR = num_samples-1;
-    for (unsigned int i=0; i<4; i++) {
-        adc->JSQR <<= 5;
-        if (i < num_samples)
-            adc->JSQR |= 0xf & channels[i];
-    }
-}
-
 void set_regular_sequence(ADC_TypeDef *adc,
                           unsigned int num_samples,
                           adc_channel_t channels[])
