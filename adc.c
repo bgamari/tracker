@@ -48,7 +48,7 @@ void adc_set_regular_sequence(ADC_TypeDef *adc,
     adc->SQR1 |= (num_samples-1) << 20;
 }
 
-void set_adc_timer_freq(unsigned int freq)
+void adc_set_timer_freq(unsigned int freq)
 {
     unsigned int prescaler = 1;
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;

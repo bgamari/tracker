@@ -30,7 +30,7 @@ void adc_set_regular_sequence(ADC_TypeDef *adc,
                               unsigned int num_samples,
                               adc_channel_t channels[]);
 
-void set_adc_timer_freq(unsigned int freq);
+void adc_set_timer_freq(unsigned int freq);
 
 enum adc_trigger_t {
   TRIGGER_MANUAL,
