@@ -98,3 +98,9 @@ void ADC_IRQHandler() {
     }
 }
 
+struct adc_sample_t *adc_get_last_sample()
+{
+    unsigned int n = 2*BUFFER_DEPTH - DMA2_Stream4->NDTR / N_INPUTS - 2;
+    n %= BUFFER_DEPTH;
+    return &buffer[n];
+}

@@ -35,3 +35,6 @@ void set_regular_sequence(ADC_TypeDef *adc,
                           adc_channel_t channels[]);
 
 void adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf);
+
+struct adc_sample_t *adc_get_last_sample();
+
