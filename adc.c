@@ -35,12 +35,14 @@ void adc_set_sample_times(struct adc_t *adc,
     adc->adc->SMPR2 = tmp;
 }
 
-void adc_set_regular_sequence(struct adc_t *adc,
-                              unsigned int num_samples,
-                              adc_channel_t channels[])
+int adc_set_regular_sequence(struct adc_t *adc,
+                             unsigned int num_samples,
+                             adc_channel_t channels[])
 {
+    if (adc->dma_started)
+        return -1;
     if (num_samples == 0)
-        return;
+        return -2;
     if (num_samples > 16)
         num_samples = 16;
 
@@ -59,6 +61,7 @@ void adc_set_regular_sequence(struct adc_t *adc,
         reg--;
     }
     adc->adc->SQR1 |= (num_samples-1) << 20;
+    return 0;
 }
 
 void adc_set_timer_freq(unsigned int freq)

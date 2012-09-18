@@ -43,9 +43,9 @@ void adc_init();
 void adc_set_sample_times(struct adc_t *adc,
                           enum sample_time_t sample_time);
 
-void adc_set_regular_sequence(struct adc_t *adc,
-                              unsigned int num_samples,
-                              adc_channel_t channels[]);
+int adc_set_regular_sequence(struct adc_t *adc,
+                             unsigned int num_samples,
+                             adc_channel_t channels[]);
 
 void adc_set_timer_freq(unsigned int freq);
 
