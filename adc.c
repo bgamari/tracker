@@ -96,7 +96,8 @@ int adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf,
     if (trigger == TRIGGER_CONTINUOUS)
         ADC1->CR2 |= ADC_CR2_CONT;
     else if (trigger == TRIGGER_TIMER) {
-        ADC1->CR2 |= 0x7 << 24;
+        ADC1->CR2 |= 0x1 << 29; // EXTEN = Rising edge
+        ADC1->CR2 |= 0x7 << 24; // TIM3 CC1
         TIM3->CR1 |= TIM_CR1_CEN;
     }
     ADC1->CR2 |= ADC_CR2_DDS | ADC_CR2_DMA | ADC_CR2_SWSTART;
