@@ -5,7 +5,7 @@
 typedef unsigned int adc_channel_t;
 
 struct adc_sample_t {
-  uint16_t channel[N_INPUTS];
+    uint16_t channel[N_INPUTS];
 };
 
 enum sample_time_t {
