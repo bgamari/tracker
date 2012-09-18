@@ -51,7 +51,7 @@ void feedback_init()
     Pin_Init(ARM_PC5, 1, Analog); // ADC12_IN15
 
     adc_channel_t channels[] = { 0, 1, 2, 12 };
-    adc_set_sample_times(SAMPLE_TIME_84_CYCLES);
+    adc_set_sample_times(ADC1, SAMPLE_TIME_84_CYCLES);
     adc_set_regular_sequence(ADC1, 4, channels);
     adc_init();
     adc_buffer_full_cb = adc_buffer_full;

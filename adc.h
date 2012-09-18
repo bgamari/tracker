@@ -24,7 +24,8 @@ extern void (*adc_buffer_full_cb)();
 
 void adc_init();
 
-void adc_set_sample_times(enum sample_time_t sample_time);
+void adc_set_sample_times(ADC_TypeDef *adc,
+                          enum sample_time_t sample_time);
 
 void adc_set_regular_sequence(ADC_TypeDef *adc,
                               unsigned int num_samples,

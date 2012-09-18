@@ -11,15 +11,16 @@ void (*adc_buffer_full_cb)();
 static struct adc_sample_t *buffer;
 static unsigned int buffer_nsamps;
 
-void adc_set_sample_times(enum sample_time_t sample_time)
+void adc_set_sample_times(ADC_TypeDef *adc,
+                          enum sample_time_t sample_time)
 {
     unsigned int tmp = 0;
     for (int i = 0; i < 8; i++) {
         tmp |= sample_time;
         tmp <<= 3;
     }
-    ADC1->SMPR1 = tmp;
-    ADC1->SMPR2 = tmp;
+    adc->SMPR1 = tmp;
+    adc->SMPR2 = tmp;
 }
 
 void adc_set_regular_sequence(ADC_TypeDef *adc,
