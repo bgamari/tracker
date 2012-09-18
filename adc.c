@@ -6,6 +6,7 @@ struct adc_t adc1 = {
     .dma_stream = DMA2_Stream4,
     .dma_channel = 0,
     .dma_started = false,
+    .nchannels = 0,
     .buffer = NULL,
     .buffer_nsamps = 0,
     .overflow_cb = NULL,
@@ -17,6 +18,7 @@ struct adc_t adc2 = {
     .dma_stream = DMA2_Stream3,
     .dma_channel = 1,
     .dma_started = false,
+    .nchannels = 0,
     .buffer = NULL,
     .buffer_nsamps = 0,
     .overflow_cb = NULL,
@@ -61,6 +63,7 @@ int adc_set_regular_sequence(struct adc_t *adc,
         reg--;
     }
     adc->adc->SQR1 |= (num_samples-1) << 20;
+    adc->nchannels = num_samples;
     return 0;
 }
 
@@ -94,18 +97,20 @@ void adc_init()
 
 /* Note: buffer can't reside in core-coupled memory */
 int adc_dma_start(struct adc_t *adc,
-                  unsigned int nsamples, struct adc_sample_t *buf,
+                  unsigned int nsamples, uint16_t *buf,
                   enum adc_trigger_t trigger)
 {
     if (adc->dma_started)
         return -1;
+    if (adc->nchannels == 0)
+        return -2;
 
     adc->buffer = buf;
     adc->buffer_nsamps = nsamples;
 
     adc->dma_stream->PAR = (uint32_t) &adc->adc->DR;
     adc->dma_stream->M0AR = (uint32_t) buf;
-    adc->dma_stream->NDTR = nsamples * N_INPUTS;
+    adc->dma_stream->NDTR = nsamples * adc->nchannels;
     adc->dma_stream->CR = DMA_SxCR_MINC | DMA_SxCR_CIRC;
     adc->dma_stream->CR |= adc->dma_channel << 25;
     adc->dma_stream->CR |= DMA_SxCR_TCIE;
@@ -156,10 +161,10 @@ void ADC_IRQHandler() {
     }
 }
 
-struct adc_sample_t adc_get_last_sample(struct adc_t *adc)
+uint16_t *adc_get_last_sample(struct adc_t *adc)
 {
-    unsigned int n = 2*adc->buffer_nsamps - adc->dma_stream->NDTR / N_INPUTS - 2;
-    n %= BUFFER_DEPTH;
-    return adc->buffer[n];
+    unsigned int n = 2*adc->buffer_nsamps - adc->dma_stream->NDTR / adc->nchannels - 2;
+    n %= adc->buffer_nsamps;
+    return &adc->buffer[n * adc->nchannels];
 }
 

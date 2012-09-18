@@ -5,10 +5,6 @@
 
 typedef unsigned int adc_channel_t;
 
-struct adc_sample_t {
-    uint16_t channel[N_INPUTS];
-};
-
 enum sample_time_t {
     SAMPLE_TIME_3_CYCLES = 0x0,
     SAMPLE_TIME_15_CYCLES,
@@ -28,8 +24,9 @@ struct adc_t {
     DMA_Stream_TypeDef *dma_stream;
     uint8_t dma_channel;
     bool dma_started;
-    struct adc_sample_t *buffer;
+    uint16_t *buffer;
     unsigned int buffer_nsamps;
+    unsigned int nchannels;
 
     // Callbacks
     void (*overflow_cb)();
@@ -57,12 +54,12 @@ enum adc_trigger_t {
 };
 
 int adc_dma_start(struct adc_t *adc,
-                  unsigned int nsamples, struct adc_sample_t *buf,
+                  unsigned int nsamples, uint16_t *buf,
                   enum adc_trigger_t trigger);
 
 void adc_trigger(struct adc_t *adc);
 
 void adc_dma_stop(struct adc_t *adc);
 
-struct adc_sample_t adc_get_last_sample();
+uint16_t *adc_get_last_sample();
 

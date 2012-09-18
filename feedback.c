@@ -5,21 +5,25 @@
 #include "adc.h"
 #include "dac.h"
 
-static struct adc_sample_t sample_buffer[BUFFER_DEPTH] __attribute__((section (".dma_data"))) = { 0 };
+#define BUFFER_DEPTH 1000
+#define SENSOR_INPUTS 4
+#define STAGE_INPUTS 3
+#define STAGE_OUTPUTS 3
+
+static uint16_t sample_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { 0 };
 
 static volatile unsigned int buffer_start_time = 0;
 
-static struct adc_sample_t pos_buffer[BUFFER_DEPTH] __attribute__((section (".dma_data"))) = { 0 };
+static uint16_t pos_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { 0 };
 
 static bool feedback_running = false;
 
-static signed int feedback_gains[N_INPUTS][N_OUTPUTS];
+static signed int feedback_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { 0 };
 
 struct dac_update_t updates[] = {
     { channel_a, 0x4400 },
     { channel_b, 0x4400 },
     { channel_c, 0x4400 },
-    { channel_d, 0x4400 },
 };
 
 void adc_buffer_full()
@@ -62,7 +66,7 @@ void feedback_start()
 {
     adc1.buffer_full_cb = adc_buffer_full;
     adc1.overflow_cb = adc_overflow;
-    adc_dma_start(&adc1, BUFFER_DEPTH, sample_buffer, TRIGGER_CONTINUOUS);
+    adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], TRIGGER_CONTINUOUS);
     TIM2->CR1 |= TIM_CR1_CEN;
     feedback_running = true;
 }
@@ -76,14 +80,14 @@ void feedback_stop()
     
 void do_feedback()
 {
-    struct adc_sample_t sample = adc_get_last_sample(&adc1);
-    for (int i=0; i<N_OUTPUTS; i++) {
+    uint16_t *sample = adc_get_last_sample(&adc1);
+    for (int i=0; i<STAGE_OUTPUTS; i++) {
         unsigned int tmp = 0;
-        for (unsigned int j=0; j<N_INPUTS; j++) 
-            tmp += feedback_gains[j][i] * sample.channel[i] / 0x1000;
+        for (unsigned int j=0; j<STAGE_INPUTS; j++) 
+            tmp += feedback_gains[j][i] * sample[j] / 0x1000;
         updates[i].value = tmp;
     }
-    set_dac(4, updates);
+    set_dac(STAGE_OUTPUTS, updates);
 }
 
 void TIM2_IRQHandler()
