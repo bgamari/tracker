@@ -36,6 +36,7 @@ void adc_set_timer_freq(unsigned int freq);
 enum adc_trigger_t {
   TRIGGER_MANUAL,
   TRIGGER_TIMER,
+  TRIGGER_TIM4_CC4,
   TRIGGER_CONTINUOUS,
 };
 

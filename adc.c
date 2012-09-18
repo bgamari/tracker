@@ -53,7 +53,7 @@ void adc_set_timer_freq(unsigned int freq)
 {
     unsigned int prescaler = 1;
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-    while (SlowPeripheralClock / prescaler / freq > 65536)
+    while (SlowPeripheralClock / prescaler / freq > 0xffff)
         prescaler *= 2;
     TIM3->PSC = prescaler - 1;
     TIM3->ARR = SlowPeripheralClock / prescaler / freq;
@@ -99,7 +99,11 @@ int adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf,
         ADC1->CR2 |= 0x1 << 29; // EXTEN = Rising edge
         ADC1->CR2 |= 0x7 << 24; // TIM3 CC1
         TIM3->CR1 |= TIM_CR1_CEN;
+    } else if (trigger == TRIGGER_TIM4_CC4) {
+        ADC1->CR2 |= 0x1 << 29; // EXTEN = Rising edge
+        ADC1->CR2 |= 0x9 << 24; // TIM3 CC1
     }
+      
     ADC1->CR2 |= ADC_CR2_DDS | ADC_CR2_DMA | ADC_CR2_SWSTART;
     return 0;
 }
