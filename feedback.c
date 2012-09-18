@@ -52,7 +52,7 @@ void feedback_init()
 
     set_sample_times(SAMPLE_TIME_84_CYCLES);
     adc_channel_t channels[] = { 0, 1, 2, 12 };
-    set_regular_sequence(ADC1, 4, channels);
+    adc_set_regular_sequence(ADC1, 4, channels);
     adc_init();
     adc_buffer_full_cb = adc_buffer_full;
     adc_overflow_cb = adc_overflow;
