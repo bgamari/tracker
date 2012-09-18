@@ -1,9 +1,15 @@
+#include <stdbool.h>
 #include "adc.h"
+
+extern uint32_t SlowPeripheralClock;
+
+bool adc_dma_started;
 
 void (*adc_overflow_cb)();
 void (*adc_buffer_full_cb)();
 
 static struct adc_sample_t *buffer;
+static unsigned int buffer_nsamps;
 
 void set_sample_times(enum sample_time_t sample_time)
 {
@@ -58,6 +64,20 @@ void set_regular_sequence(ADC_TypeDef *adc,
     adc->SQR1 |= (num_samples-1) << 20;
 }
 
+void set_adc_timer_freq(unsigned int freq)
+{
+    unsigned int prescaler = 1;
+    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+    while (SlowPeripheralClock / prescaler / freq > 65536)
+        prescaler *= 2;
+    TIM3->PSC = prescaler - 1;
+    TIM3->ARR = SlowPeripheralClock / prescaler / freq;
+    TIM3->CR1 = TIM_CR1_ARPE;
+    TIM3->CR2 = 0;
+    TIM3->CCR1 = 0;
+    TIM3->CCER = TIM_CCER_CC1E;
+}
+
 void adc_init()
 {
     NVIC_EnableIRQ(ADC_IRQn);
@@ -70,9 +90,15 @@ void adc_init()
 }
 
 /* Note: buffer can't reside in core-coupled memory */
-void adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf)
+int adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf,
+                  enum adc_trigger_t trigger)
 {
+    if (adc_dma_started)
+        return -1;
+
     buffer = buf;
+    buffer_nsamps = nsamples;
+
     DMA2_Stream4->PAR = (uint32_t) &ADC1->DR;
     DMA2_Stream4->M0AR = (uint32_t) buffer;
     DMA2_Stream4->NDTR = BUFFER_DEPTH * N_INPUTS;
@@ -81,13 +107,30 @@ void adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf)
     DMA2_Stream4->CR |= 1 << 11; // PSIZE=16 bits
     DMA2->HIFCR = 0xffffffff;
     DMA2_Stream4->CR |= DMA_SxCR_EN;
-    ADC1->CR2 |= ADC_CR2_DDS | ADC_CR2_DMA | ADC_CR2_CONT | ADC_CR2_SWSTART;
+
+    if (trigger == TRIGGER_CONTINUOUS)
+        ADC1->CR2 |= ADC_CR2_CONT;
+    else if (trigger == TRIGGER_TIMER) {
+        ADC1->CR2 |= 0x7 << 24;
+        TIM3->CR1 |= TIM_CR1_CEN;
+    }
+    ADC1->CR2 |= ADC_CR2_DDS | ADC_CR2_DMA | ADC_CR2_SWSTART;
+    return 0;
+}
+
+void adc_dma_stop()
+{
+    ADC1->CR2 &= ~ADC_CR2_CONT;
+    adc_dma_started = false;
 }
 
 void DMA2_Stream4_IRQHandler() {
+    uint32_t flag = DMA2->HISR;
     DMA2->HIFCR = 0xff;
-    if (adc_buffer_full_cb)
+    if (flag & DMA_HISR_TCIF4 && adc_buffer_full_cb)
         adc_buffer_full_cb();
+    if (flag & DMA_HISR_TEIF4) // error
+        adc_dma_started = false;
 }
 
 void ADC_IRQHandler() {
@@ -100,7 +143,8 @@ void ADC_IRQHandler() {
 
 struct adc_sample_t *adc_get_last_sample()
 {
-    unsigned int n = 2*BUFFER_DEPTH - DMA2_Stream4->NDTR / N_INPUTS - 2;
+    unsigned int n = 2*buffer_nsamps - DMA2_Stream4->NDTR / N_INPUTS - 2;
     n %= BUFFER_DEPTH;
     return &buffer[n];
 }
+

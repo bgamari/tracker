@@ -34,7 +34,14 @@ void set_regular_sequence(ADC_TypeDef *adc,
                           unsigned int num_samples,
                           adc_channel_t channels[]);
 
-void adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf);
+enum adc_trigger_t {
+  TRIGGER_MANUAL,
+  TRIGGER_TIMER,
+  TRIGGER_CONTINUOUS,
+};
+
+int adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf,
+                  enum adc_trigger_t trigger);
 
 struct adc_sample_t *adc_get_last_sample();
 
