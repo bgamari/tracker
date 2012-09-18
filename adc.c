@@ -118,6 +118,11 @@ int adc_dma_start(unsigned int nsamples, struct adc_sample_t *buf,
     return 0;
 }
 
+void adc_trigger()
+{
+    ADC1->CR2 |= ADC_CR2_SWSTART;
+}
+
 void adc_dma_stop()
 {
     ADC1->CR2 &= ~ADC_CR2_CONT;
