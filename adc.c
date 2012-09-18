@@ -67,20 +67,6 @@ int adc_set_regular_sequence(struct adc_t *adc,
     return 0;
 }
 
-void adc_set_timer_freq(unsigned int freq)
-{
-    unsigned int prescaler = 1;
-    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-    while (SlowPeripheralClock / prescaler / freq > 0xffff)
-        prescaler *= 2;
-    TIM3->PSC = prescaler - 1;
-    TIM3->ARR = SlowPeripheralClock / prescaler / freq;
-    TIM3->CR1 = TIM_CR1_ARPE;
-    TIM3->CR2 = 0;
-    TIM3->CCR1 = 0;
-    TIM3->CCER = TIM_CCER_CC1E;
-}
-
 void adc_init()
 {
     NVIC_EnableIRQ(ADC_IRQn);
@@ -120,13 +106,12 @@ int adc_dma_start(struct adc_t *adc,
 
     if (trigger == TRIGGER_CONTINUOUS)
         adc->adc->CR2 |= ADC_CR2_CONT;
-    else if (trigger == TRIGGER_TIMER) {
+    else if (trigger == TRIGGER_TIM3_CC1) {
         adc->adc->CR2 |= 0x1 << 29; // EXTEN = Rising edge
         adc->adc->CR2 |= 0x7 << 24; // TIM3 CC1
-        TIM3->CR1 |= TIM_CR1_CEN;
     } else if (trigger == TRIGGER_TIM4_CC4) {
         adc->adc->CR2 |= 0x1 << 29; // EXTEN = Rising edge
-        adc->adc->CR2 |= 0x9 << 24; // TIM3 CC1
+        adc->adc->CR2 |= 0x9 << 24; // TIM4 CC4
     }
       
     adc->adc->CR2 |= ADC_CR2_DDS | ADC_CR2_DMA | ADC_CR2_SWSTART;

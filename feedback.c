@@ -38,6 +38,19 @@ void adc_overflow()
     Serial_Put_Bytes(ser1, NONBLOCKING, msg, sizeof(msg));
 }
 
+void set_adc_trigger_freq(unsigned int freq)
+{
+    unsigned int prescaler = 1;
+    while (SlowPeripheralClock / prescaler / freq > 0xffff)
+        prescaler *= 2;
+    TIM3->PSC = prescaler - 1;
+    TIM3->ARR = SlowPeripheralClock / prescaler / freq;
+    TIM3->CR1 = TIM_CR1_ARPE;
+    TIM3->CR2 = 0;
+    TIM3->CCR1 = 0;
+    TIM3->CCER = TIM_CCER_CC1E;
+}
+
 void feedback_init()
 {
     NVIC_EnableIRQ(TIM2_IRQn);
@@ -45,6 +58,9 @@ void feedback_init()
     TIM2->DIER = TIM_DIER_UIE;
     TIM2->ARR = 100;
     TIM2->CR1 = TIM_CR1_ARPE;
+
+    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+    set_adc_trigger_freq(1000);
 
     Pin_Init(ARM_PA0, 1, Analog); // ADC123_IN0
     Pin_Init(ARM_PA1, 1, Analog); // ADC123_IN1
@@ -68,11 +84,13 @@ void feedback_start()
     adc1.overflow_cb = adc_overflow;
     adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], TRIGGER_CONTINUOUS);
     TIM2->CR1 |= TIM_CR1_CEN;
+    TIM3->CR1 |= TIM_CR1_CEN;
     feedback_running = true;
 }
 
 void feedback_stop()
 {
+    TIM3->CR1 &= ~TIM_CR1_CEN;
     TIM2->CR1 &= ~TIM_CR1_CEN;
     adc_dma_stop(&adc1);
     feedback_running = false;
