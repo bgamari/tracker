@@ -18,6 +18,7 @@
  * MA 02110-1301 USA
  */
 
+#include <string.h>
 #include <math.h>
 #include "libmanyuc.h"
 
@@ -27,12 +28,35 @@
 #include "dac.h"
 #include "uart.h"
 #include "feedback.h"
+#include "commands.h"
 
 adc_channel_t channels[] = { 0, 1, 2, 12 };
 
 void frame_recvd(unsigned int length, uint8_t *frame)
 {
-    uart_start_tx_from_buffer(9, "Thanks!\n");
+    struct cmd_frame_t *cmd = (struct cmd_frame_t *) frame;
+    switch (cmd->cmd) {
+    case CMD_ECHO:
+        uart_start_tx_from_buffer(cmd->echo.length, cmd->echo.data);
+        break;
+    case CMD_RUN_SCAN:
+        break;
+    case CMD_SET_GAINS:
+        memcpy(feedback_gains, cmd->set_gains.feedback_gains, sizeof(feedback_gains));
+        uart_start_tx_from_buffer(1, "\x06");
+        break;
+    case CMD_START_FEEDBACK:
+        feedback_start();
+        uart_start_tx_from_buffer(1, "\x06");
+        break;
+    case CMD_STOP_FEEDBACK:
+        feedback_start();
+        uart_start_tx_from_buffer(1, "\x06");
+        break;
+    default:
+        uart_start_tx_from_buffer(1, "\x15");
+        return;
+    }
 }
 
 /* This example turns all 4 leds on and then off */
