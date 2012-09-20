@@ -125,6 +125,7 @@ static void uart_start_rx(unsigned int length)
 static void uart_rx_done()
 {
     USART1->CR1 |= USART_CR1_RXNEIE;
+    USART1->CR3 &= ~USART_CR3_DMAR;
     rx_state = RX_IDLE;
 
     if (rx_buffer[rx_length-1] == 0x04 && uart_frame_recvd_cb) {
