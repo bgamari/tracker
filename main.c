@@ -24,11 +24,16 @@
 #include "tracker.h"
 #include "beagle_spi.h"
 #include "adc.h"
+#include "dac.h"
+#include "uart.h"
 #include "feedback.h"
 
-Serial_t ser1, ser3;
-
 adc_channel_t channels[] = { 0, 1, 2, 12 };
+
+void frame_recvd(unsigned int length, uint8_t *frame)
+{
+    uart_start_tx_from_buffer(9, "Thanks!\n");
+}
 
 /* This example turns all 4 leds on and then off */
 int main(void) {
@@ -40,8 +45,6 @@ int main(void) {
         Pin_Init(LED4, 1, Output)
     };
     int nleds = 4, i = 0;
-    ser1 = Serial_Init(0, 115200);
-    ser3 = Serial_Init(2, 115200);
 
     SYSCFG->CMPCR = 0x1; // Enable I/O compensation cell
 
@@ -52,11 +55,13 @@ int main(void) {
     Pin_Init(ARM_PB10, 1, Alt7);
     Pin_Init(ARM_PB11, 1, Alt7);
 
+    uart_init(115200);
+    uart_frame_recvd_cb = frame_recvd;
     beagle_spi_init();
 
     adc_init();
-    adc_set_sample_times(ADC1, SAMPLE_TIME_84_CYCLES);
-    adc_set_regular_sequence(ADC1, 4, channels);
+    adc_set_sample_times(&adc1, SAMPLE_TIME_84_CYCLES);
+    adc_set_regular_sequence(&adc1, 4, channels);
 
     dac_spi_init();
     //dac_i2s_init();
@@ -67,7 +72,6 @@ int main(void) {
     // Turn all leds on and then off,
     // with a delay of 0.2s among operations.
     // This goes on indefinitely
-    Serial_Put_Bytes(ser1, 0, "non-dma\n", sizeof("non-dma\n"));
     float t = 0;
     while (1) {
 #if 0
@@ -79,7 +83,6 @@ int main(void) {
             Pin_Off(leds[i]);
             Delay(0.2);
         }
-        Serial_Put_Bytes(ser1, NONBLOCKING, "hello world!\n", sizeof("hello world!\n"));
 #endif
     }
 }

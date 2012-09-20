@@ -7,7 +7,7 @@
 #  Project Name
 PROJECT = tracker
 #  List of the objects files to be compiled/assembled
-OBJECTS = main.o dac.o beagle_spi.o feedback.o adc.o event.o scan.o
+OBJECTS = main.o dac.o beagle_spi.o feedback.o adc.o event.o scan.o uart.o
 
 # Selected architecture/board
 ARCH = stm32/udaq

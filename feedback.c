@@ -35,7 +35,6 @@ void adc_buffer_full()
 void adc_overflow()
 {
     char *msg = "adc-overrun\n";
-    Serial_Put_Bytes(ser1, NONBLOCKING, msg, sizeof(msg));
 }
 
 void set_adc_trigger_freq(unsigned int freq)
