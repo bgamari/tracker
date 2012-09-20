@@ -6,9 +6,6 @@
 #include "dac.h"
 
 #define BUFFER_DEPTH 1000
-#define SENSOR_INPUTS 4
-#define STAGE_INPUTS 3
-#define STAGE_OUTPUTS 3
 
 static uint16_t sample_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { 0 };
 
@@ -18,7 +15,7 @@ static uint16_t pos_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section ("
 
 static bool feedback_running = false;
 
-static signed int feedback_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { 0 };
+signed int feedback_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { 0 };
 
 struct dac_update_t updates[] = {
     { channel_a, 0x4400 },
@@ -55,7 +52,7 @@ void feedback_init()
     NVIC_EnableIRQ(TIM2_IRQn);
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
     TIM2->DIER = TIM_DIER_UIE;
-    TIM2->ARR = 100;
+    TIM2->ARR = 5000;
     TIM2->CR1 = TIM_CR1_ARPE;
 
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
