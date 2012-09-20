@@ -2,6 +2,7 @@
 #include "adc.h"
 
 struct adc_t adc1 = {
+    .adc = ADC1,
     .dma = DMA2,
     .dma_stream = DMA2_Stream4,
     .dma_channel = 0,
@@ -14,6 +15,7 @@ struct adc_t adc1 = {
 };
 
 struct adc_t adc2 = {
+    .adc = ADC2,
     .dma = DMA2,
     .dma_stream = DMA2_Stream3,
     .dma_channel = 1,
