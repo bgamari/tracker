@@ -17,11 +17,11 @@ enum sample_time_t {
 };
 
 struct adc_t {
-    ADC_TypeDef *adc;
+    void *adc_base;
 
     // DMA state
-    DMA_TypeDef *dma;
-    DMA_Stream_TypeDef *dma_stream;
+    void *dma_base;
+    void *dma_stream_base;
     uint8_t dma_channel;
     bool dma_started;
     uint16_t *buffer;

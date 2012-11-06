@@ -1,34 +1,20 @@
 #!/usr/bin/make
 
-########################################################################
+PREFIX ?= arm-none-eabi
 
-# *** Fill out this information *** 
-
-#  Project Name
 PROJECT = tracker
-#  List of the objects files to be compiled/assembled
+
 OBJECTS = main.o dac.o beagle_spi.o feedback.o adc.o event.o scan.o uart.o
 
-# Selected architecture/board
-ARCH = stm32/udaq
-#ARCH = atsam3s/openmodule
-
-PROJECT_LIBS = -lm
-
-# Programming language for this project (C for C, CPP for C++)
-LANGUAGE = C
-
-# Compiling options
-DEBUG = -g3
-OPTIMIZATION = 0
-CFLAGS = -std=gnu99
+CFLAGS = -Ilibopencm3/include -DSTM32F4 -std=gnu99 -g3 -O0 -Wall
 LDFLAGS = -lm
 
-########################################################################
+all : tracker.bin
 
-# Path to the compiler and library
-LIB_BASE := libmanyuc/src
+tracker.elf : ${OBJECTS}
+tracker.bin : tracker.elf
+	$(PREFIX)-objcopy $+ $@
 
-# Include libmanyuc's Makefile to take care of the rest
-include $(LIB_BASE)/Makefile
-
+.PHONY : clean
+clean :
+	rm ${OBJECTS}
