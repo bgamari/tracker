@@ -27,6 +27,7 @@
 #include "adc.h"
 #include "dac.h"
 #include "uart.h"
+#include "scan.h"
 #include "feedback.h"
 #include "commands.h"
 
@@ -40,6 +41,8 @@ void frame_recvd(unsigned int length, uint8_t *frame)
         uart_start_tx_from_buffer(cmd->echo.length, cmd->echo.data);
         break;
     case CMD_RUN_SCAN:
+        raster_scan(&cmd->run_scan.raster_scan);
+        uart_start_tx_from_buffer(1, "\x06");
         break;
     case CMD_SET_GAINS:
         memcpy(feedback_gains, cmd->set_gains.feedback_gains, sizeof(feedback_gains));
@@ -50,7 +53,7 @@ void frame_recvd(unsigned int length, uint8_t *frame)
         uart_start_tx_from_buffer(1, "\x06");
         break;
     case CMD_STOP_FEEDBACK:
-        feedback_start();
+        feedback_stop();
         uart_start_tx_from_buffer(1, "\x06");
         break;
     default:

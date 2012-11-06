@@ -16,6 +16,7 @@ static uint16_t pos_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section ("
 static bool feedback_running = false;
 
 signed int feedback_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { 0 };
+signed int feedback_setpoint[STAGE_OUTPUTS] = { 0 };
 
 struct dac_update_t updates[] = {
     { channel_a, 0x4400 },
