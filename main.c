@@ -92,7 +92,6 @@ int main(void) {
     adc_config_channels(&adc1, 4, channels);
 
     dac_spi_init();
-    //dac_i2s_init();
     feedback_init();
 
     feedback_start();
