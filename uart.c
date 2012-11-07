@@ -30,10 +30,10 @@ volatile enum {
 void uart_init(int baudrate)
 {
     rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_USART1EN);
-    usart_enable(USART1);
     usart_set_baudrate(USART1, baudrate);
     usart_set_mode(USART1, USART_MODE_TX_RX);
     usart_enable_rx_interrupt(USART1);
+    usart_enable(USART1);
 
     nvic_enable_irq(NVIC_USART1_IRQ);
     nvic_enable_irq(NVIC_DMA2_STREAM2_IRQ);
@@ -43,7 +43,7 @@ void uart_init(int baudrate)
     dma_stream_reset(DMA2, 2);
     dma_set_transfer_mode(DMA2, 2, DMA_SCR_DIR_PER2MEM);
     dma_channel_select(DMA2, 2, 4);
-    dma_enable_transfer_error_interrupt(DMA2, 2);
+    dma_enable_transfer_complete_interrupt(DMA2, 2);
     dma_enable_memory_increment_mode(DMA2, 2);
     dma_set_peripheral_address(DMA2, 2, (u32) &USART_DR(USART1));
     dma_set_memory_address(DMA2, 2, (u32) rx_buffer);
@@ -52,12 +52,12 @@ void uart_init(int baudrate)
     dma_stream_reset(DMA2, 7);
     dma_set_transfer_mode(DMA2, 7, DMA_SCR_DIR_MEM2PER);
     dma_channel_select(DMA2, 7, 4);
-    dma_enable_transfer_error_interrupt(DMA2, 7);
+    dma_enable_transfer_complete_interrupt(DMA2, 7);
     dma_enable_memory_increment_mode(DMA2, 7);
     dma_set_peripheral_address(DMA2, 7, (u32) &USART_DR(USART1));
     dma_set_memory_address(DMA2, 7, (u32) tx_buffer);
 
-    dma_clear_interrupt_flags(DMA2, 2, 0xffffffff);
+    USART1_SR = 0;
 }
 
 inline char uart_read_byte()
@@ -148,8 +148,8 @@ void DMA2_Stream7_IRQHandler()
 
 void USART1_IRQHandler()
 {
-    uint8_t d = (uint8_t) usart_recv(USART1);
     if (usart_get_flag(USART1, USART_SR_RXNE)) {
+        uint8_t d = (uint8_t) usart_recv(USART1);
         if (rx_state == RX_IDLE && d == 0x01) {
             rx_state = RX_START;
         } else if (rx_state == RX_START)

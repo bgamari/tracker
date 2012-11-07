@@ -23,7 +23,7 @@ tracker.elf : ${OBJECTS} $(opencm3_a)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $+
 
 tracker.bin : tracker.elf
-	$(OBJCOPY) $+ $@
+	$(OBJCOPY) -Obinary $+ $@
 
 .PHONY : clean
 clean :

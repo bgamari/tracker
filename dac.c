@@ -28,11 +28,10 @@ void fill_cmd_buffer(unsigned int n, struct dac_update_t *updates)
 
 void send_cmd_buffer() {
     for (int i=0; i<ncmds; i++) {
-      pin_off(&cs);
+        pin_off(&cs);
         uint32_t tmp = cmd_buffer[i];
         for (int j=0; j<4; j++) {
             spi_write(SPI2, 0xff & (tmp >> 24));
-            spi_read(SPI2);
             tmp <<= 8;
             while (!(SPI2_SR & SPI_SR_TXE));
         }
@@ -67,8 +66,15 @@ void dac_spi_init()
     pin_off(&nldac);
     pin_off(&nclr);
 
-    SPI2_CR1 = SPI_CR1_MSTR | SPI_CR1_CPOL | SPI_CR1_SSM | SPI_CR1_SSI;
-    SPI2_CR1 |= SPI_CR1_SPE;
+    spi_reset(SPI2);
+    spi_init_master(SPI2, SPI_CR1_BAUDRATE_FPCLK_DIV_2,
+                    SPI_CR1_CPOL_CLK_TO_1_WHEN_IDLE, SPI_CR1_CPHA_CLK_TRANSITION_1,
+                    SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
+    spi_set_bidirectional_transmit_only_mode(SPI2);
+    spi_enable_ss_output(SPI2);
+    spi_enable_software_slave_management(SPI2);
+    spi_set_nss_high(SPI2);
+    spi_enable(SPI2);
 
     cmd_buffer[0] = (1<<27) | 1;
     ncmds = 1;

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <math.h>
+
 #include <libopencm3/stm32/f4/adc.h>
 #include <libopencm3/stm32/f4/rcc.h>
 #include <libopencm3/stm32/f4/gpio.h>
@@ -74,7 +75,7 @@ int main(void) {
 
     uart_init(115200);
     uart_frame_recvd_cb = frame_recvd;
-    //beagle_spi_init();
+    beagle_spi_init();
 
     adc_init();
     adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_55DOT5CYC);

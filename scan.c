@@ -33,6 +33,8 @@ void raster_scan(struct raster_scan_t *scan)
 
     timer_enable_oc_output(TIM4, TIM_OC1);
     timer_enable_oc_output(TIM4, TIM_OC4);
+    timer_set_oc_value(TIM4, TIM_OC1, 0);
+    timer_set_oc_value(TIM4, TIM_OC4, period / 2);
     timer_enable_irq(TIM4, TIM_DIER_CC4IE);
     timer_enable_counter(TIM4);
     event_wait(&scan_done);

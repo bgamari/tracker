@@ -64,7 +64,7 @@ int adc_dma_start(struct adc_t *adc,
     u32 dma = adc->dma;
     u32 stream = adc->dma_stream;
     dma_stream_reset(dma, stream);
-    dma_set_peripheral_address(dma, stream, (uint32_t) &ADC_DR(&adc->adc));
+    dma_set_peripheral_address(dma, stream, (uint32_t) &ADC_DR(adc->adc));
     dma_set_memory_address(dma, stream, (uint32_t) buf);
     dma_set_number_of_data(dma, stream, nsamples * adc->nchannels);
 
@@ -127,8 +127,8 @@ void ADC_IRQHandler() {
 
 uint16_t *adc_get_last_sample(struct adc_t *adc)
 {
-    unsigned int nd = dma_get_number_of_data(adc->dma, adc->dma_stream);
-    unsigned int n = 2*adc->buffer_nsamps - nd / adc->nchannels - 2;
+    unsigned int ndtr = dma_get_number_of_data(adc->dma, adc->dma_stream);
+    unsigned int n = 2*adc->buffer_nsamps - ndtr / adc->nchannels - 2;
     n %= adc->buffer_nsamps;
     return &adc->buffer[n * adc->nchannels];
 }

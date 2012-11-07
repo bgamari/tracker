@@ -45,8 +45,8 @@ void set_adc_trigger_freq(unsigned int freq)
     unsigned int prescaler = 1;
     while (rcc_ppre1_frequency / prescaler / freq > 0xffff)
         prescaler *= 2;
-    timer_reset(TIM3);
-    timer_set_prescaler(TIM3, prescaler);
+
+    timer_set_prescaler(TIM3, prescaler-1);
     timer_set_period(TIM3, rcc_ppre1_frequency / prescaler / freq);
     timer_enable_preload(TIM3);
     timer_enable_oc_output(TIM3, TIM_OC1);
@@ -62,6 +62,7 @@ void feedback_init()
     timer_enable_preload(TIM2);
 
     RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
+    timer_reset(TIM3);
     set_adc_trigger_freq(1000);
 
     // ADC123_IN0, ADC123_IN1, ADC123_IN2, ADC123_IN3
