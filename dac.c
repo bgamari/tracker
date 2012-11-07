@@ -72,7 +72,6 @@ void dac_spi_init()
                     SPI_CR1_CPOL_CLK_TO_1_WHEN_IDLE, SPI_CR1_CPHA_CLK_TRANSITION_1,
                     SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
     spi_set_bidirectional_transmit_only_mode(SPI2);
-    spi_enable_ss_output(SPI2);
     spi_enable_software_slave_management(SPI2);
     spi_set_nss_high(SPI2);
     spi_enable(SPI2);
