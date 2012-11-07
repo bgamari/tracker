@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 extern volatile uint32_t msTicks;      /* counts 1ms timeTicks */
 
