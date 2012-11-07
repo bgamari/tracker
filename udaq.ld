@@ -7,5 +7,13 @@ MEMORY
 	iram2 (rwx) : ORIGIN = 0x2001c000, LENGTH =  16K
 }
 
+SECTIONS
+{
+        .dma_data :
+        {
+                *(.dma_data)
+        } >iram1
+}
+
 /* Include the common ld script. */
 INCLUDE libopencm3_stm32f4.ld
