@@ -5,6 +5,7 @@
 #include <libopencm3/stm32/f4/gpio.h>
 #include <libopencm3/stm32/f4/syscfg.h>
 
+#include "pin.h"
 #include "clock.h"
 #include "tracker.h"
 #include "beagle_spi.h"
@@ -46,17 +47,21 @@ void frame_recvd(unsigned int length, uint8_t *frame)
     }
 }
 
+#define NLEDS 3
+struct pin_t leds[NLEDS] = {
+  { .port = GPIOC, .pin = GPIO15 },
+  { .port = GPIOC, .pin = GPIO0 },
+  { .port = GPIOC, .pin = GPIO1 },
+};
+
 /* This example turns all 4 leds on and then off */
 int main(void) {
     // Access 4 leds predefined as LED1, LED2, LED3, LED4
-    uint32_t leds[] = {GPIO15, GPIO0, GPIO1};
-    int nleds = 3, i = 0;
-
     init_clock();
     init_systick();
     
-    for (int i=0; i<nleds; i++)
-        gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, leds[i]);
+    for (int i=0; i<NLEDS; i++)
+        pin_setup_output(&leds[i]);
 
     SYSCFG_CMPCR = 0x1; // Enable I/O compensation cell
 
@@ -86,12 +91,12 @@ int main(void) {
     // This goes on indefinitely
     while (1) {
 #if 1
-        for (i = 0; i < nleds; i++) {
-            gpio_set(GPIOC, leds[i]);
+        for (int i = 0; i < NLEDS; i++) {
+            pin_on(&leds[i]);
             delay_ms(200);
         }
-        for (i = 0; i < nleds; i++) {
-            gpio_clear(GPIOC, leds[i]);
+        for (int i = 0; i < NLEDS; i++) {
+            pin_off(&leds[i]);
             delay_ms(200);
         }
 #endif
