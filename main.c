@@ -1,5 +1,6 @@
 #include <string.h>
 #include <math.h>
+#include <libopencm3/stm32/f4/adc.h>
 #include <libopencm3/stm32/f4/rcc.h>
 #include <libopencm3/stm32/f4/gpio.h>
 #include <libopencm3/stm32/f4/syscfg.h>
@@ -14,14 +15,14 @@
 #include "feedback.h"
 #include "commands.h"
 
-adc_channel_t channels[] = { 0, 1, 2, 12 };
+u8 channels[] = { 0, 1, 2, 12 };
 
 void frame_recvd(unsigned int length, uint8_t *frame)
 {
     struct cmd_frame_t *cmd = (struct cmd_frame_t *) frame;
     switch (cmd->cmd) {
     case CMD_ECHO:
-        uart_start_tx_from_buffer(cmd->echo.length, cmd->echo.data);
+        uart_start_tx_from_buffer(cmd->echo.length, (char *) cmd->echo.data);
         break;
     case CMD_RUN_SCAN:
         raster_scan(&cmd->run_scan.raster_scan);
@@ -71,8 +72,8 @@ int main(void) {
     beagle_spi_init();
 
     adc_init();
-    adc_set_sample_times(&adc1, SAMPLE_TIME_84_CYCLES);
-    adc_set_regular_sequence(&adc1, 4, channels);
+    adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_55DOT5CYC);
+    adc_set_regular_sequence(ADC1, 4, channels);
 
     dac_spi_init();
     //dac_i2s_init();

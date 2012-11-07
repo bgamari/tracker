@@ -1,3 +1,6 @@
+#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/f4/nvic.h>
+#include <libopencm3/stm32/f4/timer.h>
 #include "scan.h"
 #include "event.h"
 #include "dac.h"
@@ -17,27 +20,29 @@ void raster_scan(struct raster_scan_t *scan)
     dir = 1;
 
     unsigned int prescaler = 1;
-    RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
-    NVIC_EnableIRQ(TIM4_IRQn);
-    while (SlowPeripheralClock / prescaler / scan->freq > 0xffff)
+    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM4EN);
+    nvic_enable_irq(NVIC_TIM4_IRQ);
+    timer_reset(TIM4);
+    timer_set_mode(TIM4, 0, 0, TIM_CR1_DIR_UP);
+    while (rcc_ppre1_frequency / prescaler / scan->freq > 0xffff)
         prescaler *= 2;
-    TIM4->PSC = prescaler - 1;
-    TIM4->ARR = SlowPeripheralClock / prescaler / scan->freq;
-    TIM4->CR1 = TIM_CR1_ARPE;
-    TIM4->CR2 = 0;
-    TIM4->DIER = TIM_DIER_CC4IE;
-    TIM4->CCR1 = 0;
-    TIM4->CCR4 = TIM4->ARR / 2;
-    TIM4->CCER = TIM_CCER_CC1E | TIM_CCER_CC4E;
-    TIM4->CR1 |= TIM_CR1_CEN;
+    timer_set_prescaler(TIM4, prescaler);
+    u32 period = rcc_ppre1_frequency / prescaler / scan->freq;
+    timer_set_period(TIM4, period);
+    timer_enable_preload(TIM4);
+
+    timer_enable_oc_output(TIM4, TIM_OC1);
+    timer_enable_oc_output(TIM4, TIM_OC4);
+    timer_enable_irq(TIM4, TIM_DIER_CC4IE);
+    timer_enable_counter(TIM4);
     event_wait(&scan_done);
 }
 
 void TIM4_IRQHandler()
 {
-    TIM4->SR = 0;
+    timer_clear_flag(TIM4, 0xffffffff);
     if (idx_y == cur_scan.size_y) {
-        TIM4->CR1 &= ~TIM_CR1_CEN;
+        timer_disable_counter(TIM4);
         event_fire(&scan_done);
     }
 

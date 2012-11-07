@@ -1,6 +1,7 @@
-#include "beagle_spi.h"
+#include <libopencm3/stm32/f4/gpio.h>
+#include <libopencm3/stm32/f4/rcc.h>
 
-extern Serial_t ser1;
+#include "beagle_spi.h"
 
 #define BUFFER_LEN 256
 

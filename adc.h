@@ -1,27 +1,15 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "tracker.h"
 
-typedef unsigned int adc_channel_t;
-
-enum sample_time_t {
-    SAMPLE_TIME_3_CYCLES = 0x0,
-    SAMPLE_TIME_15_CYCLES,
-    SAMPLE_TIME_28_CYCLES,
-    SAMPLE_TIME_56_CYCLES,
-    SAMPLE_TIME_84_CYCLES,
-    SAMPLE_TIME_112_CYCLES,
-    SAMPLE_TIME_144_CYCLES,
-    SAMPLE_TIME_480_CYCLES,
-};
-
 struct adc_t {
-    void *adc_base;
+    uint32_t adc;
 
     // DMA state
-    void *dma_base;
-    void *dma_stream_base;
+    uint32_t dma;
+    uint16_t dma_stream;
     uint8_t dma_channel;
     bool dma_started;
     uint16_t *buffer;
@@ -36,13 +24,6 @@ struct adc_t {
 extern struct adc_t adc1, adc2;
 
 void adc_init();
-
-void adc_set_sample_times(struct adc_t *adc,
-                          enum sample_time_t sample_time);
-
-int adc_set_regular_sequence(struct adc_t *adc,
-                             unsigned int num_samples,
-                             adc_channel_t channels[]);
 
 void adc_set_timer_freq(unsigned int freq);
 

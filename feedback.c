@@ -1,22 +1,27 @@
+#include <libopencm3/stm32/f4/nvic.h>
+#include <libopencm3/stm32/f4/timer.h>
+#include <libopencm3/stm32/f4/gpio.h>
+#include <libopencm3/stm32/f4/rcc.h>
 #include <stdbool.h>
 
 #include "tracker.h"
 #include "feedback.h"
 #include "adc.h"
 #include "dac.h"
+#include "clock.h"
 
 #define BUFFER_DEPTH 1000
 
-static uint16_t sample_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { 0 };
+static uint16_t sample_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { };
 
 static volatile unsigned int buffer_start_time = 0;
 
-static uint16_t pos_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { 0 };
+//static uint16_t pos_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { };
 
 static bool feedback_running = false;
 
-signed int feedback_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { 0 };
-signed int feedback_setpoint[STAGE_OUTPUTS] = { 0 };
+signed int feedback_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
+signed int feedback_setpoint[STAGE_OUTPUTS] = { };
 
 struct dac_update_t updates[] = {
     { channel_a, 0x4400 },
@@ -26,49 +31,45 @@ struct dac_update_t updates[] = {
 
 void adc_buffer_full()
 {
-    unsigned int length = msTicks - buffer_start_time;
+    //unsigned int length = msTicks - buffer_start_time;
     buffer_start_time = msTicks;
 }
 
 void adc_overflow()
 {
-    char *msg = "adc-overrun\n";
+    //char *msg = "adc-overrun\n";
 }
 
 void set_adc_trigger_freq(unsigned int freq)
 {
     unsigned int prescaler = 1;
-    while (SlowPeripheralClock / prescaler / freq > 0xffff)
+    while (rcc_ppre1_frequency / prescaler / freq > 0xffff)
         prescaler *= 2;
-    TIM3->PSC = prescaler - 1;
-    TIM3->ARR = SlowPeripheralClock / prescaler / freq;
-    TIM3->CR1 = TIM_CR1_ARPE;
-    TIM3->CR2 = 0;
-    TIM3->CCR1 = 0;
-    TIM3->CCER = TIM_CCER_CC1E;
+    timer_reset(TIM3);
+    timer_set_prescaler(TIM3, prescaler);
+    timer_set_period(TIM3, rcc_ppre1_frequency / prescaler / freq);
+    timer_enable_preload(TIM3);
+    timer_enable_oc_output(TIM3, TIM_OC1);
 }
 
 void feedback_init()
 {
-    NVIC_EnableIRQ(TIM2_IRQn);
-    RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-    TIM2->DIER = TIM_DIER_UIE;
-    TIM2->ARR = 5000;
-    TIM2->CR1 = TIM_CR1_ARPE;
+    nvic_enable_irq(NVIC_TIM2_IRQ);
+    RCC_APB1ENR |= RCC_APB1ENR_TIM2EN;
+    timer_reset(TIM2);
+    timer_enable_irq(TIM2, TIM_DIER_UIE);
+    timer_set_period(TIM2, 5000);
+    timer_enable_preload(TIM2);
 
-    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+    RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
     set_adc_trigger_freq(1000);
 
-    Pin_Init(ARM_PA0, 1, Analog); // ADC123_IN0
-    Pin_Init(ARM_PA1, 1, Analog); // ADC123_IN1
-    Pin_Init(ARM_PA2, 1, Analog); // ADC123_IN2
-    Pin_Init(ARM_PA3, 1, Analog); // ADC123_IN3
-    Pin_Init(ARM_PB0, 1, Analog); // ADC12_IN8
-    Pin_Init(ARM_PB1, 1, Analog); // ADC12_IN9
-    Pin_Init(ARM_PC2, 1, Analog); // ADC123_IN12
-    Pin_Init(ARM_PC3, 1, Analog); // ADC123_IN13
-    Pin_Init(ARM_PC4, 1, Analog); // ADC12_IN14
-    Pin_Init(ARM_PC5, 1, Analog); // ADC12_IN15
+    // ADC123_IN0, ADC123_IN1, ADC123_IN2, ADC123_IN3
+    gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0 | GPIO1 | GPIO2 | GPIO3);
+    // ADC12_IN8, ADC12_IN9
+    gpio_mode_setup(GPIOB, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0 | GPIO1);
+    // ADC123_IN12, ADC123_IN13, ADC12_IN14, ADC12_IN15
+    gpio_mode_setup(GPIOC, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO2 | GPIO3 | GPIO4 | GPIO5);
 
     feedback_gains[0][0] = 0.5 * 0xffff;
     feedback_gains[1][1] = 0.2 * 0xffff;
@@ -80,15 +81,15 @@ void feedback_start()
     adc1.buffer_full_cb = adc_buffer_full;
     adc1.overflow_cb = adc_overflow;
     adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], TRIGGER_CONTINUOUS);
-    TIM2->CR1 |= TIM_CR1_CEN;
-    TIM3->CR1 |= TIM_CR1_CEN;
+    timer_enable_counter(TIM2);
+    timer_enable_counter(TIM3);
     feedback_running = true;
 }
 
 void feedback_stop()
 {
-    TIM3->CR1 &= ~TIM_CR1_CEN;
-    TIM2->CR1 &= ~TIM_CR1_CEN;
+    timer_disable_counter(TIM2);
+    timer_disable_counter(TIM3);
     adc_dma_stop(&adc1);
     feedback_running = false;
 }
@@ -105,9 +106,9 @@ void do_feedback()
     set_dac(STAGE_OUTPUTS, updates);
 }
 
-void TIM2_IRQHandler()
+void tim2_isr(void)
 {
-    TIM2->SR &= ~TIM_SR_UIF;
+    TIM2_SR &= ~TIM_SR_UIF;
     do_feedback();
 }
 

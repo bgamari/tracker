@@ -1,10 +1,15 @@
+#include <libopencm3/stm32/f4/nvic.h>
+#include <libopencm3/stm32/f4/adc.h>
+#include <libopencm3/stm32/f4/dma.h>
+#include <libopencm3/stm32/f4/rcc.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include "adc.h"
 
 struct adc_t adc1 = {
     .adc = ADC1,
     .dma = DMA2,
-    .dma_stream = DMA2_Stream4,
+    .dma_stream = 4,
     .dma_channel = 0,
     .dma_started = false,
     .nchannels = 0,
@@ -17,7 +22,7 @@ struct adc_t adc1 = {
 struct adc_t adc2 = {
     .adc = ADC2,
     .dma = DMA2,
-    .dma_stream = DMA2_Stream3,
+    .dma_stream = 3,
     .dma_channel = 1,
     .dma_started = false,
     .nchannels = 0,
@@ -27,60 +32,20 @@ struct adc_t adc2 = {
     .buffer_full_cb = NULL,
 };
 
-void adc_set_sample_times(struct adc_t *adc,
-                          enum sample_time_t sample_time)
-{
-    unsigned int tmp = 0;
-    for (int i = 0; i < 8; i++) {
-        tmp |= sample_time;
-        tmp <<= 3;
-    }
-    adc->adc->SMPR1 = tmp;
-    adc->adc->SMPR2 = tmp;
-}
-
-int adc_set_regular_sequence(struct adc_t *adc,
-                             unsigned int num_samples,
-                             adc_channel_t channels[])
-{
-    if (adc->dma_started)
-        return -1;
-    if (num_samples == 0)
-        return -2;
-    if (num_samples > 16)
-        num_samples = 16;
-
-    __IO uint32_t *reg = &adc->adc->SQR3;
-    uint32_t k = 0;
-    for (unsigned int i=0; i<3; i++) {
-        uint32_t tmp = 0;
-        for (unsigned int j=0; j<6; j++) {
-            adc_channel_t chan = 0;
-            if (k < num_samples)
-                chan = channels[k] & 0x1f;
-            tmp |= chan << (5*j);
-            k++;
-        }
-        *reg = tmp;
-        reg--;
-    }
-    adc->adc->SQR1 |= (num_samples-1) << 20;
-    adc->nchannels = num_samples;
-    return 0;
-}
-
 void adc_init()
 {
-    NVIC_EnableIRQ(ADC_IRQn);
-    NVIC_EnableIRQ(DMA2_Stream4_IRQn);
-    RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+    nvic_enable_irq(NVIC_ADC_IRQ);
+    nvic_enable_irq(NVIC_DMA2_STREAM4_IRQ);
+    rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_ADC1EN);
 
     // Initialize ADCs
-    ADC1->CR2 |= ADC_CR2_ADON;
-    ADC1->CR1 |= ADC_CR1_SCAN | ADC_CR1_OVRIE;
+    adc_power_on(ADC1);
+    adc_enable_scan_mode(ADC1);
+    adc_enable_overrun_interrupt(ADC1);
 
-    ADC2->CR2 |= ADC_CR2_ADON;
-    ADC2->CR1 |= ADC_CR1_SCAN | ADC_CR1_OVRIE;
+    adc_power_on(ADC2);
+    adc_enable_scan_mode(ADC2);
+    adc_enable_overrun_interrupt(ADC2);
 }
 
 /* Note: buffer can't reside in core-coupled memory */
@@ -96,53 +61,65 @@ int adc_dma_start(struct adc_t *adc,
     adc->buffer = buf;
     adc->buffer_nsamps = nsamples;
 
-    adc->dma_stream->PAR = (uint32_t) &adc->adc->DR;
-    adc->dma_stream->M0AR = (uint32_t) buf;
-    adc->dma_stream->NDTR = nsamples * adc->nchannels;
-    adc->dma_stream->CR = DMA_SxCR_MINC | DMA_SxCR_CIRC;
-    adc->dma_stream->CR |= adc->dma_channel << 25;
-    adc->dma_stream->CR |= DMA_SxCR_TCIE;
-    adc->dma_stream->CR |= 1 << 11; // PSIZE=16 bits
-    adc->dma->HIFCR = 0xffffffff;
-    adc->dma_stream->CR |= DMA_SxCR_EN;
+    u32 dma = adc->dma;
+    u32 stream = adc->dma_stream;
+    dma_stream_reset(dma, stream);
+    dma_set_peripheral_address(dma, stream, (uint32_t) &ADC_DR(&adc->adc));
+    dma_set_memory_address(dma, stream, (uint32_t) buf);
+    dma_set_number_of_data(dma, stream, nsamples * adc->nchannels);
+
+    dma_enable_memory_increment_mode(dma, stream);
+    dma_enable_circular_mode(dma, stream);
+    dma_channel_select(dma, stream, adc->dma_channel);
+    dma_enable_transfer_complete_interrupt(dma, stream);
+    dma_set_peripheral_size(dma, stream, DMA_SCR_PSIZE_16BIT);
+
+    dma_clear_interrupt_flags(dma, stream, 0xffffffff);
+    dma_enable_stream(dma, stream);
 
     if (trigger == TRIGGER_CONTINUOUS)
-        adc->adc->CR2 |= ADC_CR2_CONT;
+        adc_set_continuous_conversion_mode(adc->adc);
     else if (trigger == TRIGGER_TIM3_CC1) {
-        adc->adc->CR2 |= 0x1 << 29; // EXTEN = Rising edge
-        adc->adc->CR2 |= 0x7 << 24; // TIM3 CC1
+        adc_enable_external_trigger_regular(adc->adc,
+                                            ADC_CR2_EXTSEL_TIM3_CC1,
+                                            ADC_CR2_EXTEN_RISING_EDGE);
     } else if (trigger == TRIGGER_TIM4_CC4) {
-        adc->adc->CR2 |= 0x1 << 29; // EXTEN = Rising edge
-        adc->adc->CR2 |= 0x9 << 24; // TIM4 CC4
+        adc_enable_external_trigger_regular(adc->adc,
+                                            ADC_CR2_EXTSEL_TIM4_CC4,
+                                            ADC_CR2_EXTEN_RISING_EDGE);
     }
       
-    adc->adc->CR2 |= ADC_CR2_DDS | ADC_CR2_DMA | ADC_CR2_SWSTART;
+    adc_set_dma_continue(adc->adc);
+    adc_enable_dma(adc->adc);
+    adc_trigger(adc);
     return 0;
 }
 
 void adc_trigger(struct adc_t *adc)
 {
-    adc->adc->CR2 |= ADC_CR2_SWSTART;
+    adc_start_conversion_regular(adc->adc);
 }
 
 void adc_dma_stop(struct adc_t *adc)
 {
-    adc->adc->CR2 &= ~ADC_CR2_CONT;
+    adc_set_single_conversion_mode(adc->adc);
     adc->dma_started = false;
 }
 
 void DMA2_Stream4_IRQHandler() {
-    uint32_t flag = DMA2->HISR;
-    DMA2->HIFCR = 0xff;
-    if (flag & DMA_HISR_TCIF4 && adc1.buffer_full_cb)
+    if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_TCIF) && adc1.buffer_full_cb) {
+        dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TCIF);
         adc1.buffer_full_cb();
-    if (flag & DMA_HISR_TEIF4) // error
+    }
+    if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_TEIF)) { // error
+        dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TEIF);
         adc1.dma_started = false;
+    }
 }
 
 void ADC_IRQHandler() {
-    if (ADC1->SR & ADC_SR_OVR) {
-        ADC1->SR &= ~ADC_SR_OVR;
+    if (adc_get_overrun_flag(ADC1)) {
+        adc_clear_overrun_flag(ADC1);
         if (adc1.overflow_cb)
             adc1.overflow_cb();
     }
@@ -150,7 +127,8 @@ void ADC_IRQHandler() {
 
 uint16_t *adc_get_last_sample(struct adc_t *adc)
 {
-    unsigned int n = 2*adc->buffer_nsamps - adc->dma_stream->NDTR / adc->nchannels - 2;
+    unsigned int nd = dma_get_number_of_data(adc->dma, adc->dma_stream);
+    unsigned int n = 2*adc->buffer_nsamps - nd / adc->nchannels - 2;
     n %= adc->buffer_nsamps;
     return &adc->buffer[n * adc->nchannels];
 }
