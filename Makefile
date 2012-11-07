@@ -14,6 +14,8 @@ LDFLAGS = -lm
 all : tracker.bin
 
 tracker.elf : ${OBJECTS}
+	$(CC) $(LDFLAGS) -o $@ $+
+
 tracker.bin : tracker.elf
 	$(OBJCOPY) $+ $@
 
