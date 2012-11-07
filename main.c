@@ -89,7 +89,7 @@ int main(void) {
 
     adc_init();
     adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_55DOT5CYC);
-    adc_set_regular_sequence(ADC1, 4, channels);
+    adc_config_channels(&adc1, 4, channels);
 
     dac_spi_init();
     //dac_i2s_init();

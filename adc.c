@@ -48,6 +48,12 @@ void adc_init()
     adc_enable_overrun_interrupt(ADC2);
 }
 
+void adc_config_channels(struct adc_t *adc, unsigned int nchans, u8 *channels)
+{
+    adc_set_regular_sequence(adc->adc, nchans, channels);
+    adc->nchannels = nchans;
+}
+
 /* Note: buffer can't reside in core-coupled memory */
 int adc_dma_start(struct adc_t *adc,
                   unsigned int nsamples, uint16_t *buf,

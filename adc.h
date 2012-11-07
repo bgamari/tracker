@@ -25,6 +25,8 @@ extern struct adc_t adc1, adc2;
 
 void adc_init();
 
+void adc_config_channels(struct adc_t *adc, unsigned int nchans, u8 *channels);
+
 void adc_set_timer_freq(unsigned int freq);
 
 enum adc_trigger_t {
