@@ -24,6 +24,6 @@ void delay_ms(unsigned int ms) {
     while ((msTicks - curTicks) < ms);
 }
 
-void SysTick_Handler(void) {
+void sys_tick_handler(void) {
     msTicks++;
 }
