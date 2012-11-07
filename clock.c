@@ -7,7 +7,7 @@ volatile uint32_t msTicks;      /* counts 1ms timeTicks */
 
 void init_systick()
 {
-    systick_set_reload(168e6 / 1000);
+    systick_set_reload(168e6 / 8 / 1000);
     systick_interrupt_enable();
     systick_counter_enable();
 }
