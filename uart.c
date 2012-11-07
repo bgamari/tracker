@@ -130,7 +130,7 @@ static void uart_rx_done()
 }
 
     
-void DMA2_Stream2_IRQHandler()
+void dma2_stream2_isr()
 {
     if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TCIF)) {
         dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TCIF);
@@ -138,7 +138,7 @@ void DMA2_Stream2_IRQHandler()
     }
 }
 
-void DMA2_Stream7_IRQHandler()
+void dma2_stream7_isr()
 {
     if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TCIF)) {
         dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TCIF);
@@ -146,7 +146,7 @@ void DMA2_Stream7_IRQHandler()
     }
 }
 
-void USART1_IRQHandler()
+void usart1_isr()
 {
     if (usart_get_flag(USART1, USART_SR_RXNE)) {
         uint8_t d = (uint8_t) usart_recv(USART1);

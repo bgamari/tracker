@@ -6,7 +6,7 @@ OBJCOPY = arm-none-eabi-objcopy
 
 PROJECT = tracker
 
-OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o scan.o uart.o
+OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o scan.o uart.o beagle_spi.o
 
 CFLAGS = -mthumb -mcpu=cortex-m4 -Ilibopencm3/include -DSTM32F4 -std=gnu99 -g3 -Os -Wall -Werror -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fno-common -MD -nostartfiles
 LDFLAGS = -lm -Tudaq.ld -Llibopencm3/lib

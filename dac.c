@@ -57,10 +57,11 @@ void dac_spi_init()
 {
     ncmds = 0;
 
-    RCC_APB1ENR |= RCC_APB1ENR_SPI2EN;
+    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_SPI2EN);
     pin_setup_output(&cs);
     pin_setup_output(&nclr);
     pin_setup_output(&nldac);
+    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO13 | GPIO15);
     gpio_set_af(GPIOB, GPIO_AF5, GPIO13 | GPIO15); // SCLK, MOSI
 
     pin_off(&nldac);
@@ -82,28 +83,3 @@ void dac_spi_init()
     ncmds = 0;
 }
 
-void i2s_init()
-{
-    ncmds = 0;
-
-    RCC_APB1ENR |= RCC_APB1ENR_SPI2EN;
-    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO12 | GPIO13 | GPIO15); // SCLK MOSI
-    gpio_set_af(GPIOB, GPIO_AF5, GPIO12 | GPIO13 | GPIO15); // SCLK MOSI
-
-    pin_setup_output(&cs);
-    pin_setup_output(&nclr);
-    pin_setup_output(&nldac);
-    pin_off(&nldac);
-    pin_off(&nclr);
-
-    SPI2_I2SCFGR = SPI_I2SCFGR_I2SMOD;
-    SPI2_I2SCFGR |= 0x2 << 8; // Master, transmit
-    SPI2_I2SCFGR |= 0x3 << 4; // PCM standard
-    SPI2_I2SCFGR |= 0x2 << 1; // 32-bit data length
-    SPI2_I2SPR = SPI_I2SPR_MCKOE | 10; // Prescaler
-    SPI2_I2SCFGR |= SPI_I2SCFGR_I2SE;
-}
-
-void SPI2_IRQHandler() {
-
-}

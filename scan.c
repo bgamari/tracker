@@ -40,7 +40,7 @@ void raster_scan(struct raster_scan_t *scan)
     event_wait(&scan_done);
 }
 
-void TIM4_IRQHandler()
+void tim4_isr()
 {
     timer_clear_flag(TIM4, 0xffffffff);
     if (idx_y == cur_scan.size_y) {

@@ -1,3 +1,6 @@
+#include <libopencm3/stm32/f4/dma.h>
+#include <libopencm3/stm32/f4/spi.h>
+#include <libopencm3/stm32/f4/nvic.h>
 #include <libopencm3/stm32/f4/gpio.h>
 #include <libopencm3/stm32/f4/rcc.h>
 
@@ -12,89 +15,56 @@ enum state_t {
     IDLE, WAIT_FOR_LENGTH,
 };
 
-static unsigned int msg_length = 0;
 enum state_t state = IDLE;
 
 void beagle_spi_init()
 {
     // SPI1 (Beagle)
-    Pin_Init(ARM_PA4, 1, Alt5);
-    Pin_Init(ARM_PA5, 1, Alt5);
-    Pin_Init(ARM_PA6, 1, Alt5);
-    Pin_Init(ARM_PA7, 1, Alt5);
+    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO4 | GPIO5 | GPIO6 | GPIO7);
+    gpio_set_af(GPIOA, GPIO_AF5, GPIO4 | GPIO5 | GPIO6 | GPIO7);
 
     offset = 0;
 
     // Turn things on
-    RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
-    RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+    rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_SPI1EN);
+    rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_DMA2EN);
 
-    NVIC_EnableIRQ(SPI1_IRQn);
-    SPI1->CR2 = SPI_CR2_RXNEIE;
-    SPI1->CR1 = SPI_CR1_SPE;
+    nvic_enable_irq(NVIC_SPI1_IRQ);
+    spi_reset(SPI1);
+    spi_enable_rx_buffer_not_empty_interrupt(SPI1);
+    spi_enable(SPI1);
 
     // Setup DMA:
-    NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-    NVIC_EnableIRQ(DMA2_Stream5_IRQn);
+    nvic_enable_irq(NVIC_DMA2_STREAM0_IRQ);
+    nvic_enable_irq(NVIC_DMA2_STREAM5_IRQ);
 
     // TX: DMA2_Stream5
-    DMA2_Stream5->CR = 3 << 25; // Channel
-    DMA2_Stream5->CR |= 1 << 6; // Mem to Periph
-    DMA2_Stream5->CR |= DMA_SxCR_MINC;
-    DMA2_Stream5->PAR = (uint32_t) &SPI1->DR;
+    dma_stream_reset(DMA2, 5);
+    dma_channel_select(DMA2, 5, 3);
+    dma_set_transfer_mode(DMA2, 5, DMA_SCR_DIR_MEM2PER);
+    dma_enable_memory_increment_mode(DMA2, 5);
+    dma_set_peripheral_address(DMA2, 5, (uint32_t) &SPI_DR(SPI1));
 
     // RX: DMA2_Stream0
-    DMA2_Stream0->CR = 3 << 25; // Channel
-    DMA2_Stream0->CR |= DMA_SxCR_MINC | DMA_SxCR_TCIE;
-    DMA2_Stream0->PAR = (uint32_t) &SPI1->DR;
-    DMA2_Stream0->M0AR = (uint32_t) &buffer;
+    dma_stream_reset(DMA2, 0);
+    dma_channel_select(DMA2, 0, 3);
+    dma_set_transfer_mode(DMA2, 0, DMA_SCR_DIR_PER2MEM);
+    dma_enable_memory_increment_mode(DMA2, 0);
+    dma_set_peripheral_address(DMA2, 0, (uint32_t) &SPI_DR(SPI1));
+    dma_set_memory_address(DMA2, 0, (u32) buffer);
 }
 
-static int read_byte(uint8_t *dest)
+void spi1_isr()
 {
-    for (unsigned int i=0; i<20; i++) {
-        if (SPI1->SR & SPI_SR_RXNE) {
-            *dest = SPI1->DR;
-            SPI1->DR = 0x0;
-            return 0;
-        }
-    }
-    return -1;
-}
-    
-void SPI1_IRQHandler()
-{
-    if (SPI1->SR & SPI_SR_RXNE) {
-        uint8_t tmp;
-        tmp = SPI1->DR;
-        if (tmp != 0x7e) {
-            SPI1->DR = 0xFF;
-            return;
-        } else
-            SPI1->DR = 0xAA;
-
-        if (read_byte(&tmp)) return;
-        msg_length = tmp<<8;
-        if (read_byte(&tmp)) return;
-        msg_length |= tmp;
-        DMA2_Stream0->NDTR = msg_length;
-        SPI1->CR2 |= SPI_CR2_RXDMAEN;
-        DMA2_Stream0->CR |= DMA_SxCR_EN;
-    } else {
-        SPI1->SR = 0;
-    }
 }
 
-void process_cmd() {
-}
-
-void DMA2_Stream0_IRQHandler() {
-    if (DMA2->LISR & DMA_LISR_TCIF0) {
+void dma2_stream0_isr() {
+    if (dma_get_interrupt_flag(DMA2, 0, DMA_ISR_TCIF)) {
         // Transfer complete
-        DMA2->LIFCR |= DMA_LIFCR_CTCIF0;
-        DMA2_Stream0->CR &= ~DMA_SxCR_EN;
-        SPI1->CR2 &= ~SPI_CR2_RXDMAEN;
-        process_cmd();
+        dma_clear_interrupt_flags(DMA2, 0, DMA_ISR_TCIF);
+        dma_disable_stream(DMA2, 0);
+        spi_disable_rx_dma(SPI1);
+        //process_cmd();
     }
 }
 
