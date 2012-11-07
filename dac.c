@@ -31,13 +31,12 @@ void send_cmd_buffer() {
         pin_off(&cs);
         uint32_t tmp = cmd_buffer[i];
         for (int j=0; j<4; j++) {
-            spi_write(SPI2, 0xff & (tmp >> 24));
+            SPI2_DR = 0xff & (tmp >> 24);
             tmp <<= 8;
             while (!(SPI2_SR & SPI_SR_TXE));
         }
-        //for (int i=0; i<10; i++) unused++;
+        while (SPI2_SR & SPI_SR_BSY);
         pin_on(&cs);
-        //Delay(0.001);
     }
     ncmds = 0;
 }
@@ -66,6 +65,7 @@ void dac_spi_init()
 
     pin_off(&nldac);
     pin_off(&nclr);
+    pin_on(&cs);
 
     spi_reset(SPI2);
     spi_init_master(SPI2, SPI_CR1_BAUDRATE_FPCLK_DIV_2,
@@ -76,9 +76,9 @@ void dac_spi_init()
     spi_set_nss_high(SPI2);
     spi_enable(SPI2);
 
+    // Enable internal reference
     cmd_buffer[0] = (1<<27) | 1;
     ncmds = 1;
     send_cmd_buffer();
-    ncmds = 0;
 }
 
