@@ -40,14 +40,14 @@ void beagle_spi_init()
 
     // TX: DMA2_Stream5
     dma_stream_reset(DMA2, 5);
-    dma_channel_select(DMA2, 5, 3);
+    dma_channel_select(DMA2, 5, DMA_SCR_CHSEL_3);
     dma_set_transfer_mode(DMA2, 5, DMA_SCR_DIR_MEM2PER);
     dma_enable_memory_increment_mode(DMA2, 5);
     dma_set_peripheral_address(DMA2, 5, (uint32_t) &SPI_DR(SPI1));
 
     // RX: DMA2_Stream0
     dma_stream_reset(DMA2, 0);
-    dma_channel_select(DMA2, 0, 3);
+    dma_channel_select(DMA2, 0, DMA_SCR_CHSEL_3);
     dma_set_transfer_mode(DMA2, 0, DMA_SCR_DIR_PER2MEM);
     dma_enable_memory_increment_mode(DMA2, 0);
     dma_set_peripheral_address(DMA2, 0, (uint32_t) &SPI_DR(SPI1));
