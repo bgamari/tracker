@@ -48,7 +48,9 @@ void uart_init(int baudrate)
     dma_channel_select(DMA2, 2, DMA_SCR_CHSEL_4);
     dma_enable_transfer_error_interrupt(DMA2, 2);
     dma_enable_transfer_complete_interrupt(DMA2, 2);
+    dma_enable_fifo_error_interrupt(DMA2, 2);
     dma_enable_memory_increment_mode(DMA2, 2);
+    dma_enable_fifo_mode(DMA2, 2);
     dma_set_peripheral_address(DMA2, 2, (u32) &USART_DR(USART1));
     dma_set_memory_address(DMA2, 2, (u32) rx_buffer);
 
@@ -58,7 +60,9 @@ void uart_init(int baudrate)
     dma_channel_select(DMA2, 7, DMA_SCR_CHSEL_4);
     dma_enable_transfer_error_interrupt(DMA2, 7);
     dma_enable_transfer_complete_interrupt(DMA2, 7);
+    dma_enable_fifo_error_interrupt(DMA2, 7);
     dma_enable_memory_increment_mode(DMA2, 7);
+    dma_enable_fifo_mode(DMA2, 7);
     dma_set_peripheral_address(DMA2, 7, (u32) &USART_DR(USART1));
     dma_set_memory_address(DMA2, 7, (u32) tx_buffer);
 
@@ -121,12 +125,17 @@ static void uart_rx_done()
 
 void dma2_stream2_isr()
 {
+    if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TEIF)) {
+        dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TEIF);
+        usart_send_blocking(USART1, 0x15); // NAK
+        rx_state = RX_IDLE;
+    }
     if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TCIF)) {
         dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TCIF);
         uart_rx_done();
     }
-    if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TEIF)) {
-        dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TEIF);
+    if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_FEIF)) {
+        dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_FEIF);
     }
 }
 
@@ -138,6 +147,9 @@ void dma2_stream7_isr()
     }
     if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TEIF)) {
         dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TEIF);
+    }
+    if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_FEIF)) {
+        dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_FEIF);
     }
 }
 
