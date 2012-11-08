@@ -21,11 +21,11 @@ unsigned int rx_length;
  *
  * On receiving all N bytes, an ASCII ACK or NAK character will be returned.
  */
-volatile enum {
-    RX_IDLE,    // Waiting for Beginning-Of-Packet
-    RX_START,   // Waiting for length
-    RX_ACTIVE,  // Waiting for 
-} rx_state = RX_IDLE;
+enum rx_state_t {
+    RX_IDLE,
+    RX_ACTIVE,
+};
+volatile enum rx_state_t rx_state = RX_IDLE;
 
 void uart_init(int baudrate)
 {
@@ -145,9 +145,9 @@ void usart1_isr()
     if (usart_get_interrupt_source(USART1, USART_SR_RXNE)) {
         uint8_t d = (uint8_t) usart_recv(USART1);
         if (rx_state == RX_IDLE && d == 0x01) {
-            rx_state = RX_START;
-        } else if (rx_state == RX_START)
-            uart_start_rx(d);
+            uint8_t length = usart_recv_blocking(USART1);
+            uart_start_rx(length);
+        }
     }
     if (usart_get_interrupt_source(USART1, USART_SR_ORE)) {
         usart_recv(USART1);
