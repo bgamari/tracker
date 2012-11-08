@@ -100,8 +100,8 @@ static void uart_start_rx(unsigned int length)
     rx_length = length;
     dma_set_number_of_data(DMA2, 2, length);
     dma_enable_stream(DMA2, 2);
-    usart_enable_rx_dma(USART1);
     usart_disable_rx_interrupt(USART1);
+    usart_enable_rx_dma(USART1);
 }
 
 static void uart_rx_done()
@@ -118,12 +118,14 @@ static void uart_rx_done()
     }
 }
 
-    
 void dma2_stream2_isr()
 {
     if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TCIF)) {
         dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TCIF);
         uart_rx_done();
+    }
+    if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TEIF)) {
+        dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TEIF);
     }
 }
 
@@ -133,18 +135,21 @@ void dma2_stream7_isr()
         dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TCIF);
         uart_tx_done();
     }
+    if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TEIF)) {
+        dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TEIF);
+    }
 }
 
 void usart1_isr()
 {
-    if (usart_get_flag(USART1, USART_SR_RXNE)) {
+    if (usart_get_interrupt_source(USART1, USART_SR_RXNE)) {
         uint8_t d = (uint8_t) usart_recv(USART1);
         if (rx_state == RX_IDLE && d == 0x01) {
             rx_state = RX_START;
         } else if (rx_state == RX_START)
             uart_start_rx(d);
     }
-    if (usart_get_flag(USART1, USART_SR_ORE)) {
+    if (usart_get_interrupt_source(USART1, USART_SR_ORE)) {
         usart_recv(USART1);
     }
 }
