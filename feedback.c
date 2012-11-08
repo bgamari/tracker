@@ -48,6 +48,7 @@ static void setup_periodic_timer(uint32_t timer, unsigned int freq_in_hz)
     timer_reset(timer);
     timer_set_prescaler(timer, prescaler-1);
     timer_set_period(timer, rcc_ppre1_frequency / prescaler / freq_in_hz);
+    timer_direction_down(timer);
     timer_enable_preload(timer);
 }
 
