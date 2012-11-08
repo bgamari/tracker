@@ -37,6 +37,7 @@ void adc_init()
     nvic_enable_irq(NVIC_ADC_IRQ);
     nvic_enable_irq(NVIC_DMA2_STREAM4_IRQ);
     rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_ADC1EN);
+    rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_ADC2EN);
 
     // Initialize ADCs
     adc_power_on(ADC1);
