@@ -30,6 +30,8 @@ volatile enum {
 void uart_init(int baudrate)
 {
     rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_USART1EN);
+    rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_DMA2EN);
+
     usart_set_baudrate(USART1, baudrate);
     usart_set_mode(USART1, USART_MODE_TX_RX);
     usart_enable_rx_interrupt(USART1);
