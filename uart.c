@@ -35,6 +35,7 @@ void uart_init(int baudrate)
     usart_set_baudrate(USART1, baudrate);
     usart_set_mode(USART1, USART_MODE_TX_RX);
     usart_enable_rx_interrupt(USART1);
+    usart_enable_error_interrupt(USART1);
     usart_enable(USART1);
 
     nvic_enable_irq(NVIC_USART1_IRQ);
@@ -108,7 +109,6 @@ static void uart_rx_done()
 {
     usart_enable_rx_interrupt(USART1);
     usart_disable_rx_dma(USART1);
-    rx_state = RX_IDLE;
 
     if (rx_buffer[rx_length-1] == 0x04 && uart_frame_recvd_cb) {
         usart_send_blocking(USART1, 0x06); // ACK
@@ -116,6 +116,7 @@ static void uart_rx_done()
     } else {
         usart_send_blocking(USART1, 0x15); // NAK
     }
+    rx_state = RX_IDLE;
 }
 
 void dma2_stream2_isr()
@@ -142,15 +143,16 @@ void dma2_stream7_isr()
 
 void usart1_isr()
 {
-    if (usart_get_interrupt_source(USART1, USART_SR_RXNE)) {
+    if (usart_get_flag(USART1, USART_SR_ORE)) {
+        usart_recv(USART1);
+        return;
+    }
+    if (usart_get_flag(USART1, USART_SR_RXNE)) {
         uint8_t d = (uint8_t) usart_recv(USART1);
         if (rx_state == RX_IDLE && d == 0x01) {
             uint8_t length = usart_recv_blocking(USART1);
             uart_start_rx(length);
         }
-    }
-    if (usart_get_interrupt_source(USART1, USART_SR_ORE)) {
-        usart_recv(USART1);
     }
 }
 
