@@ -30,26 +30,26 @@ void frame_recvd(unsigned int length, uint8_t *frame)
         break;
     case CMD_RUN_SCAN:
         raster_scan(&cmd->run_scan.raster_scan);
-        uart_start_tx_from_buffer(1, "\x06");
+        uart_send_bytes(1, "\x06");
         break;
     case CMD_SET_GAINS:
         memcpy(feedback_gains, cmd->set_gains.feedback_gains, sizeof(feedback_gains));
-        uart_start_tx_from_buffer(1, "\x06");
+        uart_send_bytes(1, "\x06");
         break;
     case CMD_START_FEEDBACK:
         feedback_start();
-        uart_start_tx_from_buffer(1, "\x06");
+        uart_send_bytes(1, "\x06");
         break;
     case CMD_STOP_FEEDBACK:
         feedback_stop();
-        uart_start_tx_from_buffer(1, "\x06");
+        uart_send_bytes(1, "\x06");
         break;
     case CMD_SET_FEEDBACK_FREQ:
         feedback_set_loop_freq(cmd->set_feedback_freq.freq);
-        uart_start_tx_from_buffer(1, "\x06");
+        uart_send_bytes(1, "\x06");
         break;
     default:
-        uart_start_tx_from_buffer(1, "\x15");
+        uart_send_bytes(1, "\x15");
         return;
     }
 }

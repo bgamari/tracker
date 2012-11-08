@@ -65,7 +65,7 @@ void uart_init(int baudrate)
     USART1_SR = 0;
 }
 
-void uart_send_bytes(unsigned int length, uint8_t *buf)
+void uart_send_bytes(unsigned int length, char *buf)
 {
     for (int i=0; i<length; i++)
         usart_send_blocking(USART1, buf[i]);
