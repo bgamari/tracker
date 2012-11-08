@@ -7,6 +7,7 @@
 #include <libopencm3/stm32/f4/flash.h>
 #include <libopencm3/stm32/f4/gpio.h>
 #include <libopencm3/stm32/f4/syscfg.h>
+#include <libopencm3/stm32/f4/usart.h>
 
 #include "pin.h"
 #include "clock.h"
@@ -21,35 +22,46 @@
 
 u8 channels[] = { 0, 1, 2, 12 };
 
+void send_reply(bool ack, uint16_t length, char *data)
+{
+    usart_send_blocking(USART1, 0x06 ? ack : 0x15);
+    usart_send_blocking(USART1, length>>8);
+    usart_send_blocking(USART1, length>>0);
+    if (length > 0)
+        uart_start_tx_from_buffer(length, data);
+}
+
 void frame_recvd(unsigned int length, uint8_t *frame)
 {
     struct cmd_frame_t *cmd = (struct cmd_frame_t *) frame;
     switch (cmd->cmd) {
     case CMD_ECHO:
-        uart_start_tx_from_buffer(cmd->echo.length, (char *) cmd->echo.data);
+        send_reply(true, cmd->echo.length, (char *) cmd->echo.data);
         break;
     case CMD_RUN_SCAN:
+        usart_send_blocking(USART1, 0x06);
+        usart_send_blocking(USART1, 0); // FIXME
+        usart_send_blocking(USART1, 0);
         raster_scan(&cmd->run_scan.raster_scan);
-        uart_send_bytes(1, "\x06");
         break;
     case CMD_SET_GAINS:
         memcpy(feedback_gains, cmd->set_gains.feedback_gains, sizeof(feedback_gains));
-        uart_send_bytes(1, "\x06");
+        send_reply(true, 0, NULL);
         break;
     case CMD_START_FEEDBACK:
         feedback_start();
-        uart_send_bytes(1, "\x06");
+        send_reply(true, 0, NULL);
         break;
     case CMD_STOP_FEEDBACK:
         feedback_stop();
-        uart_send_bytes(1, "\x06");
+        send_reply(true, 0, NULL);
         break;
     case CMD_SET_FEEDBACK_FREQ:
         feedback_set_loop_freq(cmd->set_feedback_freq.freq);
-        uart_send_bytes(1, "\x06");
+        send_reply(true, 0, NULL);
         break;
     default:
-        uart_send_bytes(1, "\x15");
+        send_reply(false, 0, NULL);
         return;
     }
 }

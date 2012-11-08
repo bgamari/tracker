@@ -14,12 +14,15 @@ uint8_t rx_buffer[512] __attribute__((section (".dma_data"))) = { };
 unsigned int rx_length;
 
 /* Frame format:
- *   byte  -2:          0x01 (ASCII SOH)
- *   byte  -1:          N = length
+ *   byte  -3:          0x01 (ASCII SOH)
+ *   bytes -2           MSB of length (N)
+ *   bytes -1           LSB of length
  *   bytes 0 - (N-1):   data
  *   byte  N:           0x04 (ASCII EOT)
  *
- * On receiving all N bytes, an ASCII ACK or NAK character will be returned.
+ * On receiving all N bytes, an ASCII ACK (0x06) or NAK (0x15)
+ * character will be returned, followed by number of reply bytes of
+ * follow (uint16). Finally, the reply data with be sent.
  */
 
 enum rx_state_t {
@@ -171,7 +174,9 @@ void usart1_isr()
     if (usart_get_flag(USART1, USART_SR_RXNE)) {
         uint8_t d = (uint8_t) usart_recv(USART1);
         if (rx_state == RX_IDLE && d == 0x01) {
-            uint8_t length = usart_recv_blocking(USART1);
+            uint16_t length = 0;
+            length |= usart_recv_blocking(USART1) << 8;
+            length |= usart_recv_blocking(USART1) << 0;
             uart_start_rx(length);
         } else if (rx_state != RX_IDLE)
             usart_send_blocking(USART1, 0x15);
