@@ -88,6 +88,7 @@ void feedback_init()
 
 void feedback_start()
 {
+    if (feedback_running) return;
     adc1.buffer_full_cb = adc_buffer_full;
     adc1.overflow_cb = adc_overflow;
     adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], TRIGGER_CONTINUOUS);
@@ -98,6 +99,7 @@ void feedback_start()
 
 void feedback_stop()
 {
+    if (!feedback_running) return;
     timer_disable_counter(TIM2);
     timer_disable_counter(TIM3);
     adc_dma_stop(&adc1);
