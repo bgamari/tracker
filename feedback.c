@@ -40,30 +40,37 @@ void adc_overflow()
     //char *msg = "adc-overrun\n";
 }
 
-void set_adc_trigger_freq(unsigned int freq)
+static void setup_periodic_timer(uint32_t timer, unsigned int freq_in_hz)
 {
     unsigned int prescaler = 1;
-    while (rcc_ppre1_frequency / prescaler / freq > 0xffff)
+    while (rcc_ppre1_frequency / prescaler / freq_in_hz > 0xffff)
         prescaler *= 2;
+    timer_reset(timer);
+    timer_set_prescaler(timer, prescaler-1);
+    timer_set_period(timer, rcc_ppre1_frequency / prescaler / freq_in_hz);
+    timer_enable_preload(timer);
+}
 
-    timer_set_prescaler(TIM3, prescaler-1);
-    timer_set_period(TIM3, rcc_ppre1_frequency / prescaler / freq);
-    timer_enable_preload(TIM3);
+void feedback_set_adc_freq(unsigned int freq)
+{
+    setup_periodic_timer(TIM3, freq);
     timer_enable_oc_output(TIM3, TIM_OC1);
+}
+
+void feedback_set_loop_freq(unsigned int freq)
+{
+    setup_periodic_timer(TIM2, freq);
+    timer_enable_irq(TIM2, TIM_DIER_UIE);
 }
 
 void feedback_init()
 {
     nvic_enable_irq(NVIC_TIM2_IRQ);
-    RCC_APB1ENR |= RCC_APB1ENR_TIM2EN;
-    timer_reset(TIM2);
-    timer_enable_irq(TIM2, TIM_DIER_UIE);
-    timer_set_period(TIM2, 5000);
-    timer_enable_preload(TIM2);
+    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM2EN);
+    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM3EN);
 
-    RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
-    timer_reset(TIM3);
-    set_adc_trigger_freq(1000);
+    feedback_set_adc_freq(5000);
+    feedback_set_loop_freq(10000);
 
     // ADC123_IN0, ADC123_IN1, ADC123_IN2, ADC123_IN3
     gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0 | GPIO1 | GPIO2 | GPIO3);
