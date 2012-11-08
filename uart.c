@@ -44,7 +44,8 @@ void uart_init(int baudrate)
     // Rx DMA
     dma_stream_reset(DMA2, 2);
     dma_set_transfer_mode(DMA2, 2, DMA_SCR_DIR_PER2MEM);
-    dma_channel_select(DMA2, 2, 4);
+    dma_channel_select(DMA2, 2, DMA_SCR_CHSEL_4);
+    dma_enable_transfer_error_interrupt(DMA2, 2);
     dma_enable_transfer_complete_interrupt(DMA2, 2);
     dma_enable_memory_increment_mode(DMA2, 2);
     dma_set_peripheral_address(DMA2, 2, (u32) &USART_DR(USART1));
@@ -53,7 +54,8 @@ void uart_init(int baudrate)
     // Tx DMA
     dma_stream_reset(DMA2, 7);
     dma_set_transfer_mode(DMA2, 7, DMA_SCR_DIR_MEM2PER);
-    dma_channel_select(DMA2, 7, 4);
+    dma_channel_select(DMA2, 7, DMA_SCR_CHSEL_4);
+    dma_enable_transfer_error_interrupt(DMA2, 7);
     dma_enable_transfer_complete_interrupt(DMA2, 7);
     dma_enable_memory_increment_mode(DMA2, 7);
     dma_set_peripheral_address(DMA2, 7, (u32) &USART_DR(USART1));
@@ -66,11 +68,6 @@ void uart_send_bytes(unsigned int length, uint8_t *buf)
 {
     for (int i=0; i<length; i++)
         usart_send_blocking(USART1, buf[i]);
-}
-
-inline bool uart_tx_active()
-{
-    return DMA2_S7CR & DMA_SCR_EN;
 }
 
 void uart_start_tx_from_buffer(unsigned int length, char *buf)
