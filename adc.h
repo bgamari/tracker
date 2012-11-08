@@ -10,7 +10,7 @@ struct adc_t {
     // DMA state
     uint32_t dma;
     uint16_t dma_stream;
-    uint8_t dma_channel;
+    uint32_t dma_channel;
     bool dma_started;
     uint16_t *buffer;
     unsigned int buffer_nsamps;
