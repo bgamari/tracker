@@ -74,6 +74,8 @@ int adc_dma_start(struct adc_t *adc,
     dma_set_peripheral_address(dma, stream, (uint32_t) &ADC_DR(adc->adc));
     dma_set_memory_address(dma, stream, (uint32_t) buf);
     dma_set_number_of_data(dma, stream, nsamples * adc->nchannels);
+    dma_enable_fifo_mode(dma, stream);
+    dma_set_priority(dma, stream, DMA_SCR_PL_LOW);
 
     dma_enable_memory_increment_mode(dma, stream);
     dma_enable_circular_mode(dma, stream);
