@@ -21,11 +21,14 @@ unsigned int rx_length;
  *
  * On receiving all N bytes, an ASCII ACK or NAK character will be returned.
  */
+
 enum rx_state_t {
     RX_IDLE,
     RX_ACTIVE,
 };
 volatile enum rx_state_t rx_state = RX_IDLE;
+
+volatile bool tx_busy = false;
 
 void uart_init(int baudrate)
 {
@@ -71,18 +74,22 @@ void uart_init(int baudrate)
 
 void uart_send_bytes(unsigned int length, char *buf)
 {
+    while (tx_busy);
     for (int i=0; i<length; i++)
         usart_send_blocking(USART1, buf[i]);
 }
 
 void uart_start_tx_from_buffer(unsigned int length, char *buf)
 {
+    while (tx_busy);
     memcpy(tx_buffer, buf, length);
     uart_start_tx(length);
 }
 
 void uart_start_tx(unsigned int length)
 {
+    if (tx_busy) return;
+    tx_busy = true;
     dma_set_number_of_data(DMA2, 7, length);
     dma_enable_stream(DMA2, 7);
     USART1_SR = 0;
@@ -144,6 +151,7 @@ void dma2_stream7_isr()
     if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TCIF)) {
         dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TCIF);
         uart_tx_done();
+        tx_busy = false;
     }
     if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TEIF)) {
         dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TEIF);
@@ -157,6 +165,7 @@ void usart1_isr()
 {
     if (usart_get_flag(USART1, USART_SR_ORE)) {
         usart_recv(USART1);
+        rx_state = RX_IDLE;
         return;
     }
     if (usart_get_flag(USART1, USART_SR_RXNE)) {
@@ -164,7 +173,8 @@ void usart1_isr()
         if (rx_state == RX_IDLE && d == 0x01) {
             uint8_t length = usart_recv_blocking(USART1);
             uart_start_rx(length);
-        }
+        } else if (rx_state != RX_IDLE)
+            usart_send_blocking(USART1, 0x15);
     }
 }
 
