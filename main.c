@@ -44,6 +44,10 @@ void frame_recvd(unsigned int length, uint8_t *frame)
         feedback_stop();
         uart_start_tx_from_buffer(1, "\x06");
         break;
+    case CMD_SET_FEEDBACK_FREQ:
+        feedback_set_loop_freq(cmd->set_feedback_freq.freq);
+        uart_start_tx_from_buffer(1, "\x06");
+        break;
     default:
         uart_start_tx_from_buffer(1, "\x15");
         return;
