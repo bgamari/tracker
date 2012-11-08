@@ -65,9 +65,11 @@ void feedback_set_loop_freq(unsigned int freq)
 
 void feedback_init()
 {
-    nvic_enable_irq(NVIC_TIM2_IRQ);
     rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM2EN);
     rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM3EN);
+
+    nvic_set_priority(NVIC_TIM2_IRQ, 90);
+    nvic_enable_irq(NVIC_TIM2_IRQ);
 
     feedback_set_adc_freq(5000);
     feedback_set_loop_freq(10000);
