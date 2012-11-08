@@ -92,14 +92,21 @@ int main(void) {
     adc_config_channels(&adc1, 4, channels);
 
     dac_spi_init();
-    feedback_init();
 
+    feedback_init();
     feedback_start();
 
     // Turn all leds on and then off,
     // with a delay of 0.2s among operations.
     // This goes on indefinitely
     while (1) {
+#if 0
+        for (int i=0; i<0xffff; i+=100) {
+            struct dac_update_t updates = {broadcast, i};
+            //delay_ms(1);
+            set_dac(1, &updates);
+        }
+#endif
 #if 1
         for (int i = 0; i < NLEDS; i++) {
             pin_on(&leds[i]);
