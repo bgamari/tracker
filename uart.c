@@ -60,20 +60,10 @@ void uart_init(int baudrate)
     USART1_SR = 0;
 }
 
-inline char uart_read_byte()
-{
-    return usart_recv_blocking(USART1);
-}
-
-void uart_send_byte(char data)
-{
-    usart_send_blocking(USART1, data);
-}
-
 void uart_send_bytes(unsigned int length, uint8_t *buf)
 {
     for (int i=0; i<length; i++)
-        uart_send_byte(buf[i]);
+        usart_send_blocking(USART1, buf[i]);
 }
 
 inline bool uart_tx_active()
@@ -122,10 +112,10 @@ static void uart_rx_done()
     rx_state = RX_IDLE;
 
     if (rx_buffer[rx_length-1] == 0x04 && uart_frame_recvd_cb) {
-        uart_send_byte(0x06); // ACK
+        usart_send_blocking(USART1, 0x06); // ACK
         uart_frame_recvd_cb(rx_length, rx_buffer);
     } else {
-        uart_send_byte(0x15); // NAK
+        usart_send_blocking(USART1, 0x15); // NAK
     }
 }
 
@@ -154,6 +144,9 @@ void usart1_isr()
             rx_state = RX_START;
         } else if (rx_state == RX_START)
             uart_start_rx(d);
+    }
+    if (usart_get_flag(USART1, USART_SR_ORE)) {
+        usart_recv(USART1);
     }
 }
 
