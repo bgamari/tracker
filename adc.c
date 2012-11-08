@@ -133,7 +133,7 @@ void adc_isr() {
 
 uint16_t *adc_get_last_sample(struct adc_t *adc)
 {
-    unsigned int ndtr = dma_get_number_of_data(adc->dma, adc->dma_stream);
+    unsigned int ndtr = DMA_SNDTR(adc->dma, adc->dma_stream);
     unsigned int n = 2*adc->buffer_nsamps - ndtr / adc->nchannels - 2;
     n %= adc->buffer_nsamps;
     return &adc->buffer[n * adc->nchannels];
