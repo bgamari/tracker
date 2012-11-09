@@ -76,12 +76,12 @@ int adc_dma_start(struct adc_t *adc,
     dma_set_number_of_data(dma, stream, nsamples * adc->nchannels);
     dma_enable_fifo_mode(dma, stream);
     dma_set_priority(dma, stream, DMA_SCR_PL_LOW);
-
     dma_enable_memory_increment_mode(dma, stream);
     dma_enable_circular_mode(dma, stream);
     dma_channel_select(dma, stream, adc->dma_channel);
     dma_enable_transfer_complete_interrupt(dma, stream);
     dma_set_peripheral_size(dma, stream, DMA_SCR_PSIZE_16BIT);
+    dma_set_memory_size(dma, stream, DMA_SCR_MSIZE_16BIT);
 
     dma_clear_interrupt_flags(dma, stream, 0xffffffff);
     dma_enable_stream(dma, stream);
@@ -101,6 +101,7 @@ int adc_dma_start(struct adc_t *adc,
     adc_set_dma_continue(adc->adc);
     adc_enable_dma(adc->adc);
     adc_trigger(adc);
+    adc->dma_started = true;
     return 0;
 }
 
