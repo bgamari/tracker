@@ -30,6 +30,8 @@ unsigned int rx_length, rx_tail;
 
 enum rx_state_t {
     RX_IDLE,
+    RX_WAIT_LENGTH1,
+    RX_WAIT_LENGTH2,
     RX_ACTIVE,
     RX_DONE,
 };
@@ -185,9 +187,13 @@ void usart1_isr()
     if (usart_get_flag(USART1, USART_SR_RXNE)) {
         uint8_t d = (uint8_t) usart_recv(USART1);
         if (rx_state == RX_IDLE && d == 0x01) {
+            rx_state = RX_WAIT_LENGTH1;
+        } else if (rx_state == RX_WAIT_LENGTH1) {
+            rx_length = d << 8;
+            rx_state = RX_WAIT_LENGTH2;
+        } else if (rx_state == RX_WAIT_LENGTH2) {
             uint16_t length = 0;
-            length |= usart_recv_blocking(USART1) << 8;
-            length |= usart_recv_blocking(USART1) << 0;
+            length |= d;
             if (USE_RX_DMA) {
                 uart_start_dma_rx(length);
             } else {
