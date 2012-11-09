@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include "uart.h"
 
-const bool USE_RX_DMA = false;
-const bool USE_TX_DMA = false;
+const bool USE_RX_DMA = true;
+const bool USE_TX_DMA = true;
 
 void (*uart_frame_recvd_cb)(unsigned int length, uint8_t *frame) = NULL;
 
