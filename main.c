@@ -99,7 +99,7 @@ int main(void) {
     gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10 | GPIO11);
     gpio_set_af(GPIOB, GPIO_AF7, GPIO10 | GPIO11);
 
-    uart_init(9600);
+    uart_init(115200);
     uart_frame_recvd_cb = frame_recvd;
     beagle_spi_init();
 
