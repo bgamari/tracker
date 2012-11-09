@@ -195,7 +195,7 @@ void usart1_isr()
                 rx_length = length;
                 rx_tail = 0;
             }
-        } else if (rx_state == RX_ACTIVE) {
+        } else if (!USE_RX_DMA && rx_state == RX_ACTIVE) {
             rx_buffer[rx_tail] = d;
             rx_tail += 1;
             if (rx_tail == rx_length) {
