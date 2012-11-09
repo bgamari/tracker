@@ -71,7 +71,7 @@ void feedback_init()
     rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM2EN);
     rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM3EN);
 
-    nvic_set_priority(NVIC_TIM2_IRQ, 90);
+    nvic_set_priority(NVIC_TIM2_IRQ, 10);
     nvic_enable_irq(NVIC_TIM2_IRQ);
 
     feedback_set_adc_freq(10000);
