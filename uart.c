@@ -7,11 +7,14 @@
 #include <stdlib.h>
 #include "uart.h"
 
+const bool USE_RX_DMA = false;
+const bool USE_TX_DMA = false;
+
 void (*uart_frame_recvd_cb)(unsigned int length, uint8_t *frame) = NULL;
 
 uint8_t tx_buffer[1000] __attribute__((section (".dma_data"))) = { };
 uint8_t rx_buffer[512] __attribute__((section (".dma_data"))) = { };
-unsigned int rx_length;
+unsigned int rx_length, rx_tail;
 
 /* Frame format:
  *   byte  -3:          0x01 (ASCII SOH)
@@ -28,6 +31,7 @@ unsigned int rx_length;
 enum rx_state_t {
     RX_IDLE,
     RX_ACTIVE,
+    RX_DONE,
 };
 volatile enum rx_state_t rx_state = RX_IDLE;
 
@@ -49,47 +53,37 @@ void uart_init(int baudrate)
     nvic_enable_irq(NVIC_DMA2_STREAM7_IRQ);
 
     // Rx DMA
-    dma_stream_reset(DMA2, 2);
-    dma_set_transfer_mode(DMA2, 2, DMA_SCR_DIR_PER2MEM);
-    dma_channel_select(DMA2, 2, DMA_SCR_CHSEL_4);
-    dma_enable_transfer_error_interrupt(DMA2, 2);
-    dma_enable_transfer_complete_interrupt(DMA2, 2);
-    dma_enable_fifo_error_interrupt(DMA2, 2);
-    dma_enable_memory_increment_mode(DMA2, 2);
-    dma_enable_fifo_mode(DMA2, 2);
-    dma_set_peripheral_address(DMA2, 2, (u32) &USART_DR(USART1));
-    dma_set_memory_address(DMA2, 2, (u32) rx_buffer);
+    if (USE_RX_DMA) {
+        dma_stream_reset(DMA2, 2);
+        dma_set_transfer_mode(DMA2, 2, DMA_SCR_DIR_PER2MEM);
+        dma_channel_select(DMA2, 2, DMA_SCR_CHSEL_4);
+        dma_enable_transfer_error_interrupt(DMA2, 2);
+        dma_enable_transfer_complete_interrupt(DMA2, 2);
+        dma_enable_fifo_error_interrupt(DMA2, 2);
+        dma_enable_memory_increment_mode(DMA2, 2);
+        dma_enable_fifo_mode(DMA2, 2);
+        dma_set_peripheral_address(DMA2, 2, (u32) &USART_DR(USART1));
+        dma_set_memory_address(DMA2, 2, (u32) rx_buffer);
+    }
 
     // Tx DMA
-    dma_stream_reset(DMA2, 7);
-    dma_set_transfer_mode(DMA2, 7, DMA_SCR_DIR_MEM2PER);
-    dma_channel_select(DMA2, 7, DMA_SCR_CHSEL_4);
-    dma_enable_transfer_error_interrupt(DMA2, 7);
-    dma_enable_transfer_complete_interrupt(DMA2, 7);
-    dma_enable_fifo_error_interrupt(DMA2, 7);
-    dma_enable_memory_increment_mode(DMA2, 7);
-    dma_enable_fifo_mode(DMA2, 7);
-    dma_set_peripheral_address(DMA2, 7, (u32) &USART_DR(USART1));
-    dma_set_memory_address(DMA2, 7, (u32) tx_buffer);
+    if (USE_TX_DMA) {
+        dma_stream_reset(DMA2, 7);
+        dma_set_transfer_mode(DMA2, 7, DMA_SCR_DIR_MEM2PER);
+        dma_channel_select(DMA2, 7, DMA_SCR_CHSEL_4);
+        dma_enable_transfer_error_interrupt(DMA2, 7);
+        dma_enable_transfer_complete_interrupt(DMA2, 7);
+        dma_enable_fifo_error_interrupt(DMA2, 7);
+        dma_enable_memory_increment_mode(DMA2, 7);
+        dma_enable_fifo_mode(DMA2, 7);
+        dma_set_peripheral_address(DMA2, 7, (u32) &USART_DR(USART1));
+        dma_set_memory_address(DMA2, 7, (u32) tx_buffer);
+    }
 
     USART1_SR = 0;
 }
 
-void uart_send_bytes(unsigned int length, char *buf)
-{
-    while (tx_busy);
-    for (int i=0; i<length; i++)
-        usart_send_blocking(USART1, buf[i]);
-}
-
-void uart_start_tx_from_buffer(unsigned int length, char *buf)
-{
-    while (tx_busy);
-    memcpy(tx_buffer, buf, length);
-    uart_start_tx(length);
-}
-
-void uart_start_tx(unsigned int length)
+static void uart_start_dma_tx(unsigned int length)
 {
     if (tx_busy) return;
     tx_busy = true;
@@ -99,12 +93,24 @@ void uart_start_tx(unsigned int length)
     usart_enable_tx_dma(USART1);
 }
 
-static void uart_tx_done()
+void uart_send_bytes(unsigned int length, char *buf)
+{
+    while (tx_busy);
+    if (USE_TX_DMA && length > 10) {
+        memcpy(tx_buffer, buf, length);
+        uart_start_dma_tx(length);
+    } else {
+        for (int i=0; i<length; i++)
+            usart_send_blocking(USART1, buf[i]);
+    }
+}
+
+static void uart_dma_tx_done()
 {
     usart_disable_tx_dma(USART1);
 }
 
-static void uart_start_rx(unsigned int length)
+static void uart_start_dma_rx(unsigned int length)
 {
     if (length == 0) {
         rx_state = RX_IDLE;
@@ -121,9 +127,7 @@ static void uart_start_rx(unsigned int length)
 
 static void uart_rx_done()
 {
-    usart_enable_rx_interrupt(USART1);
-    usart_disable_rx_dma(USART1);
-
+    rx_state = RX_DONE;
     if (rx_buffer[rx_length-1] == 0x04 && uart_frame_recvd_cb) {
         usart_send_blocking(USART1, 0x06); // ACK
         uart_frame_recvd_cb(rx_length, rx_buffer);
@@ -131,6 +135,13 @@ static void uart_rx_done()
         usart_send_blocking(USART1, 0x15); // NAK
     }
     rx_state = RX_IDLE;
+}
+
+static void uart_dma_rx_done()
+{
+    usart_enable_rx_interrupt(USART1);
+    usart_disable_rx_dma(USART1);
+    uart_rx_done();
 }
 
 void dma2_stream2_isr()
@@ -142,7 +153,7 @@ void dma2_stream2_isr()
     }
     if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TCIF)) {
         dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TCIF);
-        uart_rx_done();
+        uart_dma_rx_done();
     }
     if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_FEIF)) {
         dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_FEIF);
@@ -153,7 +164,7 @@ void dma2_stream7_isr()
 {
     if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TCIF)) {
         dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TCIF);
-        uart_tx_done();
+        uart_dma_tx_done();
         tx_busy = false;
     }
     if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TEIF)) {
@@ -177,7 +188,22 @@ void usart1_isr()
             uint16_t length = 0;
             length |= usart_recv_blocking(USART1) << 8;
             length |= usart_recv_blocking(USART1) << 0;
-            uart_start_rx(length);
+            if (USE_RX_DMA) {
+                uart_start_dma_rx(length);
+            } else {
+                rx_state = RX_ACTIVE;
+                rx_length = length;
+                rx_tail = 0;
+            }
+        } else if (rx_state == RX_ACTIVE) {
+            rx_buffer[rx_tail] = d;
+            rx_tail += 1;
+            if (rx_tail == rx_length) {
+                uart_rx_done();
+            } else if (rx_tail >= sizeof(rx_buffer)) {
+                usart_send_blocking(USART1, 0x15);
+                rx_state = RX_IDLE;
+            }
         } else if (rx_state != RX_IDLE)
             usart_send_blocking(USART1, 0x15);
     }

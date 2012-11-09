@@ -28,7 +28,7 @@ void send_reply(bool ack, uint16_t length, char *data)
     usart_send_blocking(USART1, length>>8);
     usart_send_blocking(USART1, length>>0);
     if (length > 0)
-        uart_start_tx_from_buffer(length, data);
+        uart_send_bytes(length, data);
 }
 
 void frame_recvd(unsigned int length, uint8_t *frame)
@@ -99,7 +99,7 @@ int main(void) {
     gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10 | GPIO11);
     gpio_set_af(GPIOB, GPIO_AF7, GPIO10 | GPIO11);
 
-    uart_init(115200);
+    uart_init(9600);
     uart_frame_recvd_cb = frame_recvd;
     beagle_spi_init();
 
