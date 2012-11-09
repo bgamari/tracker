@@ -58,12 +58,16 @@ void feedback_set_adc_freq(unsigned int freq)
     timer_set_oc_mode(TIM3, TIM_OC1, TIM_OCM_TOGGLE);
     timer_set_oc_value(TIM3, TIM_OC1, TIM3_ARR);
     timer_enable_oc_output(TIM3, TIM_OC1);
+    if (feedback_running)
+        timer_enable_counter(TIM3);
 }
 
 void feedback_set_loop_freq(unsigned int freq)
 {
     setup_periodic_timer(TIM2, freq);
     timer_enable_irq(TIM2, TIM_DIER_UIE);
+    if (feedback_running)
+        timer_enable_counter(TIM2);
 }
 
 void feedback_init()
