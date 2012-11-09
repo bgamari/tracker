@@ -78,10 +78,12 @@ int adc_dma_start(struct adc_t *adc,
     dma_enable_memory_increment_mode(dma, stream);
     dma_enable_circular_mode(dma, stream);
     dma_channel_select(dma, stream, adc->dma_channel);
-    dma_enable_transfer_complete_interrupt(dma, stream);
     dma_set_peripheral_size(dma, stream, DMA_SCR_PSIZE_16BIT);
     dma_set_memory_size(dma, stream, DMA_SCR_MSIZE_16BIT);
 
+    dma_enable_fifo_error_interrupt(dma, stream);
+    dma_enable_transfer_error_interrupt(dma, stream);
+    dma_enable_transfer_complete_interrupt(dma, stream);
     dma_clear_interrupt_flags(dma, stream, 0xffffffff);
     dma_enable_stream(dma, stream);
 
@@ -121,7 +123,11 @@ void dma2_stream4_isr() {
         if (adc1.buffer_full_cb)
             adc1.buffer_full_cb();
     }
-    if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_TEIF)) { // error
+    if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_TEIF)) { // Transfer error
+        dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TEIF);
+        adc1.dma_started = false;
+    }
+    if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_FEIF)) { // FIFO error
         dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TEIF);
         adc1.dma_started = false;
     }
