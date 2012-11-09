@@ -57,7 +57,11 @@ void frame_recvd(unsigned int length, uint8_t *frame)
         send_reply(true, 0, NULL);
         break;
     case CMD_SET_FEEDBACK_FREQ:
-        feedback_set_loop_freq(cmd->set_feedback_freq.freq);
+        feedback_set_loop_freq(cmd->set_feedback_freq);
+        send_reply(true, 0, NULL);
+        break;
+    case CMD_SET_ADC_FREQ:
+        feedback_set_adc_freq(cmd->set_adc_freq);
         send_reply(true, 0, NULL);
         break;
     default:
