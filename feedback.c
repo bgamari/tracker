@@ -10,7 +10,7 @@
 #include "dac.h"
 #include "clock.h"
 
-#define BUFFER_DEPTH 1000
+#define BUFFER_DEPTH 1024
 
 static uint16_t sample_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { };
 

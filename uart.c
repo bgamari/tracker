@@ -12,7 +12,7 @@ const bool USE_TX_DMA = false;
 
 void (*uart_frame_recvd_cb)(unsigned int length, uint8_t *frame) = NULL;
 
-uint8_t tx_buffer[1000] __attribute__((section (".dma_data"))) = { };
+uint8_t tx_buffer[1024] __attribute__((section (".dma_data"))) = { };
 uint8_t rx_buffer[512] __attribute__((section (".dma_data"))) = { };
 unsigned int rx_length, rx_tail;
 
