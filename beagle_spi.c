@@ -32,6 +32,7 @@ void beagle_spi_init()
     nvic_enable_irq(NVIC_SPI1_IRQ);
     spi_reset(SPI1);
     spi_enable_rx_buffer_not_empty_interrupt(SPI1);
+    spi_set_slave_mode(SPI1);
     spi_enable(SPI1);
 
     // Setup DMA:
@@ -56,6 +57,7 @@ void beagle_spi_init()
 
 void spi1_isr()
 {
+    spi_read(SPI1);
 }
 
 void dma2_stream0_isr() {
