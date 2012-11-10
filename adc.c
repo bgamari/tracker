@@ -119,6 +119,7 @@ void adc_trigger(struct adc_t *adc)
 void adc_dma_stop(struct adc_t *adc)
 {
     adc_set_single_conversion_mode(adc->adc);
+    dma_disable_stream(adc->dma, adc->dma_stream);
     adc->dma_started = false;
 }
 
