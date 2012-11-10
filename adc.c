@@ -126,7 +126,7 @@ void dma2_stream4_isr() {
     if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_TCIF)) {
         dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TCIF);
         if (adc1.buffer_full_cb)
-            adc1.buffer_full_cb();
+            adc1.buffer_full_cb(&adc1);
     }
     if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_TEIF)) { // Transfer error
         dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TEIF);
@@ -142,7 +142,7 @@ void adc_isr() {
     if (adc_get_overrun_flag(ADC1)) {
         adc_clear_overrun_flag(ADC1);
         if (adc1.overflow_cb)
-            adc1.overflow_cb();
+            adc1.overflow_cb(&adc1);
     }
 }
 

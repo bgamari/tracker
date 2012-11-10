@@ -17,8 +17,8 @@ struct adc_t {
     unsigned int nchannels;
 
     // Callbacks
-    void (*overflow_cb)();
-    void (*buffer_full_cb)();
+    void (*overflow_cb)(struct adc_t *adc);
+    void (*buffer_full_cb)(struct adc_t *adc);
 };
 
 extern struct adc_t adc1, adc2;
