@@ -230,6 +230,11 @@ void adc_isr() {
         if (adc1.overflow_cb)
             adc1.overflow_cb(&adc1);
     }
+    if (adc_get_overrun_flag(ADC2)) {
+        adc_clear_overrun_flag(ADC2);
+        if (adc2.overflow_cb)
+            adc2.overflow_cb(&adc2);
+    }
 }
 
 uint16_t *adc_get_active_buffer(struct adc_t *adc)
