@@ -38,6 +38,9 @@ void frame_recvd(unsigned int length, uint8_t *frame)
     case CMD_ECHO:
         send_reply(true, cmd->echo.length, (char *) cmd->echo.data);
         break;
+    case CMD_SPI_ECHO:
+        beagle_spi_dma_tx(cmd->echo.length, (char *) cmd->echo.data);
+        break;
     case CMD_RUN_SCAN:
         usart_send_blocking(USART1, 0x06);
         usart_send_blocking(USART1, 0); // FIXME

@@ -18,6 +18,7 @@ struct run_scan_cmd_t {
 
 enum cmd_t {
     CMD_ECHO = 0,
+    CMD_SPI_ECHO,
     CMD_RUN_SCAN,
     CMD_SET_GAINS,
     CMD_START_FEEDBACK,
@@ -30,6 +31,7 @@ struct cmd_frame_t {
     uint8_t cmd;
     union {
         struct echo_cmd_t echo;
+        struct echo_cmd_t spi_echo;
         struct set_gains_cmd_t set_gains;
         struct run_scan_cmd_t run_scan;
         uint32_t set_feedback_freq;
