@@ -64,7 +64,7 @@ void frame_recvd(unsigned int length, uint8_t *frame)
         send_reply(true, 0, NULL);
         break;
     case CMD_SET_ADC_FREQ:
-        feedback_set_adc_freq(cmd->set_adc_freq);
+        adc_set_trigger_freq(&adc1, cmd->set_adc_freq);
         send_reply(true, 0, NULL);
         break;
     default:
@@ -113,6 +113,8 @@ int main(void) {
     adc_init();
     adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_55DOT5CYC);
     adc_config_channels(&adc1, 4, channels);
+    adc_set_trigger_freq(&adc1, 20000);
+    adc_trigger_start(&adc1);
 
     dac_spi_init();
 

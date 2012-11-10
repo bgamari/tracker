@@ -54,16 +54,6 @@ static void setup_periodic_timer(uint32_t timer, unsigned int freq_in_hz)
     timer_enable_preload(timer);
 }
 
-void feedback_set_adc_freq(unsigned int freq)
-{
-    setup_periodic_timer(TIM3, freq);
-    timer_set_oc_mode(TIM3, TIM_OC1, TIM_OCM_TOGGLE);
-    timer_set_oc_value(TIM3, TIM_OC1, TIM3_ARR);
-    timer_enable_oc_output(TIM3, TIM_OC1);
-    if (feedback_running)
-        timer_enable_counter(TIM3);
-}
-
 void feedback_set_loop_freq(unsigned int freq)
 {
     setup_periodic_timer(TIM2, freq);
@@ -74,13 +64,9 @@ void feedback_set_loop_freq(unsigned int freq)
 
 void feedback_init()
 {
-    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM2EN);
-    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM3EN);
-
     nvic_set_priority(NVIC_TIM2_IRQ, 10);
     nvic_enable_irq(NVIC_TIM2_IRQ);
 
-    feedback_set_adc_freq(10000);
     feedback_set_loop_freq(10000);
 
     // ADC123_IN0, ADC123_IN1, ADC123_IN2, ADC123_IN3
@@ -100,7 +86,7 @@ void feedback_start()
     if (feedback_running) return;
     adc1.buffer_full_cb = adc_buffer_full;
     adc1.overflow_cb = adc_overflow;
-    adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], NULL, TRIGGER_TIM3_CC1);
+    adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], NULL);
     timer_enable_counter(TIM2);
     timer_enable_counter(TIM3);
     feedback_running = true;

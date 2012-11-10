@@ -1,4 +1,5 @@
 #include <libopencm3/stm32/f4/nvic.h>
+#include <libopencm3/stm32/f4/timer.h>
 #include <libopencm3/stm32/f4/adc.h>
 #include <libopencm3/stm32/f4/dma.h>
 #include <libopencm3/stm32/f4/rcc.h>
@@ -17,6 +18,7 @@ struct adc_t adc1 = {
     .buffer_nsamps = 0,
     .overflow_cb = NULL,
     .buffer_full_cb = NULL,
+    .trigger_src = ADC_TRIGGER_TIM3_CC1,
 };
 
 struct adc_t adc2 = {
@@ -39,6 +41,10 @@ void adc_init()
     rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_ADC1EN);
     rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_ADC2EN);
 
+    // Initialize timers for triggering
+    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM2EN);
+    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM3EN);
+
     // Initialize ADCs
     adc_power_on(ADC1);
     adc_enable_scan_mode(ADC1);
@@ -55,10 +61,102 @@ void adc_config_channels(struct adc_t *adc, unsigned int nchans, u8 *channels)
     adc->nchannels = nchans;
 }
 
+static void setup_periodic_timer(uint32_t timer, unsigned int freq_in_hz)
+{
+    unsigned int prescaler = 1;
+    while (rcc_ppre1_frequency / prescaler / freq_in_hz > 0xffff)
+        prescaler *= 2;
+    timer_reset(timer);
+    timer_set_prescaler(timer, prescaler-1);
+    timer_set_period(timer, rcc_ppre1_frequency / prescaler / freq_in_hz);
+    timer_direction_down(timer);
+    timer_enable_preload(timer);
+}
+
+static uint32_t get_trigger_src_timer(enum adc_trigger_src_t src) {
+    switch ((src >> 4) & 0xf) {
+    case 1: return TIM1;
+    case 2: return TIM2;
+    case 3: return TIM3;
+    case 4: return TIM4;
+    case 5: return TIM5;
+    case 8: return TIM8;
+    default: return 0;
+    }
+}
+
+static uint32_t get_trigger_src_cc(enum adc_trigger_src_t src) {
+    switch (src & 0xf) {
+    case 1: return TIM_OC1;
+    case 2: return TIM_OC2;
+    case 3: return TIM_OC3;
+    case 4: return TIM_OC4;
+    default: return 0xffffffff;
+    }
+}
+
+static void adc_setup_trigger(struct adc_t *adc)
+{
+    uint32_t tmp;
+    switch (adc->trigger_src) {
+    case ADC_TRIGGER_MANUAL: return;
+    case ADC_TRIGGER_CONTINUOUS:
+        adc_set_continuous_conversion_mode(adc->adc);
+        return;
+    case ADC_TRIGGER_TIM1_CC1: tmp = ADC_CR2_EXTSEL_TIM1_CC1; break;
+    case ADC_TRIGGER_TIM1_CC2: tmp = ADC_CR2_EXTSEL_TIM1_CC2; break;
+    case ADC_TRIGGER_TIM1_CC3: tmp = ADC_CR2_EXTSEL_TIM1_CC3; break;
+    case ADC_TRIGGER_TIM2_CC2: tmp = ADC_CR2_EXTSEL_TIM2_CC2; break;
+    case ADC_TRIGGER_TIM2_CC3: tmp = ADC_CR2_EXTSEL_TIM2_CC3; break;
+    case ADC_TRIGGER_TIM2_CC4: tmp = ADC_CR2_EXTSEL_TIM2_CC4; break;
+    case ADC_TRIGGER_TIM3_CC1: tmp = ADC_CR2_EXTSEL_TIM3_CC1; break;
+    case ADC_TRIGGER_TIM4_CC4: tmp = ADC_CR2_EXTSEL_TIM4_CC4; break;
+    case ADC_TRIGGER_TIM5_CC1: tmp = ADC_CR2_EXTSEL_TIM5_CC1; break;
+    case ADC_TRIGGER_TIM5_CC2: tmp = ADC_CR2_EXTSEL_TIM5_CC2; break;
+    case ADC_TRIGGER_TIM5_CC3: tmp = ADC_CR2_EXTSEL_TIM5_CC3; break;
+    case ADC_TRIGGER_TIM8_CC1: tmp = ADC_CR2_EXTSEL_TIM8_CC1; break;
+    default: return;
+    }
+    adc_enable_external_trigger_regular(adc->adc, tmp, ADC_CR2_EXTEN_RISING_EDGE);
+}
+
+int adc_set_trigger_freq(struct adc_t *adc, uint32_t freq)
+{
+    uint32_t timer = get_trigger_src_timer(adc->trigger_src);
+    uint32_t cc = get_trigger_src_cc(adc->trigger_src);
+    if (timer == 0 || cc == 0xffffffff) return 1;
+        
+    setup_periodic_timer(timer, freq);
+    timer_set_oc_mode(timer, cc, TIM_OCM_TOGGLE);
+    timer_set_oc_value(timer, cc, TIM_ARR(timer));
+    timer_enable_oc_output(timer, cc);
+    return 0;
+}
+
+int adc_trigger_start(struct adc_t *adc)
+{
+    uint32_t timer = get_trigger_src_timer(adc->trigger_src);
+    if (timer == 0) return 1;
+    timer_enable_counter(timer);
+    return 0;
+}
+
+int adc_trigger_stop(struct adc_t *adc)
+{
+    uint32_t timer = get_trigger_src_timer(adc->trigger_src);
+    if (timer == 0) return 1;
+    timer_disable_counter(timer);
+    return 0;
+}
+
+void adc_manual_trigger(struct adc_t *adc)
+{
+    adc_start_conversion_regular(adc->adc);
+}
+
 /* Note: buffer can't reside in core-coupled memory */
 int adc_dma_start(struct adc_t *adc,
-                  unsigned int nsamples, uint16_t *buf, uint16_t *buf2,
-                  enum adc_trigger_t trigger)
+                  unsigned int nsamples, uint16_t *buf, uint16_t *buf2)
 {
     if (adc->dma_started)
         return -1;
@@ -68,6 +166,8 @@ int adc_dma_start(struct adc_t *adc,
     adc->buffer = buf;
     adc->buffer2 = buf2;
     adc->buffer_nsamps = nsamples;
+
+    adc_setup_trigger(adc);
 
     u32 dma = adc->dma;
     u32 stream = adc->dma_stream;
@@ -92,28 +192,10 @@ int adc_dma_start(struct adc_t *adc,
     dma_clear_interrupt_flags(dma, stream, 0xffffffff);
     dma_enable_stream(dma, stream);
 
-    if (trigger == TRIGGER_CONTINUOUS)
-        adc_set_continuous_conversion_mode(adc->adc);
-    else if (trigger == TRIGGER_TIM3_CC1) {
-        adc_enable_external_trigger_regular(adc->adc,
-                                            ADC_CR2_EXTSEL_TIM3_CC1,
-                                            ADC_CR2_EXTEN_RISING_EDGE);
-    } else if (trigger == TRIGGER_TIM4_CC4) {
-        adc_enable_external_trigger_regular(adc->adc,
-                                            ADC_CR2_EXTSEL_TIM4_CC4,
-                                            ADC_CR2_EXTEN_RISING_EDGE);
-    }
-      
     adc_set_dma_continue(adc->adc);
     adc_enable_dma(adc->adc);
-    adc_trigger(adc);
     adc->dma_started = true;
     return 0;
-}
-
-void adc_trigger(struct adc_t *adc)
-{
-    adc_start_conversion_regular(adc->adc);
 }
 
 void adc_dma_stop(struct adc_t *adc)
