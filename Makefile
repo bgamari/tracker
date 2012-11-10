@@ -29,4 +29,4 @@ tracker.bin : tracker.elf
 
 .PHONY : clean
 clean :
-	rm ${OBJECTS} tracker.elf tracker.bin
+	rm -f ${OBJECTS} tracker.elf tracker.bin
