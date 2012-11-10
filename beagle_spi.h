@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 void beagle_spi_init();
 
 typedef void (*completion_t)(void *user);
