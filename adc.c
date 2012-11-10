@@ -125,11 +125,14 @@ int adc_set_trigger_freq(struct adc_t *adc, uint32_t freq)
     uint32_t timer = get_trigger_src_timer(adc->trigger_src);
     uint32_t cc = get_trigger_src_cc(adc->trigger_src);
     if (timer == 0 || cc == 0xffffffff) return 1;
+    bool running = TIM_CR1(timer) & TIM_CR1_CEN;
         
     setup_periodic_timer(timer, freq);
     timer_set_oc_mode(timer, cc, TIM_OCM_TOGGLE);
     timer_set_oc_value(timer, cc, TIM_ARR(timer));
     timer_enable_oc_output(timer, cc);
+    if (running)
+        timer_enable_counter(timer);
     return 0;
 }
 
