@@ -57,7 +57,7 @@ void adc_config_channels(struct adc_t *adc, unsigned int nchans, u8 *channels)
 
 /* Note: buffer can't reside in core-coupled memory */
 int adc_dma_start(struct adc_t *adc,
-                  unsigned int nsamples, uint16_t *buf,
+                  unsigned int nsamples, uint16_t *buf, uint16_t *buf2,
                   enum adc_trigger_t trigger)
 {
     if (adc->dma_started)
@@ -66,6 +66,7 @@ int adc_dma_start(struct adc_t *adc,
         return -2;
 
     adc->buffer = buf;
+    adc->buffer2 = buf2;
     adc->buffer_nsamps = nsamples;
 
     u32 dma = adc->dma;
@@ -73,6 +74,10 @@ int adc_dma_start(struct adc_t *adc,
     dma_stream_reset(dma, stream);
     dma_set_peripheral_address(dma, stream, (uint32_t) &ADC_DR(adc->adc));
     dma_set_memory_address(dma, stream, (uint32_t) buf);
+    if (buf2) {
+        dma_set_memory_address_1(dma, stream, (uint32_t) buf2);
+        dma_enable_double_buffer_mode(dma, stream);
+    }
     dma_set_number_of_data(dma, stream, nsamples * adc->nchannels);
     dma_enable_fifo_mode(dma, stream);
     dma_enable_memory_increment_mode(dma, stream);
@@ -141,11 +146,32 @@ void adc_isr() {
     }
 }
 
+uint16_t *adc_get_active_buffer(struct adc_t *adc)
+{
+    if (adc->buffer2 == NULL)
+        return adc->buffer;
+    if (dma_get_target(adc->dma, adc->dma_stream))
+        return adc->buffer2;
+    else
+        return adc->buffer;
+}
+
+uint16_t *adc_get_idle_buffer(struct adc_t *adc)
+{
+    if (adc->buffer2 == NULL)
+        return NULL;
+    if (dma_get_target(adc->dma, adc->dma_stream))
+        return adc->buffer;
+    else
+        return adc->buffer2;
+}
+
 uint16_t *adc_get_last_sample(struct adc_t *adc)
 {
+    uint16_t *buffer = adc_get_active_buffer(adc);
     unsigned int ndtr = DMA_SNDTR(adc->dma, adc->dma_stream);
     unsigned int n = 2*adc->buffer_nsamps - ndtr / adc->nchannels - 2;
     n %= adc->buffer_nsamps;
-    return &adc->buffer[n * adc->nchannels];
+    return &buffer[n * adc->nchannels];
 }
 

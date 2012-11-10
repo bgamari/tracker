@@ -2,7 +2,9 @@
 #include <libopencm3/stm32/f4/timer.h>
 #include <libopencm3/stm32/f4/gpio.h>
 #include <libopencm3/stm32/f4/rcc.h>
+
 #include <stdbool.h>
+#include <unistd.h>
 
 #include "tracker.h"
 #include "feedback.h"
@@ -98,7 +100,7 @@ void feedback_start()
     if (feedback_running) return;
     adc1.buffer_full_cb = adc_buffer_full;
     adc1.overflow_cb = adc_overflow;
-    adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], TRIGGER_TIM3_CC1);
+    adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], NULL, TRIGGER_TIM3_CC1);
     timer_enable_counter(TIM2);
     timer_enable_counter(TIM3);
     feedback_running = true;

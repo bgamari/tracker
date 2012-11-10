@@ -12,7 +12,7 @@ struct adc_t {
     uint16_t dma_stream;
     uint32_t dma_channel;
     bool dma_started;
-    uint16_t *buffer;
+    uint16_t *buffer, *buffer2;
     unsigned int buffer_nsamps;
     unsigned int nchannels;
 
@@ -37,7 +37,7 @@ enum adc_trigger_t {
 };
 
 int adc_dma_start(struct adc_t *adc,
-                  unsigned int nsamples, uint16_t *buf,
+                  unsigned int nsamples, uint16_t *buf, uint16_t *buf2,
                   enum adc_trigger_t trigger);
 
 void adc_trigger(struct adc_t *adc);
@@ -46,3 +46,5 @@ void adc_dma_stop(struct adc_t *adc);
 
 uint16_t *adc_get_last_sample();
 
+uint16_t *adc_get_active_buffer(struct adc_t *adc);
+uint16_t *adc_get_idle_buffer(struct adc_t *adc);
