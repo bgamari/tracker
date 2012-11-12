@@ -80,9 +80,9 @@ void frame_recvd(unsigned int length, uint8_t *frame)
 
 #define NLEDS 3
 struct pin_t leds[NLEDS] = {
-  { .port = GPIOC, .pin = GPIO15 },
-  { .port = GPIOC, .pin = GPIO0 },
-  { .port = GPIOC, .pin = GPIO1 },
+  { port : GPIOC, pin : GPIO15 },
+  { port : GPIOC, pin : GPIO0 },
+  { port : GPIOC, pin : GPIO1 },
 };
 
 /* This example turns all 4 leds on and then off */

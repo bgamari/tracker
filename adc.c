@@ -7,35 +7,41 @@
 #include <stdbool.h>
 #include "adc.h"
 
-struct adc_t adc1 = {
-    .adc = ADC1,
-    .dma = DMA2,
-    .dma_stream = DMA_STREAM4,
-    .dma_channel = DMA_SCR_CHSEL_0,
-    .dma_started = false,
-    .nchannels = 0,
-    .buffer = NULL,
-    .buffer_nsamps = 0,
-    .overflow_cb = NULL,
-    .buffer_full_cb = NULL,
-    .trigger_src = ADC_TRIGGER_TIM3_CC1,
+struct adc_t adc1, adc2;
+
+void init_adc1() {
+    adc1.adc = ADC1;
+    adc1.dma = DMA2;
+    adc1.dma_stream = DMA_STREAM4;
+    adc1.dma_channel = DMA_SCR_CHSEL_0;
+    adc1.dma_started = false;
+    adc1.nchannels = 0;
+    adc1.buffer = NULL;
+    adc1.buffer_nsamps = 0;
+    adc1.overflow_cb = NULL;
+    adc1.buffer_full_cb = NULL;
+    adc1.trigger_src = ADC_TRIGGER_TIM3_CC1;
 };
 
-struct adc_t adc2 = {
-    .adc = ADC2,
-    .dma = DMA2,
-    .dma_stream = DMA_STREAM3,
-    .dma_channel = DMA_SCR_CHSEL_1,
-    .dma_started = false,
-    .nchannels = 0,
-    .buffer = NULL,
-    .buffer_nsamps = 0,
-    .overflow_cb = NULL,
-    .buffer_full_cb = NULL,
+void init_adc2() {
+    adc2.adc = ADC2;
+    adc2.dma = DMA2;
+    adc2.dma_stream = DMA_STREAM3;
+    adc2.dma_channel = DMA_SCR_CHSEL_1;
+    adc2.dma_started = false;
+    adc2.nchannels = 0;
+    adc2.buffer = NULL;
+    adc2.buffer_nsamps = 0;
+    adc2.overflow_cb = NULL;
+    adc2.buffer_full_cb = NULL;
+    adc2.trigger_src = ADC_TRIGGER_TIM4_CC4;
 };
 
 void adc_init()
 {
+    init_adc1();
+    init_adc2();
+
     nvic_enable_irq(NVIC_ADC_IRQ);
     nvic_enable_irq(NVIC_DMA2_STREAM4_IRQ);
     rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_ADC1EN);
@@ -123,7 +129,7 @@ static void adc_setup_trigger(struct adc_t *adc)
 int adc_set_trigger_freq(struct adc_t *adc, uint32_t freq)
 {
     uint32_t timer = get_trigger_src_timer(adc->trigger_src);
-    uint32_t cc = get_trigger_src_cc(adc->trigger_src);
+    tim_oc_id cc = (tim_oc_id) get_trigger_src_cc(adc->trigger_src);
     if (timer == 0 || cc == 0xffffffff) return 1;
     bool running = TIM_CR1(timer) & TIM_CR1_CEN;
         

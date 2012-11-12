@@ -12,9 +12,9 @@ static unsigned int ncmds;
 // Use DMA2_Stream3 for tx
 // Use I2S
 
-static struct pin_t cs    = { .port = GPIOB, .pin = GPIO12 };
-static struct pin_t nldac = { .port = GPIOB, .pin = GPIO14 };
-static struct pin_t nclr  = { .port = GPIOC, .pin = GPIO6 };
+static struct pin_t cs    = { port : GPIOB, pin : GPIO12 };
+static struct pin_t nldac = { port : GPIOB, pin : GPIO14 };
+static struct pin_t nclr  = { port : GPIOC, pin : GPIO6 };
 
 void fill_cmd_buffer(unsigned int n, struct dac_update_t *updates)
 {
@@ -27,7 +27,7 @@ void fill_cmd_buffer(unsigned int n, struct dac_update_t *updates)
 }
 
 void send_cmd_buffer() {
-    for (int i=0; i<ncmds; i++) {
+    for (unsigned int i=0; i<ncmds; i++) {
         pin_off(&cs);
         uint32_t tmp = cmd_buffer[i];
         for (int j=0; j<4; j++) {

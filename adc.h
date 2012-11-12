@@ -57,7 +57,7 @@ int adc_dma_start(struct adc_t *adc,
 void adc_dma_stop(struct adc_t *adc);
 
 // Accessing sample buffers
-uint16_t *adc_get_last_sample();
+uint16_t *adc_get_last_sample(struct adc_t *adc);
 
 uint16_t *adc_get_active_buffer(struct adc_t *adc);
 uint16_t *adc_get_idle_buffer(struct adc_t *adc);

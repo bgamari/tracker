@@ -32,13 +32,13 @@ struct dac_update_t updates[] = {
     { channel_c, 0x4400 },
 };
 
-void adc_buffer_full()
+void adc_buffer_full(struct adc_t *adc)
 {
     //unsigned int length = msTicks - buffer_start_time;
     buffer_start_time = msTicks;
 }
 
-void adc_overflow()
+void adc_overflow(struct adc_t *adc)
 {
     //char *msg = "adc-overrun\n";
 }

@@ -102,7 +102,7 @@ void uart_send_bytes(unsigned int length, char *buf)
         memcpy(tx_buffer, buf, length);
         uart_start_dma_tx(length);
     } else {
-        for (int i=0; i<length; i++)
+        for (unsigned int i=0; i<length; i++)
             usart_send_blocking(USART1, buf[i]);
     }
 }

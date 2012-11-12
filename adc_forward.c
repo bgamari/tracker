@@ -7,7 +7,7 @@ static uint16_t buf2[1024][4] __attribute__((section (".dma_data"))) = { };
 void adcfwd_buffer_full(struct adc_t *adc)
 {
     uint16_t *buf = adc_get_idle_buffer(adc);
-    beagle_spi_dma_tx(1024*4*2, (void*) buf);
+    beagle_spi_dma_tx(1024*4*2, (char *) buf);
 }
 
 void adcfwd_start(struct adc_t *adc)

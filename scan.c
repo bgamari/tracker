@@ -43,12 +43,12 @@ void raster_scan(struct raster_scan_t *scan)
 void tim4_isr()
 {
     timer_clear_flag(TIM4, 0xffffffff);
-    if (idx_y == cur_scan.size_y) {
+    if (idx_y == (int) cur_scan.size_y) {
         timer_disable_counter(TIM4);
         event_fire(&scan_done);
     }
 
-    if (idx_x == dir * cur_scan.size_x / 2) {
+    if (idx_x == dir * (int) cur_scan.size_x / 2) {
         dir *= -1;
         idx_y++;
     }
