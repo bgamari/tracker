@@ -14,7 +14,8 @@
 
 #define BUFFER_DEPTH 1024
 
-static uint16_t sample_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { };
+static uint16_t psd_buffer[BUFFER_DEPTH][PSD_INPUTS] __attribute__((section (".dma_data"))) = { };
+static uint16_t stage_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { };
 
 static volatile unsigned int buffer_start_time = 0;
 
@@ -84,9 +85,14 @@ void feedback_init()
 void feedback_start()
 {
     if (feedback_running) return;
-    adc1.buffer_full_cb = adc_buffer_full;
-    adc1.overflow_cb = adc_overflow;
-    adc_dma_start(&adc1, BUFFER_DEPTH, &sample_buffer[0][0], NULL);
+    psd_adc->buffer_full_cb = adc_buffer_full;
+    psd_adc->overflow_cb = adc_overflow;
+    adc_dma_start(psd_adc, BUFFER_DEPTH, &psd_buffer[0][0], NULL);
+
+    stage_adc->buffer_full_cb = adc_buffer_full;
+    stage_adc->overflow_cb = adc_overflow;
+    adc_dma_start(stage_adc, BUFFER_DEPTH, &stage_buffer[0][0], NULL);
+
     timer_enable_counter(TIM2);
     timer_enable_counter(TIM3);
     feedback_running = true;
