@@ -19,6 +19,7 @@
 #include "scan.h"
 #include "feedback.h"
 #include "commands.h"
+#include "adc_forward.h"
 
 u8 psd_channels[PSD_INPUTS] = { 0, 1, 2, 12 };
 u8 stage_channels[STAGE_INPUTS] = { 0, 1, 2 }; // TODO
@@ -129,7 +130,8 @@ int main(void) {
     dac_init();
 
     feedback_init();
-    feedback_start();
+    adcfwd_start(&adc1);
+    //feedback_start();
 
     // Turn all leds on and then off,
     // with a delay of 0.2s among operations.
