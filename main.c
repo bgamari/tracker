@@ -20,7 +20,11 @@
 #include "feedback.h"
 #include "commands.h"
 
-u8 channels[] = { 0, 1, 2, 12 };
+u8 psd_channels[PSD_INPUTS] = { 0, 1, 2, 12 };
+u8 stage_channels[STAGE_INPUTS] = { 0, 1, 2 }; // TODO
+
+struct adc_t *psd_adc = &adc1;
+struct adc_t *stage_adc = &adc2;
 
 void send_reply(bool ack, uint16_t length, char *data)
 {
@@ -112,9 +116,15 @@ int main(void) {
 
     adc_init();
     adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_55DOT5CYC);
-    adc_config_channels(&adc1, 4, channels);
-    adc_set_trigger_freq(&adc1, 20000);
-    adc_trigger_start(&adc1);
+    adc_set_sample_time_on_all_channels(ADC2, ADC_SMPR_SMP_55DOT5CYC);
+
+    adc_config_channels(psd_adc, 4, psd_channels);
+    adc_set_trigger_freq(psd_adc, 20000);
+    adc_trigger_start(psd_adc);
+
+    adc_config_channels(stage_adc, 3, stage_channels);
+    adc_set_trigger_freq(stage_adc, 20000);
+    adc_trigger_start(stage_adc);
 
     dac_init();
 
