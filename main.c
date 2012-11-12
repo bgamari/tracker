@@ -116,7 +116,7 @@ int main(void) {
     adc_set_trigger_freq(&adc1, 20000);
     adc_trigger_start(&adc1);
 
-    dac_spi_init();
+    dac_init();
 
     feedback_init();
     feedback_start();

@@ -11,6 +11,6 @@ struct dac_update_t {
     uint16_t value;
 };
 
-void dac_spi_init();
+void dac_init();
 void set_dac(unsigned int n, struct dac_update_t *updates);
 

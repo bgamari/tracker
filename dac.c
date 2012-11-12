@@ -52,7 +52,7 @@ void set_dac(unsigned int n, struct dac_update_t *updates)
     send_cmd_buffer();
 }
 
-void dac_spi_init()
+void dac_init()
 {
     ncmds = 0;
 
