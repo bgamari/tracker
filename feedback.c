@@ -12,6 +12,7 @@
 #include "feedback.h"
 #include "adc.h"
 #include "dac.h"
+#include "timer.h"
 #include "clock.h"
 
 #define BUFFER_DEPTH 1024
@@ -50,18 +51,6 @@ void adc_buffer_full(struct adc_t *adc)
 void adc_overflow(struct adc_t *adc)
 {
     //char *msg = "adc-overrun\n";
-}
-
-static void setup_periodic_timer(uint32_t timer, unsigned int freq_in_hz)
-{
-    unsigned int prescaler = 1;
-    while (rcc_ppre1_frequency / prescaler / freq_in_hz > 0xffff)
-        prescaler *= 2;
-    timer_reset(timer);
-    timer_set_prescaler(timer, prescaler-1);
-    timer_set_period(timer, rcc_ppre1_frequency / prescaler / freq_in_hz);
-    timer_direction_down(timer);
-    timer_enable_preload(timer);
 }
 
 void feedback_set_loop_freq(unsigned int freq)

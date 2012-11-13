@@ -3,9 +3,12 @@
 #include <libopencm3/stm32/f4/adc.h>
 #include <libopencm3/stm32/f4/dma.h>
 #include <libopencm3/stm32/f4/rcc.h>
+
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include "adc.h"
+#include "timer.h"
 
 struct adc_t adc1, adc2;
 
@@ -65,18 +68,6 @@ void adc_config_channels(struct adc_t *adc, unsigned int nchans, u8 *channels)
 {
     adc_set_regular_sequence(adc->adc, nchans, channels);
     adc->nchannels = nchans;
-}
-
-static void setup_periodic_timer(uint32_t timer, unsigned int freq_in_hz)
-{
-    unsigned int prescaler = 1;
-    while (rcc_ppre1_frequency / prescaler / freq_in_hz > 0xffff)
-        prescaler *= 2;
-    timer_reset(timer);
-    timer_set_prescaler(timer, prescaler-1);
-    timer_set_period(timer, rcc_ppre1_frequency / prescaler / freq_in_hz);
-    timer_direction_down(timer);
-    timer_enable_preload(timer);
 }
 
 static uint32_t get_trigger_src_timer(enum adc_trigger_src_t src) {

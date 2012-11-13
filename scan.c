@@ -1,6 +1,8 @@
 #include <libopencm3/stm32/f4/rcc.h>
 #include <libopencm3/stm32/f4/nvic.h>
 #include <libopencm3/stm32/f4/timer.h>
+
+#include "timer.h"
 #include "scan.h"
 #include "event.h"
 #include "dac.h"
@@ -19,22 +21,13 @@ void raster_scan(struct raster_scan_t *scan)
     idx_y = -cur_scan.size_y / 2;
     dir = 1;
 
-    unsigned int prescaler = 1;
     rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM4EN);
     nvic_enable_irq(NVIC_TIM4_IRQ);
-    timer_reset(TIM4);
-    timer_set_mode(TIM4, 0, 0, TIM_CR1_DIR_UP);
-    while (rcc_ppre1_frequency / prescaler / scan->freq > 0xffff)
-        prescaler *= 2;
-    timer_set_prescaler(TIM4, prescaler);
-    u32 period = rcc_ppre1_frequency / prescaler / scan->freq;
-    timer_set_period(TIM4, period);
-    timer_enable_preload(TIM4);
-
+    setup_periodic_timer(TIM4, scan->freq);
     timer_enable_oc_output(TIM4, TIM_OC1);
     timer_enable_oc_output(TIM4, TIM_OC4);
     timer_set_oc_value(TIM4, TIM_OC1, 0);
-    timer_set_oc_value(TIM4, TIM_OC4, period / 2);
+    timer_set_oc_value(TIM4, TIM_OC4, TIM4_ARR / 2);
     timer_enable_irq(TIM4, TIM_DIER_CC4IE);
     timer_enable_counter(TIM4);
     event_wait(&scan_done);
