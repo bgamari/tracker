@@ -1,5 +1,7 @@
 #pragma once
 
+#include <libopencm3/stm32/f4/gpio.h>
+
 struct pin_t {
     u32 port;
     u16 pin;

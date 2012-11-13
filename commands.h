@@ -39,3 +39,4 @@ struct cmd_frame_t {
     };
 } __attribute__((packed));
 
+void process_cmd(struct cmd_frame_t *cmd);
