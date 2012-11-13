@@ -72,19 +72,19 @@ int main(void) {
     adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_55DOT5CYC);
     adc_set_sample_time_on_all_channels(ADC2, ADC_SMPR_SMP_55DOT5CYC);
 
-    adc_config_channels(psd_adc, 4, psd_channels);
+    adc_config_channels(psd_adc, PSD_INPUTS, psd_channels);
     adc_set_trigger_freq(psd_adc, 20000);
     adc_trigger_start(psd_adc);
 
-    adc_config_channels(stage_adc, 3, stage_channels);
+    adc_config_channels(stage_adc, STAGE_INPUTS, stage_channels);
     adc_set_trigger_freq(stage_adc, 20000);
     adc_trigger_start(stage_adc);
 
     dac_init();
 
     feedback_init();
-    adcfwd_start(&adc1);
-    //feedback_start();
+    //adcfwd_start(&adc1);
+    feedback_start();
 
     // Turn all leds on and then off,
     // with a delay of 0.2s among operations.
