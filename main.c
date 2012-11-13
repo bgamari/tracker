@@ -20,8 +20,8 @@
 #include "commands.h"
 #include "adc_forward.h"
 
-u8 psd_channels[PSD_INPUTS] = { 0, 1, 2, 12 };
-u8 stage_channels[STAGE_INPUTS] = { 8, 9, 10 };
+u8 psd_channels[PSD_INPUTS] = { 2, 1, 0, 13 };
+u8 stage_channels[STAGE_INPUTS] = { 9, 8, 15 };
 
 struct adc_t *psd_adc = &adc1;
 struct adc_t *stage_adc = &adc2;
