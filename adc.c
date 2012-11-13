@@ -53,6 +53,7 @@ void adc_init()
     // Initialize timers for triggering
     rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM2EN);
     rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM3EN);
+    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM4EN);
 
     // Initialize ADCs
     adc_power_on(ADC1);
