@@ -7,6 +7,8 @@
 #undef errno
 extern int errno;
 
+extern "C" {
+
 caddr_t _sbrk(int incr) {
     return 0;
 }
@@ -51,7 +53,7 @@ int _isatty(int fildes) {
     return 1;
 }
 
-int _link(char *old, char *new) {
+int _link(char *old, char *new_) {
     errno = EMLINK;
     return -1;
 }
@@ -91,3 +93,5 @@ int _write(int file, char *ptr, int len) {
     return -1;
 }
 // vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+
+}
