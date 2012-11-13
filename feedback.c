@@ -3,6 +3,7 @@
 #include <libopencm3/stm32/f4/gpio.h>
 #include <libopencm3/stm32/f4/rcc.h>
 
+#include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
 
@@ -34,6 +35,7 @@ signed int psd_fb_setpoint[STAGE_OUTPUTS] = { };
 signed int stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
 signed int stage_fb_setpoint[STAGE_OUTPUTS] = { };
 
+signed int max_error = 1000;
 signed int output_gains[STAGE_OUTPUTS] = { };
 
 struct dac_update_t updates[] = {
@@ -122,6 +124,11 @@ void do_feedback()
                 tmp += stage_fb_gains[j][i] * sample[j] / 0x1000;
             error[i] = stage_fb_setpoint[i] - tmp;
         }
+    }
+
+    for (int i=0; i<STAGE_OUTPUTS; i++) {
+        if (abs(error[i]) > max_error)
+            feedback_stop();
     }
 
     // TODO: Put error into PID loop
