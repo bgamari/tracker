@@ -18,6 +18,6 @@ void delay_ms(unsigned int ms) {
     while ((msTicks - curTicks) < ms);
 }
 
-void sys_tick_handler(void) {
+extern "C" void sys_tick_handler() {
     msTicks++;
 }
