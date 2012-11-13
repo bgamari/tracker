@@ -33,7 +33,7 @@ enum cmd_t {
     CMD_START_FEEDBACK        = 0x17,
     CMD_STOP_FEEDBACK         = 0x18,
     CMD_SET_FEEDBACK_FREQ     = 0x19,
-    CMD_SET_FEEDBACK_MODE     = 0x20,
+    CMD_SET_FEEDBACK_MODE     = 0x1A,
 };
 
 struct cmd_frame_t {
