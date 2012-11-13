@@ -30,3 +30,5 @@ tracker.bin : tracker.elf
 .PHONY : clean
 clean :
 	rm -f ${OBJECTS} tracker.elf tracker.bin
+
+include $(wildcard *.d)
