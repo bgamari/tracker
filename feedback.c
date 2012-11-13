@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include <array>
+
 #include "tracker.h"
 #include "feedback.h"
 #include "adc.h"
@@ -23,8 +25,15 @@ static volatile unsigned int buffer_start_time = 0;
 
 static bool feedback_running = false;
 
-signed int feedback_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
-signed int feedback_setpoint[STAGE_OUTPUTS] = { };
+enum feedback_mode_t feedback_mode = STAGE_FEEDBACK;
+
+signed int psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
+signed int psd_fb_setpoint[STAGE_OUTPUTS] = { };
+
+signed int stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
+signed int stage_fb_setpoint[STAGE_OUTPUTS] = { };
+
+signed int output_gains[STAGE_OUTPUTS] = { };
 
 struct dac_update_t updates[] = {
     { channel_a, 0x4400 },
@@ -76,10 +85,6 @@ void feedback_init()
     gpio_mode_setup(GPIOB, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0 | GPIO1);
     // ADC123_IN12, ADC123_IN13, ADC12_IN14, ADC12_IN15
     gpio_mode_setup(GPIOC, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO2 | GPIO3 | GPIO4 | GPIO5);
-
-    feedback_gains[0][0] = 0.5 * 0xffff;
-    feedback_gains[1][1] = 0.2 * 0xffff;
-    feedback_gains[2][2] = 0.8 * 0xffff;
 }
 
 void feedback_start()
@@ -109,13 +114,30 @@ void feedback_stop()
     
 void do_feedback()
 {
-    uint16_t *sample = adc_get_last_sample(&adc1);
-    for (int i=0; i<STAGE_OUTPUTS; i++) {
-        unsigned int tmp = 0;
-        for (unsigned int j=0; j<STAGE_INPUTS; j++) 
-            tmp += feedback_gains[j][i] * sample[j] / 0x1000;
-        updates[i].value = tmp;
+    std::array<signed int, 3> error;
+
+    if (feedback_mode == PSD_FEEDBACK) {
+        uint16_t *sample = adc_get_last_sample(psd_adc);
+        for (int i=0; i<STAGE_OUTPUTS; i++) {
+            unsigned int tmp = 0;
+            for (unsigned int j=0; j<PSD_INPUTS; j++) 
+                tmp += psd_fb_gains[j][i] * sample[j] / 0x1000;
+            error[i] = psd_fb_setpoint[i] - tmp;
+        }
+
+    } else {
+        uint16_t *sample = adc_get_last_sample(stage_adc);
+        for (int i=0; i<STAGE_OUTPUTS; i++) {
+            signed int tmp = 0;
+            for (unsigned int j=0; j<STAGE_INPUTS; j++) 
+                tmp += psd_fb_gains[j][i] * sample[j] / 0x1000;
+            error[i] = psd_fb_setpoint[i] - tmp;
+        }
     }
+
+    // TODO: Put error into PID loop
+    for (int i=0; i<STAGE_OUTPUTS; i++)
+        updates[i].value += output_gains[i] * error[i] / 0x1000;
     set_dac(STAGE_OUTPUTS, updates);
 }
 

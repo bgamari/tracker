@@ -52,8 +52,16 @@ void frame_recvd(unsigned int length, uint8_t *frame)
         usart_send_blocking(USART1, 0);
         raster_scan(&cmd->run_scan.raster_scan);
         break;
-    case CMD_SET_GAINS:
-        memcpy(feedback_gains, cmd->set_gains.feedback_gains, sizeof(feedback_gains));
+    case CMD_SET_STAGE_GAINS:
+        memcpy(stage_fb_gains, cmd->set_stage_gains, sizeof(stage_fb_gains));
+        send_reply(true, 0, NULL);
+        break;
+    case CMD_SET_PSD_GAINS:
+        memcpy(psd_fb_gains, cmd->set_psd_gains, sizeof(psd_fb_gains));
+        send_reply(true, 0, NULL);
+        break;
+    case CMD_SET_OUTPUT_GAINS:
+        memcpy(output_gains, cmd->set_output_gains, sizeof(output_gains));
         send_reply(true, 0, NULL);
         break;
     case CMD_START_FEEDBACK:

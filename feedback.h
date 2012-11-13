@@ -6,5 +6,18 @@ void feedback_stop();
 
 void feedback_set_loop_freq(unsigned int freq);
 
-extern signed int feedback_gains[STAGE_INPUTS][STAGE_OUTPUTS];
+enum feedback_mode_t {
+    PSD_FEEDBACK,
+    STAGE_FEEDBACK,
+};
+
+extern enum feedback_mode_t feedback_mode;
+
+extern signed int psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS];
+extern signed int psd_fb_setpoint[STAGE_OUTPUTS];
+
+extern signed int stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS];
+extern signed int stage_fb_setpoint[STAGE_OUTPUTS];
+
+extern signed int output_gains[STAGE_OUTPUTS];
 
