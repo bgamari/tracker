@@ -12,7 +12,7 @@
 
 struct adc_t adc1, adc2;
 
-void init_adc1() {
+static void init_adc1() {
     adc1.adc = ADC1;
     adc1.dma = DMA2;
     adc1.dma_stream = DMA_STREAM4;
@@ -26,7 +26,7 @@ void init_adc1() {
     adc1.trigger_src = ADC_TRIGGER_TIM3_CC1;
 };
 
-void init_adc2() {
+static void init_adc2() {
     adc2.adc = ADC2;
     adc2.dma = DMA2;
     adc2.dma_stream = DMA_STREAM3;
