@@ -2,11 +2,11 @@
 #include <math.h>
 
 #include <libopencm3/stm32/f4/adc.h>
-#include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/f4/pwr.h>
-#include <libopencm3/stm32/f4/flash.h>
-#include <libopencm3/stm32/f4/syscfg.h>
-#include <libopencm3/stm32/f4/usart.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/pwr.h>
+#include <libopencm3/stm32/flash.h>
+#include <libopencm3/stm32/syscfg.h>
+#include <libopencm3/stm32/usart.h>
 
 #include "pin.h"
 #include "clock.h"
@@ -45,7 +45,7 @@ int main(void) {
     while (!(PWR_CSR & PWR_CSR_VOSRDY));
     SYSCFG_CMPCR = 0x1; // Enable I/O compensation cell
 
-    flash_set_ws(FLASH_LATENCY_5WS);
+    flash_set_ws(FLASH_ACR_LATENCY_5WS);
     rcc_clock_setup_hse_3v3(&hse_8mhz_3v3[CLOCK_3V3_168MHZ]);
     init_systick();
     
