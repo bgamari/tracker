@@ -16,7 +16,7 @@ static void init_adc1() {
     adc1.adc = ADC1;
     adc1.dma = DMA2;
     adc1.dma_stream = DMA_STREAM4;
-    adc1.dma_channel = DMA_SCR_CHSEL_0;
+    adc1.dma_channel = DMA_SxCR_CHSEL_0;
     adc1.dma_started = false;
     adc1.nchannels = 0;
     adc1.buffer = NULL;
@@ -30,7 +30,7 @@ static void init_adc2() {
     adc2.adc = ADC2;
     adc2.dma = DMA2;
     adc2.dma_stream = DMA_STREAM3;
-    adc2.dma_channel = DMA_SCR_CHSEL_1;
+    adc2.dma_channel = DMA_SxCR_CHSEL_1;
     adc2.dma_started = false;
     adc2.nchannels = 0;
     adc2.buffer = NULL;
@@ -184,8 +184,8 @@ int adc_dma_start(struct adc_t *adc,
     dma_enable_memory_increment_mode(dma, stream);
     dma_enable_circular_mode(dma, stream);
     dma_channel_select(dma, stream, adc->dma_channel);
-    dma_set_peripheral_size(dma, stream, DMA_SCR_PSIZE_16BIT);
-    dma_set_memory_size(dma, stream, DMA_SCR_MSIZE_16BIT);
+    dma_set_peripheral_size(dma, stream, DMA_SxCR_PSIZE_16BIT);
+    dma_set_memory_size(dma, stream, DMA_SxCR_MSIZE_16BIT);
 
     dma_enable_fifo_error_interrupt(dma, stream);
     dma_enable_transfer_error_interrupt(dma, stream);
@@ -207,17 +207,17 @@ void adc_dma_stop(struct adc_t *adc)
 }
 
 void dma2_stream4_isr() {
-    if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_TCIF)) {
-        dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TCIF);
+    if (dma_get_interrupt_flag(DMA2, 4, DMA_TCIF)) {
+        dma_clear_interrupt_flags(DMA2, 4, DMA_TCIF);
         if (adc1.buffer_full_cb)
             adc1.buffer_full_cb(&adc1);
     }
-    if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_TEIF)) { // Transfer error
-        dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TEIF);
+    if (dma_get_interrupt_flag(DMA2, 4, DMA_TEIF)) { // Transfer error
+        dma_clear_interrupt_flags(DMA2, 4, DMA_TEIF);
         adc1.dma_started = false;
     }
-    if (dma_get_interrupt_flag(DMA2, 4, DMA_ISR_FEIF)) { // FIFO error
-        dma_clear_interrupt_flags(DMA2, 4, DMA_ISR_TEIF);
+    if (dma_get_interrupt_flag(DMA2, 4, DMA_FEIF)) { // FIFO error
+        dma_clear_interrupt_flags(DMA2, 4, DMA_TEIF);
         adc1.dma_started = false;
     }
 }

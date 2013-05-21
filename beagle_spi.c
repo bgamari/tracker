@@ -33,8 +33,8 @@ void beagle_spi_init()
 
     // TX: DMA2_Stream5
     dma_stream_reset(DMA2, 5);
-    dma_channel_select(DMA2, 5, DMA_SCR_CHSEL_3);
-    dma_set_transfer_mode(DMA2, 5, DMA_SCR_DIR_MEM2PER);
+    dma_channel_select(DMA2, 5, DMA_SxCR_CHSEL_3);
+    dma_set_transfer_mode(DMA2, 5, DMA_SxCR_DIR_MEM_TO_PERIPHERAL);
     dma_enable_memory_increment_mode(DMA2, 5);
     dma_set_peripheral_address(DMA2, 5, (uint32_t) &SPI_DR(SPI1));
     dma_enable_fifo_mode(DMA2, 5);
@@ -44,8 +44,8 @@ void beagle_spi_init()
 
     // RX: DMA2_Stream0
     dma_stream_reset(DMA2, 0);
-    dma_channel_select(DMA2, 0, DMA_SCR_CHSEL_3);
-    dma_set_transfer_mode(DMA2, 0, DMA_SCR_DIR_PER2MEM);
+    dma_channel_select(DMA2, 0, DMA_SxCR_CHSEL_3);
+    dma_set_transfer_mode(DMA2, 0, DMA_SxCR_DIR_PERIPHERAL_TO_MEM);
     dma_enable_memory_increment_mode(DMA2, 0);
     dma_set_peripheral_address(DMA2, 0, (uint32_t) &SPI_DR(SPI1));
     dma_enable_fifo_mode(DMA2, 0);
@@ -81,25 +81,25 @@ int beagle_spi_dma_rx(uint16_t length, char *buffer,
 }
 
 void dma2_stream5_isr() {
-    if (dma_get_interrupt_flag(DMA2, 5, DMA_ISR_TCIF)) {
-        dma_clear_interrupt_flags(DMA2, 5, DMA_ISR_TCIF);
+    if (dma_get_interrupt_flag(DMA2, 5, DMA_TCIF)) {
+        dma_clear_interrupt_flags(DMA2, 5, DMA_TCIF);
         spi_disable_tx_dma(SPI1);
         tx_busy = false;
     }
-    if (dma_get_interrupt_flag(DMA2, 5, DMA_ISR_TEIF)) {
-        dma_clear_interrupt_flags(DMA2, 5, DMA_ISR_TEIF);
+    if (dma_get_interrupt_flag(DMA2, 5, DMA_TEIF)) {
+        dma_clear_interrupt_flags(DMA2, 5, DMA_TEIF);
     }
-    if (dma_get_interrupt_flag(DMA2, 5, DMA_ISR_FEIF)) {
+    if (dma_get_interrupt_flag(DMA2, 5, DMA_FEIF)) {
         // This happens for some reason even when the FIFO is
         // disabled. Regardless, it doesn't seem to do any harm.
-        dma_clear_interrupt_flags(DMA2, 5, DMA_ISR_FEIF);
+        dma_clear_interrupt_flags(DMA2, 5, DMA_FEIF);
     }
 }
 
 void dma2_stream0_isr() {
-    if (dma_get_interrupt_flag(DMA2, 0, DMA_ISR_TCIF)) {
+    if (dma_get_interrupt_flag(DMA2, 0, DMA_TCIF)) {
         // Transfer complete
-        dma_clear_interrupt_flags(DMA2, 0, DMA_ISR_TCIF);
+        dma_clear_interrupt_flags(DMA2, 0, DMA_TCIF);
         spi_disable_rx_dma(SPI1);
         if (rx_completion)
             rx_completion(rx_user_data);

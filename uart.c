@@ -57,8 +57,8 @@ void uart_init(int baudrate)
     // Rx DMA
     if (USE_RX_DMA) {
         dma_stream_reset(DMA2, 2);
-        dma_set_transfer_mode(DMA2, 2, DMA_SCR_DIR_PER2MEM);
-        dma_channel_select(DMA2, 2, DMA_SCR_CHSEL_4);
+        dma_set_transfer_mode(DMA2, 2, DMA_SxCR_DIR_PERIPHERAL_TO_MEM);
+        dma_channel_select(DMA2, 2, DMA_SxCR_CHSEL_4);
         dma_enable_transfer_error_interrupt(DMA2, 2);
         dma_enable_transfer_complete_interrupt(DMA2, 2);
         dma_enable_fifo_error_interrupt(DMA2, 2);
@@ -71,8 +71,8 @@ void uart_init(int baudrate)
     // Tx DMA
     if (USE_TX_DMA) {
         dma_stream_reset(DMA2, 7);
-        dma_set_transfer_mode(DMA2, 7, DMA_SCR_DIR_MEM2PER);
-        dma_channel_select(DMA2, 7, DMA_SCR_CHSEL_4);
+        dma_set_transfer_mode(DMA2, 7, DMA_SxCR_DIR_MEM_TO_PERIPHERAL);
+        dma_channel_select(DMA2, 7, DMA_SxCR_CHSEL_4);
         dma_enable_transfer_error_interrupt(DMA2, 7);
         dma_enable_transfer_complete_interrupt(DMA2, 7);
         dma_enable_fifo_error_interrupt(DMA2, 7);
@@ -148,32 +148,32 @@ static void uart_dma_rx_done()
 
 void dma2_stream2_isr()
 {
-    if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TEIF)) {
-        dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TEIF);
+    if (dma_get_interrupt_flag(DMA2, 2, DMA_TEIF)) {
+        dma_clear_interrupt_flags(DMA2, 2, DMA_TEIF);
         usart_send_blocking(USART1, 0x15); // NAK
         rx_state = RX_IDLE;
     }
-    if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_TCIF)) {
-        dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_TCIF);
+    if (dma_get_interrupt_flag(DMA2, 2, DMA_TCIF)) {
+        dma_clear_interrupt_flags(DMA2, 2, DMA_TCIF);
         uart_dma_rx_done();
     }
-    if (dma_get_interrupt_flag(DMA2, 2, DMA_ISR_FEIF)) {
-        dma_clear_interrupt_flags(DMA2, 2, DMA_ISR_FEIF);
+    if (dma_get_interrupt_flag(DMA2, 2, DMA_FEIF)) {
+        dma_clear_interrupt_flags(DMA2, 2, DMA_FEIF);
     }
 }
 
 void dma2_stream7_isr()
 {
-    if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TCIF)) {
-        dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TCIF);
+    if (dma_get_interrupt_flag(DMA2, 7, DMA_TCIF)) {
+        dma_clear_interrupt_flags(DMA2, 7, DMA_TCIF);
         uart_dma_tx_done();
         tx_busy = false;
     }
-    if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_TEIF)) {
-        dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_TEIF);
+    if (dma_get_interrupt_flag(DMA2, 7, DMA_TEIF)) {
+        dma_clear_interrupt_flags(DMA2, 7, DMA_TEIF);
     }
-    if (dma_get_interrupt_flag(DMA2, 7, DMA_ISR_FEIF)) {
-        dma_clear_interrupt_flags(DMA2, 7, DMA_ISR_FEIF);
+    if (dma_get_interrupt_flag(DMA2, 7, DMA_FEIF)) {
+        dma_clear_interrupt_flags(DMA2, 7, DMA_FEIF);
     }
 }
 
