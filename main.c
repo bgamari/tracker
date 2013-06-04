@@ -69,8 +69,8 @@ int main(void) {
     beagle_spi_init();
 
     adc_init();
-    adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_55DOT5CYC);
-    adc_set_sample_time_on_all_channels(ADC2, ADC_SMPR_SMP_55DOT5CYC);
+    adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_56CYC);
+    adc_set_sample_time_on_all_channels(ADC2, ADC_SMPR_SMP_56CYC);
 
     adc_config_channels(psd_adc, PSD_INPUTS, psd_channels);
     adc_set_trigger_freq(psd_adc, 20000);
