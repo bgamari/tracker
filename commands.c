@@ -28,9 +28,11 @@ void process_cmd(struct cmd_frame_t *cmd)
     case CMD_ECHO:
         send_reply(true, cmd->echo.length, (char *) cmd->echo.data);
         break;
+
     case CMD_SPI_ECHO:
         beagle_spi_dma_tx(cmd->echo.length, (char *) cmd->echo.data);
         break;
+
     case CMD_RUN_SCAN:
         usart_send_blocking(USART1, 0x06);
         usart_send_blocking(USART1, 0); // FIXME
@@ -60,6 +62,7 @@ void process_cmd(struct cmd_frame_t *cmd)
         max_error = cmd->set_max_error;
         send_reply(true, 0, NULL);
         break;
+
     case CMD_SET_OUTPUT_GAINS:
         memcpy(output_gains, cmd->set_output_gains, sizeof(output_gains));
         send_reply(true, 0, NULL);
@@ -78,10 +81,12 @@ void process_cmd(struct cmd_frame_t *cmd)
         feedback_stop();
         send_reply(true, 0, NULL);
         break;
+
     case CMD_SET_FEEDBACK_FREQ:
         feedback_set_loop_freq(cmd->set_feedback_freq);
         send_reply(true, 0, NULL);
         break;
+
     case CMD_SET_FEEDBACK_MODE:
         feedback_mode = cmd->set_feedback_mode;
         send_reply(true, 0, NULL);
