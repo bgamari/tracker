@@ -4,8 +4,5 @@
 
 #define PSD_INPUTS 4
 #define STAGE_INPUTS 3
+#define INPUTS (PSD_INPUTS + STAGE_INPUTS)
 #define STAGE_OUTPUTS 3
-
-extern struct adc_t *psd_adc;
-extern struct adc_t *stage_adc;
-

@@ -1,17 +1,14 @@
-#include <libopencm3/stm32/f4/timer.h>
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/lpc43xx/timer.h>
 
+#include "config.h"
 #include "timer.h"
-#include "clock.h"
 
+// Uses match 3 for reset
 void setup_periodic_timer(uint32_t timer, unsigned int freq_in_hz)
 {
-    unsigned int prescaler = 1;
-    while (rcc_ppre1_frequency / prescaler / freq_in_hz > 0xffff)
-        prescaler *= 2;
+    timer_disable_counter(timer);
     timer_reset(timer);
-    timer_set_prescaler(timer, prescaler-1);
-    timer_set_period(timer, rcc_ppre1_frequency / prescaler / freq_in_hz);
-    timer_direction_down(timer);
-    timer_enable_preload(timer);
+    TIMER_MR3(timer) = CLK_BASE_M4 / freq_in_hz;
+    TIMER_MCR(timer) &= ~(TIMER_MCR_MR3I | TIMER_MCR_MR3R | TIMER_MCR_MR3S);
+    TIMER_MCR(timer) |= TIMER_MCR_MR3R;
 }

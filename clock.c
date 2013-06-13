@@ -1,13 +1,13 @@
 #include "clock.h"
+#include "config.h"
 
 #include <libopencm3/cm3/systick.h>
-#include <libopencm3/stm32/f4/rcc.h>
 
 volatile uint32_t msTicks;      /* counts 1ms timeTicks */
 
 void init_systick()
 {
-    systick_set_reload(168e6 / 8 / 1000);
+    systick_set_reload(CLK_BASE_M4 / 8 / 1000);
     systick_interrupt_enable();
     systick_counter_enable();
 }

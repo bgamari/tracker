@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libopencm3/stm32/f4/gpio.h>
+#include <libopencm3/lpc43xx/gpio.h>
 
 struct pin_t {
     u32 port;
@@ -9,12 +9,12 @@ struct pin_t {
 
 static inline void pin_setup_output(struct pin_t *pin)
 {
-    gpio_mode_setup(pin->port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, pin->pin);
+    GPIO_DIR(pin->port) |= pin->pin; 
 }
 
 static inline void pin_setup_input(struct pin_t *pin)
 {
-    gpio_mode_setup(pin->port, GPIO_MODE_INPUT, GPIO_PUPD_NONE, pin->pin);
+    GPIO_DIR(pin->port) &= ~pin->pin; 
 }
 
 static inline void pin_off(struct pin_t *pin)

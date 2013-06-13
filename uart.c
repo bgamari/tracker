@@ -1,10 +1,10 @@
-#include <libopencm3/stm32/f4/nvic.h>
-#include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/f4/dma.h>
-#include <libopencm3/stm32/usart.h>
+#include <libopencm3/cm3/nvic.h>
+#include <libopencm3/lpc43xx/uart.h>
 
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
+
 #include "uart.h"
 
 const bool USE_RX_DMA = true;
@@ -39,153 +39,91 @@ volatile enum rx_state_t rx_state = RX_IDLE;
 
 volatile bool tx_busy = false;
 
-void uart_init(int baudrate)
+struct rational_t {
+  unsigned int num;
+  unsigned int denom;
+};
+
+struct rational_t nearest_rational(float value, unsigned int max_denom)
 {
-    rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_USART1EN);
-    rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_DMA2EN);
-
-    usart_set_baudrate(USART1, baudrate);
-    usart_set_mode(USART1, USART_MODE_TX_RX);
-    usart_enable_rx_interrupt(USART1);
-    usart_enable_error_interrupt(USART1);
-    usart_enable(USART1);
-
-    nvic_enable_irq(NVIC_USART1_IRQ);
-    nvic_enable_irq(NVIC_DMA2_STREAM2_IRQ);
-    nvic_enable_irq(NVIC_DMA2_STREAM7_IRQ);
-
-    // Rx DMA
-    if (USE_RX_DMA) {
-        dma_stream_reset(DMA2, 2);
-        dma_set_transfer_mode(DMA2, 2, DMA_SxCR_DIR_PERIPHERAL_TO_MEM);
-        dma_channel_select(DMA2, 2, DMA_SxCR_CHSEL_4);
-        dma_enable_transfer_error_interrupt(DMA2, 2);
-        dma_enable_transfer_complete_interrupt(DMA2, 2);
-        dma_enable_fifo_error_interrupt(DMA2, 2);
-        dma_enable_memory_increment_mode(DMA2, 2);
-        dma_enable_fifo_mode(DMA2, 2);
-        dma_set_peripheral_address(DMA2, 2, (u32) &USART_DR(USART1));
-        dma_set_memory_address(DMA2, 2, (u32) rx_buffer);
+  struct rational_t a;
+  float error = value;
+  for (unsigned int j=1; j<=max_denom; j++) {
+    for (unsigned int i=0; i<j; i++) {
+      float v = i / j;
+      if (fabs(v - value) < error) {
+        error = fabs(v - value);
+        a.num = i;
+        a.denom = j;
+      }
     }
+  }
 
-    // Tx DMA
-    if (USE_TX_DMA) {
-        dma_stream_reset(DMA2, 7);
-        dma_set_transfer_mode(DMA2, 7, DMA_SxCR_DIR_MEM_TO_PERIPHERAL);
-        dma_channel_select(DMA2, 7, DMA_SxCR_CHSEL_4);
-        dma_enable_transfer_error_interrupt(DMA2, 7);
-        dma_enable_transfer_complete_interrupt(DMA2, 7);
-        dma_enable_fifo_error_interrupt(DMA2, 7);
-        dma_enable_memory_increment_mode(DMA2, 7);
-        dma_enable_fifo_mode(DMA2, 7);
-        dma_set_peripheral_address(DMA2, 7, (u32) &USART_DR(USART1));
-        dma_set_memory_address(DMA2, 7, (u32) tx_buffer);
-    }
-
-    USART1_SR = 0;
+  return a;
 }
 
-static void uart_start_dma_tx(unsigned int length)
+// TODO: Perhaps this should end up in libopencm3 (libm dependency
+// could be problematic)
+void uart_init_baud(uart_num_t uart_num,
+                    uart_databit_t data_nb_bits,
+                    uart_stopbit_t data_nb_stop,
+                    uart_parity_t data_parity,
+                    unsigned int pclk, unsigned int baudrate)
 {
-    if (tx_busy) return;
-    tx_busy = true;
-    dma_set_number_of_data(DMA2, 7, length);
-    dma_enable_stream(DMA2, 7);
-    USART1_SR = 0;
-    usart_enable_tx_dma(USART1);
+  u16 divisor;
+  struct rational_t frac;
+
+  if (pclk % (16 * baudrate) == 0) {
+    frac.num = 0;
+    frac.denom = 1;
+  } else {
+    float fr_est = 1.5;
+    unsigned int dl_est;
+    while (fr_est < 1.1 || fr_est > 1.9) {
+      dl_est = roundf(pclk / 16.0 / baudrate / fr_est);
+      fr_est = pclk / 16 / baudrate / dl_est;
+    }
+    
+    frac = nearest_rational(fr_est-1, 15);
+    divisor = dl_est;
+  }
+
+  uart_init(uart_num, data_nb_bits, data_nb_stop, data_parity,
+            divisor, frac.num, frac.denom);
+}
+
+void uart_init(int baudrate)
+{
+    uart_init_baud(UART0_NUM, UART_DATABIT_8, UART_STOPBIT_1, UART_PARITY_NONE,
+                     CLK_BASE_M4, 115200);
+
+    UART_FCR(UART0) = UART_FCR_FIFO_EN | UART_FCR_TRG_LEV3;
+    nvic_enable_irq(NVIC_USART0_IRQ);
+    UART_IER(UART0) |= UART_IER_RBRINT_EN;
 }
 
 void uart_send_bytes(unsigned int length, char *buf)
 {
-    while (tx_busy);
-    if (USE_TX_DMA && length > 10) {
-        memcpy(tx_buffer, buf, length);
-        uart_start_dma_tx(length);
-    } else {
-        for (unsigned int i=0; i<length; i++)
-            usart_send_blocking(USART1, buf[i]);
-    }
-}
-
-static void uart_dma_tx_done()
-{
-    usart_disable_tx_dma(USART1);
-}
-
-static void uart_start_dma_rx(unsigned int length)
-{
-    if (length == 0) {
-        rx_state = RX_IDLE;
-        return;
-    }
-    if (rx_state == RX_ACTIVE) return;
-    rx_state = RX_ACTIVE;
-    rx_length = length;
-    dma_set_number_of_data(DMA2, 2, length);
-    dma_enable_stream(DMA2, 2);
-    usart_disable_rx_interrupt(USART1);
-    usart_enable_rx_dma(USART1);
+    for (unsigned int i=0; i<length; i++)
+        uart_write(UART0_NUM, buf[i]);
 }
 
 static void uart_rx_done()
 {
     rx_state = RX_DONE;
     if (rx_buffer[rx_length-1] == 0x04 && uart_frame_recvd_cb) {
-        usart_send_blocking(USART1, 0x06); // ACK
+        uart_write(UART0_NUM, 0x06); // ACK
         uart_frame_recvd_cb(rx_length, rx_buffer);
     } else {
-        usart_send_blocking(USART1, 0x15); // NAK
+        uart_write(UART0_NUM, 0x15); // NAK
     }
     rx_state = RX_IDLE;
 }
 
-static void uart_dma_rx_done()
+void uart0_isr()
 {
-    usart_enable_rx_interrupt(USART1);
-    usart_disable_rx_dma(USART1);
-    uart_rx_done();
-}
-
-void dma2_stream2_isr()
-{
-    if (dma_get_interrupt_flag(DMA2, 2, DMA_TEIF)) {
-        dma_clear_interrupt_flags(DMA2, 2, DMA_TEIF);
-        usart_send_blocking(USART1, 0x15); // NAK
-        rx_state = RX_IDLE;
-    }
-    if (dma_get_interrupt_flag(DMA2, 2, DMA_TCIF)) {
-        dma_clear_interrupt_flags(DMA2, 2, DMA_TCIF);
-        uart_dma_rx_done();
-    }
-    if (dma_get_interrupt_flag(DMA2, 2, DMA_FEIF)) {
-        dma_clear_interrupt_flags(DMA2, 2, DMA_FEIF);
-    }
-}
-
-void dma2_stream7_isr()
-{
-    if (dma_get_interrupt_flag(DMA2, 7, DMA_TCIF)) {
-        dma_clear_interrupt_flags(DMA2, 7, DMA_TCIF);
-        uart_dma_tx_done();
-        tx_busy = false;
-    }
-    if (dma_get_interrupt_flag(DMA2, 7, DMA_TEIF)) {
-        dma_clear_interrupt_flags(DMA2, 7, DMA_TEIF);
-    }
-    if (dma_get_interrupt_flag(DMA2, 7, DMA_FEIF)) {
-        dma_clear_interrupt_flags(DMA2, 7, DMA_FEIF);
-    }
-}
-
-void usart1_isr()
-{
-    if (usart_get_flag(USART1, USART_SR_ORE)) {
-        usart_recv(USART1);
-        rx_state = RX_IDLE;
-        return;
-    }
-    if (usart_get_flag(USART1, USART_SR_RXNE)) {
-        uint8_t d = (uint8_t) usart_recv(USART1);
+    if (UART_IIR(UART0) & UART_IIR_INTID_THRE) {
+        uint8_t d = uart_read(UART0_NUM);
         if (rx_state == RX_IDLE && d == 0x01) {
             rx_state = RX_WAIT_LENGTH1;
         } else if (rx_state == RX_WAIT_LENGTH1) {
@@ -194,24 +132,20 @@ void usart1_isr()
         } else if (rx_state == RX_WAIT_LENGTH2) {
             uint16_t length = 0;
             length |= d;
-            if (USE_RX_DMA) {
-                uart_start_dma_rx(length);
-            } else {
-                rx_state = RX_ACTIVE;
-                rx_length = length;
-                rx_tail = 0;
-            }
+
+            rx_state = RX_ACTIVE;
+            rx_length = length;
+            rx_tail = 0;
         } else if (!USE_RX_DMA && rx_state == RX_ACTIVE) {
             rx_buffer[rx_tail] = d;
             rx_tail += 1;
             if (rx_tail == rx_length) {
                 uart_rx_done();
             } else if (rx_tail >= sizeof(rx_buffer)) {
-                usart_send_blocking(USART1, 0x15);
+                uart_write(UART0_NUM, 0x15);
                 rx_state = RX_IDLE;
             }
         } else if (rx_state != RX_IDLE)
-            usart_send_blocking(USART1, 0x15);
+            uart_write(UART0_NUM, 0x15);
     }
 }
-

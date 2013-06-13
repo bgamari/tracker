@@ -1,6 +1,5 @@
-#include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/f4/nvic.h>
-#include <libopencm3/stm32/f4/timer.h>
+#include <libopencm3/cm3/nvic.h>
+#include <libopencm3/lpc43xx/timer.h>
 
 #include "timer.h"
 #include "scan.h"
@@ -21,23 +20,19 @@ void raster_scan(struct raster_scan_t *scan)
     idx_y = -cur_scan.size_y / 2;
     dir = 1;
 
-    rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_TIM4EN);
-    nvic_enable_irq(NVIC_TIM4_IRQ);
-    setup_periodic_timer(TIM4, scan->freq);
-    timer_enable_oc_output(TIM4, TIM_OC1);
-    timer_enable_oc_output(TIM4, TIM_OC4);
-    timer_set_oc_value(TIM4, TIM_OC1, 0);
-    timer_set_oc_value(TIM4, TIM_OC4, TIM4_ARR / 2);
-    timer_enable_irq(TIM4, TIM_DIER_CC4IE);
-    timer_enable_counter(TIM4);
+    nvic_enable_irq(NVIC_TIMER3_IRQ);
+    setup_periodic_timer(TIMER3, scan->freq);
+    TIMER3_MCR |= TIMER_MCR_MR3I;  // interrupt on overflow match
+    timer_enable_counter(TIMER3);
     event_wait(&scan_done);
 }
 
-void tim4_isr()
+// FIXME: Setup ADC
+void timer3_isr()
 {
-    timer_clear_flag(TIM4, 0xffffffff);
+    TIMER3_IR = 0xf;  // Clear interrupt
     if (idx_y == (int) cur_scan.size_y) {
-        timer_disable_counter(TIM4);
+        timer_disable_counter(TIMER3);
         event_fire(&scan_done);
     }
 

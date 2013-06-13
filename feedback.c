@@ -1,7 +1,5 @@
-#include <libopencm3/stm32/f4/nvic.h>
-#include <libopencm3/stm32/f4/timer.h>
-#include <libopencm3/stm32/f4/gpio.h>
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/lpc43xx/timer.h>
+#include <libopencm3/cm3/nvic.h>
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -18,8 +16,7 @@
 
 #define BUFFER_DEPTH 1024
 
-static uint16_t psd_buffer[BUFFER_DEPTH][PSD_INPUTS] __attribute__((section (".dma_data"))) = { };
-static uint16_t stage_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { };
+static uint16_t buffer[BUFFER_DEPTH][INPUTS] __attribute__((section (".dma_data"))) = { };
 
 static volatile unsigned int buffer_start_time = 0;
 
@@ -44,62 +41,50 @@ struct dac_update_t updates[] = {
     { channel_c, 0x4400 },
 };
 
-void adc_buffer_full(struct adc_t *adc)
+void adc_buffer_full()
 {
     //unsigned int length = msTicks - buffer_start_time;
     buffer_start_time = msTicks;
 }
 
-void adc_overflow(struct adc_t *adc)
+void adc_overflow()
 {
     //char *msg = "adc-overrun\n";
 }
 
 void feedback_set_loop_freq(unsigned int freq)
 {
-    setup_periodic_timer(TIM2, freq);
-    timer_enable_irq(TIM2, TIM_DIER_UIE);
+    setup_periodic_timer(TIMER2, freq);
+    TIMER2_IR |= TIMER_IR_MR0INT;
     if (feedback_running)
-        timer_enable_counter(TIM2);
+        timer_enable_counter(TIMER2);
 }
 
 void feedback_init()
 {
-    nvic_set_priority(NVIC_TIM2_IRQ, 10);
-    nvic_enable_irq(NVIC_TIM2_IRQ);
+    nvic_set_priority(NVIC_TIMER2_IRQ, 10);
+    nvic_enable_irq(NVIC_TIMER2_IRQ);
 
     feedback_set_loop_freq(10000);
-
-    // ADC123_IN0, ADC123_IN1, ADC123_IN2, ADC123_IN3
-    gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0 | GPIO1 | GPIO2 | GPIO3);
-    // ADC12_IN8, ADC12_IN9
-    gpio_mode_setup(GPIOB, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0 | GPIO1);
-    // ADC123_IN12, ADC123_IN13, ADC12_IN14, ADC12_IN15
-    gpio_mode_setup(GPIOC, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO2 | GPIO3 | GPIO4 | GPIO5);
 }
 
 void feedback_start()
 {
     if (feedback_running) return;
-    psd_adc->buffer_full_cb = adc_buffer_full;
-    psd_adc->overflow_cb = adc_overflow;
-    adc_dma_start(psd_adc, BUFFER_DEPTH, &psd_buffer[0][0], NULL);
+    // FIXME
+    buffer[0][0] = buffer[1][1];
+    //adc_dma_start(BUFFER_DEPTH, &buffer[0][0], NULL);
 
-    stage_adc->buffer_full_cb = adc_buffer_full;
-    stage_adc->overflow_cb = adc_overflow;
-    adc_dma_start(stage_adc, BUFFER_DEPTH, &stage_buffer[0][0], NULL);
-
-    timer_enable_counter(TIM2);
-    timer_enable_counter(TIM3);
+    timer_enable_counter(TIMER2);
     feedback_running = true;
 }
 
 void feedback_stop()
 {
     if (!feedback_running) return;
-    timer_disable_counter(TIM2);
-    timer_disable_counter(TIM3);
-    adc_dma_stop(&adc1);
+    timer_disable_counter(TIMER2);
+    // FIXME
+    //adc_dma_stop();
     feedback_running = false;
 }
     
@@ -108,7 +93,7 @@ void do_feedback()
     std::array<signed int, 3> error;
 
     if (feedback_mode == PSD_FEEDBACK) {
-        uint16_t *sample = adc_get_last_sample(psd_adc);
+        uint16_t *sample = adc_get_last_sample();
         for (int i=0; i<STAGE_OUTPUTS; i++) {
             unsigned int tmp = 0;
             for (unsigned int j=0; j<PSD_INPUTS; j++) 
@@ -117,7 +102,7 @@ void do_feedback()
         }
 
     } else {
-        uint16_t *sample = adc_get_last_sample(stage_adc);
+        uint16_t *sample = adc_get_last_sample();
         for (int i=0; i<STAGE_OUTPUTS; i++) {
             signed int tmp = 0;
             for (unsigned int j=0; j<STAGE_INPUTS; j++) 
@@ -137,9 +122,9 @@ void do_feedback()
     set_dac(STAGE_OUTPUTS, updates);
 }
 
-void tim2_isr(void)
+void timer2_isr(void)
 {
-    TIM2_SR &= ~TIM_SR_UIF;
+    TIMER2_IR |= TIMER_IR_MR0INT;
     do_feedback();
 }
 
