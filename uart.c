@@ -92,7 +92,7 @@ void uart_init_baud(uart_num_t uart_num,
             divisor, frac.num, frac.denom);
 }
 
-void uart_init(int baudrate)
+void tracker_uart_init(int baudrate)
 {
     uart_init_baud(UART0_NUM, UART_DATABIT_8, UART_STOPBIT_1, UART_PARITY_NONE,
                      CLK_BASE_M4, 115200);
