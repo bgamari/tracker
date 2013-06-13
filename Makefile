@@ -23,7 +23,7 @@ $(opencm3_a) :
 	make -Clibopencm3 lib
 
 tracker.elf : ${OBJECTS} $(opencm3_a)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $+
+	$(CC) $(CFLAGS) $+ $(LDFLAGS) -o $@
 
 tracker.bin : tracker.elf
 	$(OBJCOPY) -Obinary -R.dma_data $+ $@
