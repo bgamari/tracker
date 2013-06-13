@@ -7,8 +7,6 @@
 #undef errno
 extern int errno;
 
-extern "C" {
-
 caddr_t _sbrk(int incr) {
     return 0;
 }
@@ -92,6 +90,5 @@ int _wait(int *status) {
 int _write(int file, char *ptr, int len) {
     return -1;
 }
-// vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
 
-}
+// vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
