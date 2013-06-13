@@ -6,7 +6,8 @@ OBJCOPY = arm-none-eabi-objcopy
 
 PROJECT = tracker
 
-OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o scan.o uart.o syscalls.o timer.o commands.o
+USB_OBJECTS = tracker_usb.o usb.o usb_descriptor.o usb_request.o usb_standard_request.o
+OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o scan.o uart.o syscalls.o timer.o commands.o $(USB_OBJECTS)
 
 FLAGS = -mthumb -mcpu=cortex-m4 -Ilibopencm3/include -g3 -O0 -Wall -Werror -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fno-common -MD -nostartfiles -DLPC43XX
 CFLAGS = $(FLAGS) -std=gnu99
