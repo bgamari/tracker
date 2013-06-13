@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <array>
-
 #include "tracker.h"
 #include "feedback.h"
 #include "adc.h"
@@ -90,7 +88,7 @@ void feedback_stop()
     
 void do_feedback()
 {
-    std::array<signed int, 3> error;
+    signed int error[3];
 
     if (feedback_mode == PSD_FEEDBACK) {
         uint16_t *sample = adc_get_last_sample();
