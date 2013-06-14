@@ -106,10 +106,6 @@ usb_endpoint_t usb_endpoint_control_in = {
 	.transfer_complete = usb_control_in_complete,
 };
 
-// NOTE: Endpoint number for IN and OUT are different. I wish I had some
-// evidence that having BULK IN and OUT on separate endpoint numbers was
-// actually a good idea. Seems like everybody does it that way, but why?
-
 usb_endpoint_t usb_endpoint_bulk_in = {
 	.address = 0x81,
 	.device = &usb_device,
@@ -158,47 +154,14 @@ const usb_request_handlers_t usb_request_handlers = {
 	.reserved = 0,
 };
 
-// TODO: Seems like this should live in usb_standard_request.c.
-bool usb_set_configuration(
-	usb_device_t* const device,
-	const uint_fast8_t configuration_number
+void usb_configuration_changed(
+	usb_device_t* const device
 ) {
-	const usb_configuration_t* new_configuration = 0;
-	if( configuration_number != 0 ) {
-		
-		// Locate requested configuration.
-		if( device->configurations ) {
-			usb_configuration_t** configurations = *(device->configurations);
-			uint32_t i = 0;
-			const usb_speed_t usb_speed_current = usb_speed(device);
-			while( configurations[i] ) {
-				if( (configurations[i]->speed == usb_speed_current) &&
-				    (configurations[i]->number == configuration_number) ) {
-					new_configuration = configurations[i];
-					break;
-				}
-				i++;
-			}
-		}
-
-		// Requested configuration not found: request error.
-		if( new_configuration == 0 ) {
-			return false;
-		}
+        if( device->configuration ) {
+                gpio_set(PORT_LED1_3, PIN_LED1);
+        } else {
+                gpio_clear(PORT_LED1_3, PIN_LED1);
 	}
-	
-	if( new_configuration != device->configuration ) {
-		// Configuration changed.
-		device->configuration = new_configuration;
-
-		if( device->configuration ) {
-                        gpio_set(GPIO1, GPIOPIN12);
-		} else {
-                        gpio_clear(GPIO1, GPIOPIN12);
-		}
-	}
-
-	return true;
 };
 
 void usb_init(void)
