@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include "tracker_usb.h"
+#include "commands.h"
 #include "usb.h"
 #include "usb_type.h"
 #include "usb_request.h"
@@ -16,6 +17,23 @@ static const uint32_t usb_bulk_buffer_mask = 32768 - 1;
 
 usb_transfer_descriptor_t usb_td_bulk[2] ATTR_ALIGNED(64);
 const uint_fast8_t usb_td_bulk_count = sizeof(usb_td_bulk) / sizeof(usb_td_bulk[0]);
+
+struct cmd_frame_t cmd_frame;
+usb_request_status_t usb_vendor_request_command(
+	usb_endpoint_t* const endpoint,
+	const usb_transfer_stage_t stage) 
+{
+        if (stage == USB_TRANSFER_STAGE_SETUP) {
+                usb_endpoint_schedule(endpoint->out, &cmd_frame, 255);
+                return USB_REQUEST_STATUS_OK;
+        } else if (stage == USB_TRANSFER_STAGE_DATA) {
+                usb_endpoint_schedule_ack(endpoint->in);
+                // TODO: Actually do something with request
+                return USB_REQUEST_STATUS_OK;
+                //return UST_REQUEST_STATUS_STALL; // TODO: handle errors
+        } else
+                return USB_REQUEST_STATUS_OK;
+}
 
 static void usb_init_buffers_bulk() {
 	usb_td_bulk[0].next_dtd_pointer = USB_TD_NEXT_DTD_POINTER_TERMINATE;
@@ -126,6 +144,7 @@ usb_endpoint_t usb_endpoint_bulk_out = {
 
 static const usb_request_handler_fn vendor_request_handler[] = {
 	NULL,
+        usb_vendor_request_command,
 };
 
 static const uint32_t vendor_request_handler_count =
