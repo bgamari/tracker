@@ -175,16 +175,11 @@ const usb_request_handlers_t usb_request_handlers = {
 
 void usb_configuration_changed(
 	usb_device_t* const device
-) {
-        if( device->configuration ) {
-                gpio_set(PORT_LED1_3, PIN_LED1);
-        } else {
-                gpio_clear(PORT_LED1_3, PIN_LED1);
-	}
-};
+) {};
 
 void usb_init(void)
 {
+  usb_set_configuration_changed_cb(usb_configuration_changed);
   usb_peripheral_reset();
   usb_device_init(0, &usb_device);
   usb_init_buffers_bulk();
