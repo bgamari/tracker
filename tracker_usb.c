@@ -171,6 +171,8 @@ void usb_init(void)
   usb_init_buffers_bulk();
   usb_endpoint_init(&usb_endpoint_control_out);
   usb_endpoint_init(&usb_endpoint_control_in);
+  usb_endpoint_init(&usb_endpoint_bulk_out);
+  usb_endpoint_init(&usb_endpoint_bulk_in);
   nvic_set_priority(NVIC_USB0_IRQ, 255);
   usb_run(&usb_device);
 }
