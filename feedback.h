@@ -7,7 +7,8 @@ void feedback_stop();
 void feedback_set_loop_freq(unsigned int freq);
 
 enum feedback_mode_t {
-    PSD_FEEDBACK = 0,
+    NO_FEEDBACK = 0,
+    PSD_FEEDBACK,
     STAGE_FEEDBACK,
 };
 
