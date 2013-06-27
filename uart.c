@@ -44,15 +44,17 @@ struct rational_t {
   unsigned int denom;
 };
 
-struct rational_t nearest_rational(float value, unsigned int max_denom)
+typedef uint32_t fixed_t;
+
+static struct rational_t nearest_rational(fixed_t value, unsigned int max_denom)
 {
   struct rational_t a;
-  float error = value;
+  fixed_t error = value;
   for (unsigned int j=1; j<=max_denom; j++) {
     for (unsigned int i=0; i<j; i++) {
-      float v = i / j;
-      if (fabs(v - value) < error) {
-        error = fabs(v - value);
+      fixed_t v = (i << 16) / j;
+      if (abs(v - value) < error) {
+        error = abs(v - value);
         a.num = i;
         a.denom = j;
       }
@@ -60,6 +62,20 @@ struct rational_t nearest_rational(float value, unsigned int max_denom)
   }
 
   return a;
+}
+
+fixed_t round_fixed(fixed_t a)
+{
+  fixed_t trunc = a & 0xffff0000;
+  if ((a & 0xffff) > 0xffff/2)
+    return trunc + 0x10000;
+  else
+    return trunc;
+}
+
+fixed_t fixed(uint16_t integral, uint16_t fract)
+{
+  return (integral << 16) | fract;
 }
 
 // TODO: Perhaps this should end up in libopencm3 (libm dependency
@@ -77,11 +93,13 @@ void uart_init_baud(uart_num_t uart_num,
     frac.num = 0;
     frac.denom = 1;
   } else {
-    float fr_est = 1.5;
+    fixed_t fr_est = fixed(1, 0xffff/2);
     unsigned int dl_est;
-    while (fr_est < 1.1 || fr_est > 1.9) {
-      dl_est = roundf(pclk / 16.0 / baudrate / fr_est);
-      fr_est = pclk / 16 / baudrate / dl_est;
+    while (fr_est < fixed(1, 0xffff/10) || fr_est > fixed(1, 9*0xffff/10)) {
+      // pclk / 16 / baudrate
+      fixed_t pclk_16_baud = ((pclk / 16) << 16) / baudrate;
+      dl_est = round_fixed(pclk_16_baud / fr_est);
+      fr_est = pclk_16_baud / dl_est;
     }
     
     frac = nearest_rational(fr_est-1, 15);
