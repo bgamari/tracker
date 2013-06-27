@@ -65,11 +65,11 @@ void dac_init()
              SSP_MODE_NORMAL,
              SSP_MASTER,
              SSP_SLAVE_OUT_DISABLE);
-    scu_pinmux(P1_19, SCU_CONF_FUNCTION3 | SCU_SSP_IO); // SCK
+    scu_pinmux(P1_19, SCU_CONF_FUNCTION1 | SCU_SSP_IO); // SCK
+    scu_pinmux(P0_0, SCU_CONF_FUNCTION1 | SCU_SSP_IO); // MISO
+    scu_pinmux(P0_1, SCU_CONF_FUNCTION1 | SCU_SSP_IO); // MOSI
     scu_pinmux(P1_20, SCU_CONF_FUNCTION0 | SCU_GPIO_NOPULL); // CS = GPIO0[15]
     scu_pinmux(P5_4, SCU_CONF_FUNCTION0 | SCU_GPIO_NOPULL); // LDAC = GPIO2[13] 
-    scu_pinmux(P0_0, SCU_CONF_FUNCTION3 | SCU_SSP_IO); // MISO
-    scu_pinmux(P0_1, SCU_CONF_FUNCTION3 | SCU_SSP_IO); // MOSI
 
     // Enable internal reference
     cmd_buffer[0] = (1<<27) | 1;
