@@ -29,7 +29,7 @@ void send_cmd_buffer() {
             tmp <<= 8;
             while (!(SSP1_SR & SSP_SR_TNF));
         }
-        while (SSP1_SR & SSP_SR_TFE);
+        while (!(SSP1_SR & SSP_SR_TFE));
         pin_on(&cs);
     }
     ncmds = 0;
