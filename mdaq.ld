@@ -13,6 +13,9 @@ MEMORY
 	ram_ahb2   (rwx) : ORIGIN = 0x2000C000, LENGTH =  16K
 }
 
+/* Include the common ld script. */
+INCLUDE lpc43xx/m4/libopencm3_lpc43xx_ram_only.ld
+
 SECTIONS
 {
         .dma_data :
@@ -20,6 +23,3 @@ SECTIONS
                 *(.dma_data)
         } >ram_local1
 }
-
-/* Include the common ld script. */
-INCLUDE libopencm3_lpc43xx.ld
