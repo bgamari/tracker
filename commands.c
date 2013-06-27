@@ -68,15 +68,6 @@ void process_cmd(struct cmd_frame_t *cmd)
         send_reply(true, 0, NULL);
         break;
 
-    case CMD_START_FEEDBACK:
-        feedback_start();
-        send_reply(true, 0, NULL);
-        break;
-    case CMD_STOP_FEEDBACK:
-        feedback_stop();
-        send_reply(true, 0, NULL);
-        break;
-
     case CMD_SET_FEEDBACK_FREQ:
         feedback_set_loop_freq(cmd->set_feedback_freq);
         send_reply(true, 0, NULL);

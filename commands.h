@@ -16,7 +16,6 @@ struct run_scan_cmd_t {
 
 enum cmd_t {
     CMD_ECHO                  = 0x0,
-    CMD_SPI_ECHO              = 0x1,
     CMD_RUN_SCAN              = 0x2,
 
     CMD_SET_STAGE_GAINS       = 0x10,
@@ -30,10 +29,8 @@ enum cmd_t {
 
     CMD_SET_ADC_FREQ          = 0x16,
 
-    CMD_START_FEEDBACK        = 0x17,
-    CMD_STOP_FEEDBACK         = 0x18,
-    CMD_SET_FEEDBACK_FREQ     = 0x19,
-    CMD_SET_FEEDBACK_MODE     = 0x1A,
+    CMD_SET_FEEDBACK_FREQ     = 0x17,
+    CMD_SET_FEEDBACK_MODE     = 0x18,
 };
 
 struct cmd_frame_t {
