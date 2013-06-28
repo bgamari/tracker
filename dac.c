@@ -56,10 +56,10 @@ void dac_init()
     pin_on(&cs);
 
     u8 prescale = 1;
-    ssp_init(SSP0_NUM,
+    ssp_init(SSP1_NUM,
              SSP_DATA_8BITS,
              SSP_FRAME_SPI,
-             SSP_CPOL_0_CPHA_0, 
+             SSP_CPOL_0_CPHA_1, 
              2,
              prescale, // FIXME
              SSP_MODE_NORMAL,
