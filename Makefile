@@ -6,8 +6,8 @@ OBJCOPY = arm-none-eabi-objcopy
 
 PROJECT = tracker
 
-USB_OBJECTS = tracker_usb.o usb.o usb_descriptor.o usb_request.o usb_standard_request.o
-OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o scan.o uart.o syscalls.o timer.o commands.o $(USB_OBJECTS)
+USB_OBJECTS = usb.o usb_descriptor.o usb_request.o usb_standard_request.o usb_queue.o
+OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o scan.o uart.o syscalls.o timer.o commands.o $(addprefix hackrf_usb/,$(USB_OBJECTS)) buffer_pool.o tracker_usb.o
 
 FLAGS = -mthumb -mcpu=cortex-m4 -Ilibopencm3/include -g3 -O0 -Wall -Werror -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fno-common -MD -nostartfiles -DLPC43XX
 CFLAGS = $(FLAGS) -std=gnu99
@@ -16,7 +16,7 @@ LDFLAGS = -Tmdaq.ld -Llibopencm3/lib
 
 opencm3_a = libopencm3/lib/libopencm3_lpc43xx.a
 
-all : tracker.bin
+all : tracker.bin tracker.dfu
 
 .PHONY : $(opencm3_a)
 $(opencm3_a) :

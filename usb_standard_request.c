@@ -1,1 +1,0 @@
-hackrf/firmware/hackrf_usb/usb_standard_request.c
