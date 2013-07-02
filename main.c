@@ -126,10 +126,9 @@ int main(void) {
     scu_pinmux(P2_4, SCU_CONF_FUNCTION2); // RXD
     scu_pinmux(P2_3, SCU_CONF_FUNCTION2); // TXD
 
-    //tracker_uart_init(115200);
+    tracker_uart_init(115200);
     //uart_frame_recvd_cb = frame_recvd;
-
-    //while (1) { uart_write(UART0_NUM, 'a'); delay_ms(100); }
+    uart_print("Hello world!\n");
 
     dac_init();
     adc_init();
