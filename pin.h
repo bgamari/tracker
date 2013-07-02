@@ -3,8 +3,8 @@
 #include <libopencm3/lpc43xx/gpio.h>
 
 struct pin_t {
-    u32 port;
-    u16 pin;
+    uint32_t port;
+    uint16_t pin;
 };
 
 static inline void pin_setup_output(struct pin_t *pin)

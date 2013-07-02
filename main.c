@@ -15,8 +15,10 @@
 #include "feedback.h"
 #include "commands.h"
 
-u8 psd_channels[PSD_INPUTS] = { 2, 1, 0, 13 };
-u8 stage_channels[STAGE_INPUTS] = { 9, 8, 15 };
+#include <libopencm3/lpc43xx/uart.h>
+
+uint8_t psd_channels[PSD_INPUTS] = { 2, 1, 0, 13 };
+uint8_t stage_channels[STAGE_INPUTS] = { 9, 8, 15 };
 
 #define NLEDS 4
 struct pin_t leds[NLEDS] = {

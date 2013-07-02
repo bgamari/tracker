@@ -55,7 +55,7 @@ void dac_init()
     pin_off(&nldac);
     pin_on(&cs);
 
-    u8 prescale = 1;
+    uint8_t prescale = 1;
     ssp_init(SSP1_NUM,
              SSP_DATA_8BITS,
              SSP_FRAME_SPI,
