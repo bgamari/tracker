@@ -78,8 +78,7 @@ fixed_t fixed(uint16_t integral, uint16_t fract)
   return (integral << 16) | fract;
 }
 
-// TODO: Perhaps this should end up in libopencm3 (libm dependency
-// could be problematic)
+// TODO: Perhaps this should end up in libopencm3
 void uart_init_baud(uart_num_t uart_num,
                     uart_databit_t data_nb_bits,
                     uart_stopbit_t data_nb_stop,
