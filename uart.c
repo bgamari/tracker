@@ -122,7 +122,7 @@ void tracker_uart_init(int baudrate)
 
 void uart_print(const char *buf)
 {
-    for (const char* c=buf; c != 0; c++)
+    for (const char* c=buf; *c != 0; c++)
         uart_write(UART0_NUM, *c);
 }
 
