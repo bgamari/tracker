@@ -14,12 +14,5 @@ MEMORY
 }
 
 /* Include the common ld script. */
-INCLUDE lpc43xx/m4/libopencm3_lpc43xx_ram_only.ld
-
-SECTIONS
-{
-        .dma_data :
-        {
-                *(.dma_data)
-        } >ram_local1
-}
+/*INCLUDE lpc43xx/m4/libopencm3_lpc43xx_ram_only.ld*/
+INCLUDE lpc43xx/m4/libopencm3_lpc43xx.ld

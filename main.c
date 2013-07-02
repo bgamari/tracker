@@ -106,13 +106,16 @@ static void init_clock()
       | CGU_BASE_APB1_CLK_CLK_SEL(CGU_SRC_PLL1);
 }
 
+uint16_t b1[32], b2[32];
+
 /* This example turns all 4 leds on and then off */
 int main(void) {
     CREG_FLASHCFGA = (CREG_FLASHCFGA & ~CREG_FLASHCFGA_FLASHTIM_MASK) | CREG_FLASHCFGA_FLASHTIM(0x9);
     CREG_FLASHCFGB = (CREG_FLASHCFGB & ~CREG_FLASHCFGB_FLASHTIM_MASK) | CREG_FLASHCFGB_FLASHTIM(0x9);
+    
     init_clock();
     init_systick();
-    
+
     for (int i=0; i<NLEDS; i++)
         pin_setup_output(&leds[i]);
 
@@ -123,17 +126,21 @@ int main(void) {
     scu_pinmux(P2_4, SCU_CONF_FUNCTION2); // RXD
     scu_pinmux(P2_3, SCU_CONF_FUNCTION2); // TXD
 
-    tracker_uart_init(115200);
-    uart_frame_recvd_cb = frame_recvd;
+    //tracker_uart_init(115200);
+    //uart_frame_recvd_cb = frame_recvd;
 
-    adc_init();
-    adc_set_trigger_freq(20000);
-    adc_trigger_start();
+    //while (1) { uart_write(UART0_NUM, 'a'); delay_ms(100); }
 
     dac_init();
+    adc_init();
+    adc_set_trigger_freq(2000);
+    adc_set_buffers(32, b1, b2);
+    //adc_trigger_start();
 
+#if 0
     feedback_init();
     feedback_start();
+#endif
 
     // Turn all leds on and then off,
     // with a delay of 0.2s among operations.
@@ -142,7 +149,7 @@ int main(void) {
 #if 0
         for (int i=0; i<0xffff; i+=100) {
             struct dac_update_t updates = {broadcast, i};
-            //delay_ms(1);
+            delay_ms(10);
             set_dac(1, &updates);
         }
 #endif

@@ -5,58 +5,16 @@
 
 #include "tracker_usb.h"
 #include "commands.h"
-#include "usb.h"
-#include "usb_type.h"
-#include "usb_request.h"
-#include "usb_descriptor.h"
-#include "usb_standard_request.h"
-
-uint8_t* const usb_bulk_buffer = (uint8_t*)0x20004000;
-static volatile uint32_t usb_bulk_buffer_offset = 0;
-static const uint32_t usb_bulk_buffer_mask = 32768 - 1;
-
-usb_transfer_descriptor_t usb_td_bulk[2] ATTR_ALIGNED(64);
-const uint_fast8_t usb_td_bulk_count = sizeof(usb_td_bulk) / sizeof(usb_td_bulk[0]);
+#include "hackrf_usb/usb.h"
+#include "hackrf_usb/usb_type.h"
+#include "hackrf_usb/usb_request.h"
+#include "hackrf_usb/usb_descriptor.h"
+#include "hackrf_usb/usb_standard_request.h"
 
 struct cmd_frame_t cmd_frame;
-usb_request_status_t usb_vendor_request_command(
-	usb_endpoint_t* const endpoint,
-	const usb_transfer_stage_t stage) 
-{
-        if (stage == USB_TRANSFER_STAGE_SETUP) {
-                usb_endpoint_schedule(endpoint->out, &cmd_frame, 255);
-                return USB_REQUEST_STATUS_OK;
-        } else if (stage == USB_TRANSFER_STAGE_DATA) {
-                usb_endpoint_schedule_ack(endpoint->in);
-                // TODO: Actually do something with request
-                return USB_REQUEST_STATUS_OK;
-                //return UST_REQUEST_STATUS_STALL; // TODO: handle errors
-        } else
-                return USB_REQUEST_STATUS_OK;
-}
 
-static void usb_init_buffers_bulk() {
-	usb_td_bulk[0].next_dtd_pointer = USB_TD_NEXT_DTD_POINTER_TERMINATE;
-	usb_td_bulk[0].total_bytes
-		= USB_TD_DTD_TOKEN_TOTAL_BYTES(16384)
-		| USB_TD_DTD_TOKEN_MULTO(0)
-		;
-	usb_td_bulk[0].buffer_pointer_page[0] = (uint32_t)&usb_bulk_buffer[0x0000];
-	usb_td_bulk[0].buffer_pointer_page[1] = (uint32_t)&usb_bulk_buffer[0x1000];
-	usb_td_bulk[0].buffer_pointer_page[2] = (uint32_t)&usb_bulk_buffer[0x2000];
-	usb_td_bulk[0].buffer_pointer_page[3] = (uint32_t)&usb_bulk_buffer[0x3000];
-	usb_td_bulk[0].buffer_pointer_page[4] = (uint32_t)&usb_bulk_buffer[0x4000];
-
-	usb_td_bulk[1].next_dtd_pointer = USB_TD_NEXT_DTD_POINTER_TERMINATE;
-	usb_td_bulk[1].total_bytes
-		= USB_TD_DTD_TOKEN_TOTAL_BYTES(16384)
-		| USB_TD_DTD_TOKEN_MULTO(0)
-		;
-	usb_td_bulk[1].buffer_pointer_page[0] = (uint32_t)&usb_bulk_buffer[0x4000];
-	usb_td_bulk[1].buffer_pointer_page[1] = (uint32_t)&usb_bulk_buffer[0x5000];
-	usb_td_bulk[1].buffer_pointer_page[2] = (uint32_t)&usb_bulk_buffer[0x6000];
-	usb_td_bulk[1].buffer_pointer_page[3] = (uint32_t)&usb_bulk_buffer[0x7000];
-	usb_td_bulk[1].buffer_pointer_page[4] = (uint32_t)&usb_bulk_buffer[0x8000];
+static void out_transfer_complete(usb_endpoint_t* const endpoint) {
+  
 }
 
 void usb_endpoint_schedule_no_int(
@@ -139,12 +97,11 @@ usb_endpoint_t usb_endpoint_bulk_out = {
 	.in = 0,
 	.out = &usb_endpoint_bulk_out,
 	.setup_complete = 0,
-	.transfer_complete = 0,
+	.transfer_complete = out_transfer_complete,
 };
 
 static const usb_request_handler_fn vendor_request_handler[] = {
 	NULL,
-        usb_vendor_request_command,
 };
 
 static const uint32_t vendor_request_handler_count =
@@ -182,7 +139,6 @@ void usb_init(void)
   usb_set_configuration_changed_cb(usb_configuration_changed);
   usb_peripheral_reset();
   usb_device_init(0, &usb_device);
-  usb_init_buffers_bulk();
   usb_endpoint_init(&usb_endpoint_control_out);
   usb_endpoint_init(&usb_endpoint_control_in);
   usb_endpoint_init(&usb_endpoint_bulk_out);
