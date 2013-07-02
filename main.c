@@ -145,10 +145,11 @@ int main(void) {
     // with a delay of 0.2s among operations.
     // This goes on indefinitely
     while (1) {
+    uart_print("Hello world!\n");
 #if 0
         for (int i=0; i<0xffff; i+=100) {
             struct dac_update_t updates = {broadcast, i};
-            delay_ms(10);
+            delay_ms(1);
             set_dac(1, &updates);
         }
 #endif
