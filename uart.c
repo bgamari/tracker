@@ -120,7 +120,13 @@ void tracker_uart_init(int baudrate)
     UART_IER(UART0) |= UART_IER_RBRINT_EN;
 }
 
-void uart_send_bytes(unsigned int length, char *buf)
+void uart_print(const char *buf)
+{
+    for (const char* c=buf; c != 0; c++)
+        uart_write(UART0_NUM, *c);
+}
+
+void uart_send_bytes(unsigned int length, const char *buf)
 {
     for (unsigned int i=0; i<length; i++)
         uart_write(UART0_NUM, buf[i]);
