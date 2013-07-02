@@ -64,13 +64,13 @@ static struct rational_t nearest_rational(fixed_t value, unsigned int max_denom)
   return a;
 }
 
-fixed_t round_fixed(fixed_t a)
+uint16_t round_fixed(fixed_t a)
 {
   fixed_t trunc = a & 0xffff0000;
   if ((a & 0xffff) > 0xffff/2)
-    return trunc + 0x10000;
+    return (trunc + 0x10000) >> 16;
   else
-    return trunc;
+    return trunc >> 16;
 }
 
 fixed_t fixed(uint16_t integral, uint16_t fract)
@@ -90,19 +90,20 @@ void uart_init_baud(uart_num_t uart_num,
   struct rational_t frac;
 
   if (pclk % (16 * baudrate) == 0) {
+    divisor = pclk % (16 * baudrate);
     frac.num = 0;
     frac.denom = 1;
   } else {
     fixed_t fr_est = fixed(1, 0xffff/2);
-    unsigned int dl_est;
-    while (fr_est < fixed(1, 0xffff/10) || fr_est > fixed(1, 9*0xffff/10)) {
+    uint16_t dl_est;
+    do {
       // pclk / 16 / baudrate
-      fixed_t pclk_16_baud = ((pclk / 16) << 16) / baudrate;
-      dl_est = round_fixed(pclk_16_baud / fr_est);
+      fixed_t pclk_16_baud = ((pclk / baudrate) << 16) / 16;
+      dl_est = round_fixed((pclk_16_baud / fr_est) << 16);
       fr_est = pclk_16_baud / dl_est;
-    }
+    } while (fr_est < fixed(1, 0xffff/10) || fr_est > fixed(1, 9*0xffff/10));
     
-    frac = nearest_rational(fr_est-1, 15);
+    frac = nearest_rational(fr_est-fixed(1,0), 15);
     divisor = dl_est;
   }
 
@@ -113,7 +114,10 @@ void uart_init_baud(uart_num_t uart_num,
 void tracker_uart_init(int baudrate)
 {
     uart_init_baud(UART0_NUM, UART_DATABIT_8, UART_STOPBIT_1, UART_PARITY_NONE,
-                     CLK_BASE_M4, 115200);
+                   CLK_BASE_M4, 115200);
+
+    //uart_init(UART0_NUM, UART_DATABIT_8, UART_STOPBIT_1, UART_PARITY_NONE,
+    //          75, 1, 2);
 
     UART_FCR(UART0) = UART_FCR_FIFO_EN | UART_FCR_TRG_LEV3;
     nvic_enable_irq(NVIC_USART0_IRQ);
