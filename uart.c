@@ -86,7 +86,7 @@ void uart_init_baud(uart_num_t uart_num,
                     uart_parity_t data_parity,
                     unsigned int pclk, unsigned int baudrate)
 {
-  u16 divisor;
+  uint16_t divisor;
   struct rational_t frac;
 
   if (pclk % (16 * baudrate) == 0) {

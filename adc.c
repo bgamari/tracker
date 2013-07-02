@@ -44,7 +44,7 @@ void adc_init()
     pin_on(&reset);
     pin_off(&reset);
 
-    u8 prescale = 1;
+    uint8_t prescale = 1;
     ssp_init(SSP0_NUM,
              SSP_DATA_16BITS,
              SSP_FRAME_SPI,
