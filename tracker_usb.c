@@ -119,10 +119,8 @@ static void command_transfer_completed(
 void usb_configuration_changed(
 	usb_device_t* const device
 ) {
-        usb_transfer_schedule(&usb_endpoint_bulk_out,
-                              command_buffer,
-                              sizeof(command_buffer),
-                              command_transfer_completed);
+        usb_endpoint_init(&usb_endpoint_bulk_out);
+        usb_endpoint_init(&usb_endpoint_bulk_in);
 };
 
 void usb_init(void)
@@ -133,8 +131,6 @@ void usb_init(void)
         usb_device_init(0, &usb_device);
         usb_endpoint_init(&usb_endpoint_control_out);
         usb_endpoint_init(&usb_endpoint_control_in);
-        usb_endpoint_init(&usb_endpoint_bulk_out);
-        usb_endpoint_init(&usb_endpoint_bulk_in);
         nvic_set_priority(NVIC_USB0_IRQ, 255);
         usb_run(&usb_device);
 }
