@@ -14,7 +14,7 @@
 
 struct cmd_frame_t cmd_frame;
 
-uint8_t command_buffer[512];
+uint8_t command_buffer[512] = "hello world";
 
 usb_configuration_t usb_configuration_high_speed = {
 	.number = 1,
@@ -113,7 +113,10 @@ static void command_transfer_completed(
         usb_transfer_t* transfer,
         unsigned int transferred
 ) {
-        return;
+        usb_transfer_schedule(&usb_endpoint_bulk_in,
+                              command_buffer,
+                              sizeof(command_buffer),
+                              command_transfer_completed);
 }
 
 void usb_configuration_changed(
@@ -121,6 +124,10 @@ void usb_configuration_changed(
 ) {
         usb_endpoint_init(&usb_endpoint_bulk_out);
         usb_endpoint_init(&usb_endpoint_bulk_in);
+        usb_transfer_schedule(&usb_endpoint_bulk_in,
+                              command_buffer,
+                              sizeof(command_buffer),
+                              command_transfer_completed);
 };
 
 void usb_init(void)
