@@ -14,6 +14,8 @@
 
 struct cmd_frame_t cmd_frame;
 
+uint8_t in_buffer[512];
+
 usb_configuration_t usb_configuration_high_speed = {
 	.number = 1,
 	.speed = USB_SPEED_HIGH,
@@ -107,20 +109,32 @@ const usb_request_handlers_t usb_request_handlers = {
 	.reserved = 0,
 };
 
+static void in_transfer_completed(
+        usb_transfer_t* transfer,
+        unsigned int transferred
+) {
+        return;
+}
+
 void usb_configuration_changed(
 	usb_device_t* const device
-) {};
+) {
+        usb_transfer_schedule(&usb_endpoint_bulk_in,
+                              in_buffer,
+                              sizeof(in_buffer),
+                              in_transfer_completed);
+};
 
 void usb_init(void)
 {
-  usb_queue_init();
-  usb_set_configuration_changed_cb(usb_configuration_changed);
-  usb_peripheral_reset();
-  usb_device_init(0, &usb_device);
-  usb_endpoint_init(&usb_endpoint_control_out);
-  usb_endpoint_init(&usb_endpoint_control_in);
-  usb_endpoint_init(&usb_endpoint_bulk_out);
-  usb_endpoint_init(&usb_endpoint_bulk_in);
-  nvic_set_priority(NVIC_USB0_IRQ, 255);
-  usb_run(&usb_device);
+        usb_queue_init();
+        usb_set_configuration_changed_cb(usb_configuration_changed);
+        usb_peripheral_reset();
+        usb_device_init(0, &usb_device);
+        usb_endpoint_init(&usb_endpoint_control_out);
+        usb_endpoint_init(&usb_endpoint_control_in);
+        usb_endpoint_init(&usb_endpoint_bulk_out);
+        usb_endpoint_init(&usb_endpoint_bulk_in);
+        nvic_set_priority(NVIC_USB0_IRQ, 255);
+        usb_run(&usb_device);
 }
