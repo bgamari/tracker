@@ -14,7 +14,7 @@
 
 struct cmd_frame_t cmd_frame;
 
-uint8_t in_buffer[512];
+uint8_t command_buffer[512];
 
 usb_configuration_t usb_configuration_high_speed = {
 	.number = 1,
@@ -109,7 +109,7 @@ const usb_request_handlers_t usb_request_handlers = {
 	.reserved = 0,
 };
 
-static void in_transfer_completed(
+static void command_transfer_completed(
         usb_transfer_t* transfer,
         unsigned int transferred
 ) {
@@ -119,10 +119,10 @@ static void in_transfer_completed(
 void usb_configuration_changed(
 	usb_device_t* const device
 ) {
-        usb_transfer_schedule(&usb_endpoint_bulk_in,
-                              in_buffer,
-                              sizeof(in_buffer),
-                              in_transfer_completed);
+        usb_transfer_schedule(&usb_endpoint_bulk_out,
+                              command_buffer,
+                              sizeof(command_buffer),
+                              command_transfer_completed);
 };
 
 void usb_init(void)
