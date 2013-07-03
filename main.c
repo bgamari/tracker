@@ -14,6 +14,7 @@
 #include "scan.h"
 #include "feedback.h"
 #include "commands.h"
+#include "tracker_usb.h"
 
 #include <libopencm3/lpc43xx/uart.h>
 
@@ -115,6 +116,7 @@ int main(void) {
     
     init_clock();
     init_systick();
+    usb_init();
 
     for (int i=0; i<NLEDS; i++)
         pin_setup_output(&leds[i]);

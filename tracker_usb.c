@@ -7,35 +7,12 @@
 #include "commands.h"
 #include "hackrf_usb/usb.h"
 #include "hackrf_usb/usb_type.h"
+#include "hackrf_usb/usb_queue.h"
 #include "hackrf_usb/usb_request.h"
 #include "hackrf_usb/usb_descriptor.h"
 #include "hackrf_usb/usb_standard_request.h"
 
 struct cmd_frame_t cmd_frame;
-
-static void out_transfer_complete(usb_endpoint_t* const endpoint) {
-  
-}
-
-void usb_endpoint_schedule_no_int(
-	const usb_endpoint_t* const endpoint,
-	usb_transfer_descriptor_t* const td
-) {
-	// Ensure that endpoint is ready to be primed.
-	// It may have been flushed due to an aborted transaction.
-	// TODO: This should be preceded by a flush?
-	while( usb_endpoint_is_ready(endpoint) );
-
-	// Configure a transfer.
-	td->total_bytes =
-		  USB_TD_DTD_TOKEN_TOTAL_BYTES(16384)
-		/*| USB_TD_DTD_TOKEN_IOC*/
-		| USB_TD_DTD_TOKEN_MULTO(0)
-		| USB_TD_DTD_TOKEN_STATUS_ACTIVE
-		;
-	
-	usb_endpoint_prime(endpoint, td);
-}
 
 usb_configuration_t usb_configuration_high_speed = {
 	.number = 1,
@@ -88,7 +65,7 @@ usb_endpoint_t usb_endpoint_bulk_in = {
 	.in = &usb_endpoint_bulk_in,
 	.out = 0,
 	.setup_complete = 0,
-	.transfer_complete = 0,
+	.transfer_complete = usb_queue_transfer_complete,
 };
 
 usb_endpoint_t usb_endpoint_bulk_out = {
@@ -97,7 +74,7 @@ usb_endpoint_t usb_endpoint_bulk_out = {
 	.in = 0,
 	.out = &usb_endpoint_bulk_out,
 	.setup_complete = 0,
-	.transfer_complete = out_transfer_complete,
+	.transfer_complete = usb_queue_transfer_complete,
 };
 
 static const usb_request_handler_fn vendor_request_handler[] = {
@@ -136,6 +113,7 @@ void usb_configuration_changed(
 
 void usb_init(void)
 {
+  usb_queue_init();
   usb_set_configuration_changed_cb(usb_configuration_changed);
   usb_peripheral_reset();
   usb_device_init(0, &usb_device);
