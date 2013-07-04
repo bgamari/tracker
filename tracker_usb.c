@@ -113,10 +113,20 @@ static void command_transfer_completed(
         usb_transfer_t* transfer,
         unsigned int transferred
 ) {
-        usb_transfer_schedule(&usb_endpoint_bulk_in,
+        usb_transfer_schedule(&usb_endpoint_bulk_out,
                               command_buffer,
                               sizeof(command_buffer),
                               command_transfer_completed);
+}
+
+static void reply_transfer_completed(
+        usb_transfer_t* transfer,
+        unsigned int transferred
+) {
+        usb_transfer_schedule(&usb_endpoint_bulk_in,
+                              command_buffer,
+                              sizeof(command_buffer),
+                              reply_transfer_completed);
 }
 
 void usb_configuration_changed(
@@ -124,10 +134,8 @@ void usb_configuration_changed(
 ) {
         usb_endpoint_init(&usb_endpoint_bulk_out);
         usb_endpoint_init(&usb_endpoint_bulk_in);
-        usb_transfer_schedule(&usb_endpoint_bulk_in,
-                              command_buffer,
-                              sizeof(command_buffer),
-                              command_transfer_completed);
+        command_transfer_completed(0, 0);
+        reply_transfer_completed(0, 0);
 };
 
 void usb_init(void)
