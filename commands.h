@@ -41,7 +41,7 @@ struct cmd_frame_t {
         signed int set_stage_gains[3][3];
         signed int set_stage_setpoint[3];
         signed int set_psd_gains[4][3];
-        signed int set_psd_setpoint[3];
+        signed int set_psd_setpoint[4];
         unsigned int set_max_error;
         signed int set_output_gains[3];
         struct run_scan_cmd_t run_scan;
