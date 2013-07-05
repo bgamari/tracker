@@ -24,8 +24,9 @@ void process_cmd(struct cmd_frame_t *cmd)
         switch (cmd->cmd) {
         case CMD_ECHO:
                 reply_buffer[0] = ACK;
-                memcpy(&reply_buffer[1], cmd->echo.data, cmd->echo.length);
-                send_reply(reply_buffer, cmd->echo.length+1);
+                reply_buffer[1] = cmd->echo.length;
+                memcpy(&reply_buffer[2], cmd->echo.data, cmd->echo.length);
+                send_reply(reply_buffer, cmd->echo.length+2);
                 break;
 
 #if 0
