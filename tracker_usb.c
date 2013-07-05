@@ -132,11 +132,16 @@ static void reply_transfer_completed(
 void usb_configuration_changed(
 	usb_device_t* const device
 ) {
-        usb_endpoint_init(&usb_endpoint_bulk_out);
-        usb_endpoint_init(&usb_endpoint_bulk_in);
-        command_transfer_completed(0, 0);
-        reply_transfer_completed(0, 0);
-};
+        if (device->configuration == 0) {
+            usb_endpoint_disable(&usb_endpoint_bulk_in);
+            usb_endpoint_disable(&usb_endpoint_bulk_out);
+        } else {
+            usb_endpoint_init(&usb_endpoint_bulk_out);
+            usb_endpoint_init(&usb_endpoint_bulk_in);
+            command_transfer_completed(0, 0);
+            reply_transfer_completed(0, 0);
+        }
+}
 
 void usb_init(void)
 {
