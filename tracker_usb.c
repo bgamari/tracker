@@ -109,24 +109,27 @@ const usb_request_handlers_t usb_request_handlers = {
 	.reserved = 0,
 };
 
+static void start_command_transfer(void);
+
 static void command_transfer_completed(
         usb_transfer_t* transfer,
         unsigned int transferred
 ) {
+        process_cmd((struct cmd_frame_t*) command_buffer);
+        start_command_transfer();
+}
+
+static void start_command_transfer()
+{
         usb_transfer_schedule(&usb_endpoint_bulk_out,
                               command_buffer,
                               sizeof(command_buffer),
                               command_transfer_completed);
 }
 
-static void reply_transfer_completed(
-        usb_transfer_t* transfer,
-        unsigned int transferred
-) {
-        usb_transfer_schedule(&usb_endpoint_bulk_in,
-                              command_buffer,
-                              sizeof(command_buffer),
-                              reply_transfer_completed);
+void send_reply(void *data, uint16_t length)
+{
+        usb_transfer_schedule(&usb_endpoint_bulk_in, data, length, NULL);
 }
 
 void usb_configuration_changed(
@@ -138,8 +141,7 @@ void usb_configuration_changed(
         } else {
             usb_endpoint_init(&usb_endpoint_bulk_out);
             usb_endpoint_init(&usb_endpoint_bulk_in);
-            command_transfer_completed(0, 0);
-            reply_transfer_completed(0, 0);
+            start_command_transfer();
         }
 }
 
