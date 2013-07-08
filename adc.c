@@ -57,7 +57,6 @@ void adc_init()
         scu_pinmux(P3_3, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // SCK
         scu_pinmux(P3_6, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // CS
         scu_pinmux(P3_7, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // MISO
-        //scu_pinmux(P3_8, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // MOSI
         scu_pinmux(P1_16, SCU_CONF_FUNCTION4); // T0_MAT0 = STCONV
 
         // configure PINT0 = ADC_BUSY = GPIO1[13]
