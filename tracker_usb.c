@@ -132,6 +132,12 @@ void send_reply(void *data, uint16_t length)
         usb_transfer_schedule(&usb_endpoint_bulk_in, data, length, NULL);
 }
 
+void tracker_usb_send_buffer(void *data, uint16_t length)
+{
+        // FIXME
+        usb_transfer_schedule(&usb_endpoint_bulk_in, data, length, NULL);
+}
+
 void usb_configuration_changed(
 	usb_device_t* const device
 ) {

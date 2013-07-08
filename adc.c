@@ -10,6 +10,7 @@
 #include "adc.h"
 #include "timer.h"
 #include "pin.h"
+#include "tracker_usb.h"
 
 static bool running = false;
 static unsigned int nsamples;
@@ -49,29 +50,29 @@ void adc_init()
                  SSP_DATA_16BITS,
                  SSP_FRAME_SPI,
                  SSP_CPOL_1_CPHA_1,
-                 1,
+                 2,
                  prescale, // FIXME
                  SSP_MODE_NORMAL,
                  SSP_MASTER,
                  SSP_SLAVE_OUT_DISABLE);
-        scu_pinmux(P3_3, SCU_CONF_FUNCTION3 | SCU_SSP_IO); // SCK
-        scu_pinmux(P3_6, SCU_CONF_FUNCTION3 | SCU_SSP_IO); // CS
-        scu_pinmux(P3_7, SCU_CONF_FUNCTION3 | SCU_SSP_IO); // MISO
-        scu_pinmux(P3_8, SCU_CONF_FUNCTION3 | SCU_SSP_IO); // MOSI
+        scu_pinmux(P3_3, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // SCK
+        scu_pinmux(P3_6, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // CS
+        scu_pinmux(P3_7, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // MISO
+        //scu_pinmux(P3_8, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // MOSI
         scu_pinmux(P1_16, SCU_CONF_FUNCTION4); // T0_MAT0 = STCONV
 
-        // PINT0 = ADC_BUSY = GPIO1[13]
+        // configure PINT0 = ADC_BUSY = GPIO1[13]
         nvic_enable_irq(NVIC_PIN_INT0_IRQ);
         SCU_PINTSEL0 = (SCU_PINTSEL0 & ~0xff) | 13 | (0x1 << 5);
         GPIO_PIN_INTERRUPT_ISEL &= ~(1 << 0); // Edge sensitive
-        //GPIO_PIN_INTERRUPT_IENR |= 1 << 0;
-        GPIO_PIN_INTERRUPT_IENF |= 1 << 0;
+        GPIO_PIN_INTERRUPT_IENF |= 1 << 0; // Falling edge
 }
 
 void adc_set_buffers(unsigned int length, uint16_t *buffer1, uint16_t *buffer2)
 {
         nsamples = length;
         buffer = buffer1;
+        last_sample = NULL; // FIXME?
         head = 0;
         inactive_buffer = buffer2;
 }
@@ -126,6 +127,16 @@ void adc_set_sample_time(enum adc_sample_time_t time)
         pin_set(&os3, time & 0x4);
 }
 
+static void buffer_done()
+{
+        uint16_t* buf = buffer;
+        buffer = inactive_buffer;
+        inactive_buffer = buf;
+        head = 0;
+
+        //tracker_usb_send_buffer(buffer, sizeof(buffer));
+}
+
 // ADC_BUSY fell: ADC sample ready
 void pin_int0_isr(void)
 {
@@ -139,6 +150,7 @@ void pin_int0_isr(void)
                 for (unsigned int i=0; i<8; i++, head++) 
                         buffer[head] = ssp_transfer(SSP0_NUM, 0);
                 last_sample = &buffer[head - 8];
-                head = head % nsamples;
+                if (head >= nsamples)
+                        buffer_done();
         }
 }

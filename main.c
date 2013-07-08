@@ -107,7 +107,7 @@ static void init_clock()
                 | CGU_BASE_APB1_CLK_CLK_SEL(CGU_SRC_PLL1);
 }
 
-uint16_t b1[32], b2[32];
+uint16_t b1[256], b2[256];
 
 /* This example turns all 4 leds on and then off */
 int main(void) {
@@ -134,9 +134,9 @@ int main(void) {
 
         dac_init();
         adc_init();
-        adc_set_trigger_freq(2000);
-        adc_set_buffers(32, b1, b2);
-        //adc_trigger_start();
+        adc_set_trigger_freq(200);
+        adc_set_buffers(sizeof(b1) / sizeof(b1[0]), b1, b2);
+        adc_trigger_start();
 
 #if 0
         feedback_init();
@@ -148,7 +148,7 @@ int main(void) {
         // This goes on indefinitely
         while (1) {
                 uart_print("Hello world!\n");
-#if 0
+#if 1
                 for (int i=0; i<0xffff; i+=100) {
                         struct dac_update_t updates = {broadcast, i};
                         delay_ms(1);
