@@ -132,10 +132,17 @@ void send_reply(void *data, uint16_t length)
         usb_transfer_schedule(&usb_endpoint_bulk_in, data, length, NULL);
 }
 
+volatile static unsigned int pending_buffers = 0;
+static void buffer_transfer_done(usb_transfer_t* transfer, unsigned int transferred)
+{
+        pending_buffers--;
+}
+
 void tracker_usb_send_buffer(void *data, uint16_t length)
 {
-        // FIXME
-        usb_transfer_schedule(&usb_endpoint_bulk_in, data, length, NULL);
+        if (pending_buffers) return;
+        pending_buffers++;
+        usb_transfer_schedule(&usb_endpoint_bulk_in, data, length, buffer_transfer_done);
 }
 
 void usb_configuration_changed(

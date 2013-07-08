@@ -132,7 +132,7 @@ static void buffer_done()
         inactive_buffer = buf;
         head = 0;
 
-        //tracker_usb_send_buffer(buffer, sizeof(buffer));
+        tracker_usb_send_buffer(buffer, nsamples * sizeof(uint16_t));
 }
 
 // ADC_BUSY fell: ADC sample ready
