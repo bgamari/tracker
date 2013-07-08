@@ -80,7 +80,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
 
         case CMD_SET_FEEDBACK_MODE:
-                feedback_mode = cmd->set_feedback_mode;
+                feedback_set_mode(cmd->set_feedback_mode);
                 send_ack();
                 break;
 

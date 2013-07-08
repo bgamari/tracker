@@ -20,9 +20,7 @@ static volatile unsigned int buffer_start_time = 0;
 
 //static uint16_t pos_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { };
 
-static bool feedback_running = false;
-
-enum feedback_mode_t feedback_mode = STAGE_FEEDBACK;
+static enum feedback_mode_t feedback_mode = NO_FEEDBACK;
 
 signed int psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
 signed int psd_fb_setpoint[STAGE_OUTPUTS] = { };
@@ -39,22 +37,11 @@ struct dac_update_t updates[] = {
     { channel_c, 0x4400 },
 };
 
-void adc_buffer_full()
-{
-    //unsigned int length = msTicks - buffer_start_time;
-    buffer_start_time = msTicks;
-}
-
-void adc_overflow()
-{
-    //char *msg = "adc-overrun\n";
-}
-
 void feedback_set_loop_freq(unsigned int freq)
 {
     setup_periodic_timer(TIMER2, freq);
     TIMER2_IR |= TIMER_IR_MR0INT;
-    if (feedback_running)
+    if (feedback_mode != NO_FEEDBACK)
         timer_enable_counter(TIMER2);
 }
 
@@ -66,24 +53,26 @@ void feedback_init()
     feedback_set_loop_freq(10000);
 }
 
-void feedback_start()
+enum feedback_mode_t feedback_get_mode()
 {
-    if (feedback_running) return;
-    // FIXME
-    buffer[0][0] = buffer[1][1];
-    //adc_dma_start(BUFFER_DEPTH, &buffer[0][0], NULL);
-
-    timer_enable_counter(TIMER2);
-    feedback_running = true;
+  return feedback_mode;
 }
 
-void feedback_stop()
+void feedback_set_mode(enum feedback_mode_t mode)
 {
-    if (!feedback_running) return;
+  if (mode == feedback_mode) return;
+
+  switch (mode) {
+  case NO_FEEDBACK:
     timer_disable_counter(TIMER2);
-    // FIXME
-    //adc_dma_stop();
-    feedback_running = false;
+    break;
+
+  case PSD_FEEDBACK:
+  case STAGE_FEEDBACK:
+    buffer[0][0] = buffer[1][1];
+    timer_enable_counter(TIMER2);
+  }
+  feedback_mode = mode;
 }
     
 void do_feedback()
@@ -111,7 +100,7 @@ void do_feedback()
 
     for (int i=0; i<STAGE_OUTPUTS; i++) {
         if (abs(error[i]) > max_error)
-            feedback_stop();
+          feedback_set_mode(NO_FEEDBACK);
     }
 
     // TODO: Put error into PID loop
