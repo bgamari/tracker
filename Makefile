@@ -44,3 +44,6 @@ include $(wildcard *.d)
 	$(Q)python -c "import os.path; import struct; print('0000000: da ff ' + ' '.join(map(lambda s: '%02x' % ord(s), struct.pack('<H', os.path.getsize('$(*).bin') / 512 + 1))) + ' ff ff ff ff')" | xxd -g1 -r > _header.bin
 	$(Q)cat _header.bin _tmp.dfu >$(*).dfu
 	$(Q)rm -f _tmp.dfu _header.bin
+
+program : tracker.dfu
+	dfu-util -D $< -d 1fc9:000c
