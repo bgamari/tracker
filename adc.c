@@ -45,13 +45,12 @@ void adc_init()
         pin_on(&reset);
         pin_off(&reset);
 
-        uint8_t prescale = 1;
         ssp_init(SSP0_NUM,
                  SSP_DATA_16BITS,
                  SSP_FRAME_SPI,
                  SSP_CPOL_1_CPHA_1,
-                 2,
-                 prescale, // FIXME
+                 0,
+                 2, // FIXME
                  SSP_MODE_NORMAL,
                  SSP_MASTER,
                  SSP_SLAVE_OUT_DISABLE);

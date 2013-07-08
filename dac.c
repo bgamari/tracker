@@ -55,13 +55,12 @@ void dac_init()
     pin_off(&nldac);
     pin_on(&cs);
 
-    uint8_t prescale = 1;
     ssp_init(SSP1_NUM,
              SSP_DATA_8BITS,
              SSP_FRAME_SPI,
              SSP_CPOL_0_CPHA_1, 
+             0,
              2,
-             prescale, // FIXME
              SSP_MODE_NORMAL,
              SSP_MASTER,
              SSP_SLAVE_OUT_DISABLE);
