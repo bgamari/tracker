@@ -74,6 +74,14 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_START_ADC_STREAM:
+                adc_set_streaming(true);
+                break;
+
+        case CMD_STOP_ADC_STREAM:
+                adc_set_streaming(false);
+                break;
+
         case CMD_SET_FEEDBACK_FREQ:
                 feedback_set_loop_freq(cmd->set_feedback_freq);
                 send_ack();

@@ -11,6 +11,7 @@ enum adc_sample_time_t {
 // Subsystem initialization
 void adc_init();
 void adc_set_buffers(unsigned int length, uint16_t *buffer1, uint16_t *buffer2);
+void adc_set_streaming(bool on);
 
 // Triggering
 int adc_set_trigger_freq(uint32_t freq);

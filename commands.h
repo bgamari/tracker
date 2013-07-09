@@ -27,10 +27,12 @@ enum cmd_t {
     CMD_SET_MAX_ERROR         = 0x14,
     CMD_SET_OUTPUT_GAINS      = 0x15,
 
-    CMD_SET_ADC_FREQ          = 0x16,
+    CMD_SET_ADC_FREQ          = 0x20,
+    CMD_START_ADC_STREAM      = 0x21,
+    CMD_STOP_ADC_STREAM       = 0X22,
 
-    CMD_SET_FEEDBACK_FREQ     = 0x17,
-    CMD_SET_FEEDBACK_MODE     = 0x18,
+    CMD_SET_FEEDBACK_FREQ     = 0x30,
+    CMD_SET_FEEDBACK_MODE     = 0x31,
 };
 
 struct cmd_frame_t {

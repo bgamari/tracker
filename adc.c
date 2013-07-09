@@ -18,6 +18,7 @@ static uint16_t *buffer;
 static unsigned int head; // index in buffer where next sample will be stored
 static uint16_t *inactive_buffer;
 static uint16_t *last_sample;
+static bool streaming = false;
 
 struct pin_t os1 = { .port = GPIO3, .pin = GPIOPIN7 };
 struct pin_t os2 = { .port = GPIO3, .pin = GPIOPIN6 };
@@ -73,6 +74,11 @@ void adc_set_buffers(unsigned int length, uint16_t *buffer1, uint16_t *buffer2)
         last_sample = NULL; // FIXME?
         head = 0;
         inactive_buffer = buffer2;
+}
+
+void adc_set_streaming(bool on)
+{
+        streaming = on;
 }
 
 int adc_set_trigger_freq(uint32_t freq)
@@ -132,7 +138,8 @@ static void buffer_done()
         inactive_buffer = buf;
         head = 0;
 
-        tracker_usb_send_buffer(buffer, nsamples * sizeof(uint16_t));
+        if (streaming)
+                tracker_usb_send_buffer(buffer, nsamples * sizeof(uint16_t));
 }
 
 // ADC_BUSY fell: ADC sample ready
