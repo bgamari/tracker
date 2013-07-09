@@ -61,20 +61,29 @@ usb_endpoint_t usb_endpoint_control_in = {
 	.transfer_complete = usb_control_in_complete,
 };
 
-usb_endpoint_t usb_endpoint_bulk_in = {
+usb_endpoint_t usb_endpoint_bulk_cmd_in = {
 	.address = 0x81,
 	.device = &usb_device,
-	.in = &usb_endpoint_bulk_in,
+	.in = &usb_endpoint_bulk_cmd_in,
 	.out = 0,
 	.setup_complete = 0,
 	.transfer_complete = usb_queue_transfer_complete,
 };
 
-usb_endpoint_t usb_endpoint_bulk_out = {
+usb_endpoint_t usb_endpoint_bulk_cmd_out = {
 	.address = 0x02,
 	.device = &usb_device,
 	.in = 0,
-	.out = &usb_endpoint_bulk_out,
+	.out = &usb_endpoint_bulk_cmd_out,
+	.setup_complete = 0,
+	.transfer_complete = usb_queue_transfer_complete,
+};
+
+usb_endpoint_t usb_endpoint_bulk_data_in = {
+	.address = 0x83,
+	.device = &usb_device,
+	.in = &usb_endpoint_bulk_data_in,
+	.out = 0,
 	.setup_complete = 0,
 	.transfer_complete = usb_queue_transfer_complete,
 };
@@ -121,7 +130,7 @@ static void command_transfer_completed(
 
 static void start_command_transfer()
 {
-        usb_transfer_schedule(&usb_endpoint_bulk_out,
+        usb_transfer_schedule(&usb_endpoint_bulk_cmd_out,
                               command_buffer,
                               sizeof(command_buffer),
                               command_transfer_completed);
@@ -129,7 +138,7 @@ static void start_command_transfer()
 
 void send_reply(void *data, uint16_t length)
 {
-        usb_transfer_schedule(&usb_endpoint_bulk_in, data, length, NULL);
+        usb_transfer_schedule(&usb_endpoint_bulk_cmd_in, data, length, NULL);
 }
 
 volatile static unsigned int pending_buffers = 0;
@@ -142,18 +151,22 @@ void tracker_usb_send_buffer(void *data, uint16_t length)
 {
         if (pending_buffers) return;
         pending_buffers++;
-        usb_transfer_schedule(&usb_endpoint_bulk_in, data, length, buffer_transfer_done);
+        usb_transfer_schedule(&usb_endpoint_bulk_data_in,
+                              data, length,
+                              buffer_transfer_done);
 }
 
 void usb_configuration_changed(
 	usb_device_t* const device
 ) {
         if (device->configuration == 0) {
-            usb_endpoint_disable(&usb_endpoint_bulk_in);
-            usb_endpoint_disable(&usb_endpoint_bulk_out);
+            usb_endpoint_disable(&usb_endpoint_bulk_cmd_in);
+            usb_endpoint_disable(&usb_endpoint_bulk_cmd_out);
+            usb_endpoint_disable(&usb_endpoint_bulk_data_in);
         } else {
-            usb_endpoint_init(&usb_endpoint_bulk_out);
-            usb_endpoint_init(&usb_endpoint_bulk_in);
+            usb_endpoint_init(&usb_endpoint_bulk_cmd_out);
+            usb_endpoint_init(&usb_endpoint_bulk_cmd_in);
+            usb_endpoint_init(&usb_endpoint_bulk_data_in);
             start_command_transfer();
         }
 }

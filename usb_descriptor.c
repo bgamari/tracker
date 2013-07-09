@@ -32,8 +32,9 @@
 #define USB_MAX_PACKET_BULK_FS	(64)
 #define USB_MAX_PACKET_BULK_HS	(512)
 
-#define USB_BULK_IN_EP_ADDR 	(0x81)
-#define USB_BULK_OUT_EP_ADDR 	(0x02)
+#define USB_BULK_CMD_IN_EP_ADDR 	(0x81)
+#define USB_BULK_CMD_OUT_EP_ADDR 	(0x02)
+#define USB_BULK_DATA_IN_EP_ADDR 	(0x83)
 
 #define USB_STRING_LANGID		(0x0409)
 
@@ -69,7 +70,7 @@ uint8_t usb_descriptor_device_qualifier[] = {
 uint8_t usb_descriptor_configuration_full_speed[] = {
     9,          						// bLength
     USB_DESCRIPTOR_TYPE_CONFIGURATION,	// bDescriptorType
-    USB_WORD(32), 						// wTotalLength
+    USB_WORD(39), 						// wTotalLength
     0x01,       						// bNumInterfaces
     0x01,       						// bConfigurationValue
     0x00,       						// iConfiguration
@@ -80,7 +81,7 @@ uint8_t usb_descriptor_configuration_full_speed[] = {
     USB_DESCRIPTOR_TYPE_INTERFACE,		// bDescriptorType
     0x00,       						// bInterfaceNumber
     0x00,       						// bAlternateSetting
-    0x02,       						// bNumEndpoints
+    0x03,       						// bNumEndpoints
     0xFF,       						// bInterfaceClass: vendor-specific
     0xFF,       						// bInterfaceSubClass
     0xFF,       						// bInterfaceProtocol: vendor-specific
@@ -88,14 +89,21 @@ uint8_t usb_descriptor_configuration_full_speed[] = {
     
     7,          						// bLength
     USB_DESCRIPTOR_TYPE_ENDPOINT,		// bDescriptorType
-    USB_BULK_IN_EP_ADDR,       			// bEndpointAddress
+    USB_BULK_CMD_IN_EP_ADDR,       			// bEndpointAddress
     0x02,       						// bmAttributes: BULK
     USB_WORD(USB_MAX_PACKET_BULK_FS), 	// wMaxPacketSize
     0x00,       						// bInterval: no NAK
     
     7,          						// bLength
     USB_DESCRIPTOR_TYPE_ENDPOINT,		// bDescriptorType
-    USB_BULK_OUT_EP_ADDR,       		// bEndpointAddress
+    USB_BULK_CMD_OUT_EP_ADDR,       		// bEndpointAddress
+    0x02,       						// bmAttributes: BULK
+    USB_WORD(USB_MAX_PACKET_BULK_FS), 	// wMaxPacketSize
+    0x00,       						// bInterval: no NAK
+
+    7,         		 					// bLength
+    USB_DESCRIPTOR_TYPE_ENDPOINT,		// bDescriptorType
+    USB_BULK_DATA_IN_EP_ADDR,       		// bEndpointAddress
     0x02,       						// bmAttributes: BULK
     USB_WORD(USB_MAX_PACKET_BULK_FS), 	// wMaxPacketSize
     0x00,       						// bInterval: no NAK
@@ -106,7 +114,7 @@ uint8_t usb_descriptor_configuration_full_speed[] = {
 uint8_t usb_descriptor_configuration_high_speed[] = {
     9,          						// bLength
     USB_DESCRIPTOR_TYPE_CONFIGURATION,	// bDescriptorType
-    USB_WORD(32), 						// wTotalLength
+    USB_WORD(39), 						// wTotalLength
     0x01,       						// bNumInterfaces
     0x01,       						// bConfigurationValue
     0x00,       						// iConfiguration
@@ -117,7 +125,7 @@ uint8_t usb_descriptor_configuration_high_speed[] = {
     USB_DESCRIPTOR_TYPE_INTERFACE,		// bDescriptorType
     0x00,       						// bInterfaceNumber
     0x00,       						// bAlternateSetting
-    0x02,       						// bNumEndpoints
+    0x03,       						// bNumEndpoints
     0xFF,       						// bInterfaceClass: vendor-specific
     0xFF,       						// bInterfaceSubClass
     0xFF,       						// bInterfaceProtocol: vendor-specific
@@ -125,14 +133,21 @@ uint8_t usb_descriptor_configuration_high_speed[] = {
     
     7,          						// bLength
     USB_DESCRIPTOR_TYPE_ENDPOINT,		// bDescriptorType
-    USB_BULK_IN_EP_ADDR,       			// bEndpointAddress
+    USB_BULK_CMD_IN_EP_ADDR,       			// bEndpointAddress
     0x02,       						// bmAttributes: BULK
     USB_WORD(USB_MAX_PACKET_BULK_HS), 	// wMaxPacketSize
     0x00,       						// bInterval: no NAK
     
     7,         		 					// bLength
     USB_DESCRIPTOR_TYPE_ENDPOINT,		// bDescriptorType
-    USB_BULK_OUT_EP_ADDR,       		// bEndpointAddress
+    USB_BULK_CMD_OUT_EP_ADDR,       		// bEndpointAddress
+    0x02,       						// bmAttributes: BULK
+    USB_WORD(USB_MAX_PACKET_BULK_HS), 	// wMaxPacketSize
+    0x00,       						// bInterval: no NAK
+
+    7,         		 					// bLength
+    USB_DESCRIPTOR_TYPE_ENDPOINT,		// bDescriptorType
+    USB_BULK_DATA_IN_EP_ADDR,       		// bEndpointAddress
     0x02,       						// bmAttributes: BULK
     USB_WORD(USB_MAX_PACKET_BULK_HS), 	// wMaxPacketSize
     0x00,       						// bInterval: no NAK
