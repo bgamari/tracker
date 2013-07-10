@@ -156,9 +156,12 @@ void tracker_usb_send_buffer(void *data, uint16_t length)
 {
         if (pending_buffers) return;
         pending_buffers++;
-        usb_transfer_schedule(&usb_endpoint_bulk_data_in,
-                              data, length,
-                              buffer_transfer_done);
+        int ret = usb_transfer_schedule(&usb_endpoint_bulk_data_in,
+                                        data, length,
+                                        buffer_transfer_done);
+        if (ret) {
+                // fixme fail
+        }
 }
 
 void usb_configuration_changed(
