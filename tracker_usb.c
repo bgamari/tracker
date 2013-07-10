@@ -51,6 +51,7 @@ usb_endpoint_t usb_endpoint_control_out = {
 	.setup_complete = usb_setup_complete,
 	.transfer_complete = usb_control_out_complete,
 };
+USB_DEFINE_QUEUE(usb_endpoint_control_out, 4);
 
 usb_endpoint_t usb_endpoint_control_in = {
 	.address = 0x80,
@@ -60,6 +61,7 @@ usb_endpoint_t usb_endpoint_control_in = {
 	.setup_complete = 0,
 	.transfer_complete = usb_control_in_complete,
 };
+USB_DEFINE_QUEUE(usb_endpoint_control_in, 4);
 
 usb_endpoint_t usb_endpoint_bulk_cmd_in = {
 	.address = 0x81,
@@ -69,6 +71,7 @@ usb_endpoint_t usb_endpoint_bulk_cmd_in = {
 	.setup_complete = 0,
 	.transfer_complete = usb_queue_transfer_complete,
 };
+USB_DEFINE_QUEUE(usb_endpoint_bulk_cmd_in, 4);
 
 usb_endpoint_t usb_endpoint_bulk_cmd_out = {
 	.address = 0x02,
@@ -78,6 +81,7 @@ usb_endpoint_t usb_endpoint_bulk_cmd_out = {
 	.setup_complete = 0,
 	.transfer_complete = usb_queue_transfer_complete,
 };
+USB_DEFINE_QUEUE(usb_endpoint_bulk_cmd_out, 4);
 
 usb_endpoint_t usb_endpoint_bulk_data_in = {
 	.address = 0x83,
@@ -87,6 +91,7 @@ usb_endpoint_t usb_endpoint_bulk_data_in = {
 	.setup_complete = 0,
 	.transfer_complete = usb_queue_transfer_complete,
 };
+USB_DEFINE_QUEUE(usb_endpoint_bulk_data_in, 4);
 
 static const usb_request_handler_fn vendor_request_handler[] = {
 	NULL,
@@ -173,7 +178,12 @@ void usb_configuration_changed(
 
 void usb_init(void)
 {
-        usb_queue_init();
+        usb_queue_init(&usb_endpoint_control_in_queue);
+        usb_queue_init(&usb_endpoint_control_out_queue);
+        usb_queue_init(&usb_endpoint_bulk_cmd_in_queue);
+        usb_queue_init(&usb_endpoint_bulk_cmd_out_queue);
+        usb_queue_init(&usb_endpoint_bulk_data_in_queue);
+
         usb_set_configuration_changed_cb(usb_configuration_changed);
         usb_peripheral_reset();
         usb_device_init(0, &usb_device);
