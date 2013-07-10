@@ -151,7 +151,10 @@ void tracker_usb_send_buffer(void *data, uint16_t length)
         int ret = usb_transfer_schedule(&usb_endpoint_bulk_data_in,
                                         data, length, NULL);
                                         
-        if (ret) {
+        if (ret == -1 || ret == 0) {
+                // Timeout or success
+                return;
+        } else {
                 while (1);
         }
 }
