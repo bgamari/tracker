@@ -3,6 +3,7 @@
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/creg.h>
+#include <libopencm3/lpc43xx/gpdma.h>
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -11,6 +12,8 @@
 #include "timer.h"
 #include "pin.h"
 #include "tracker_usb.h"
+
+//#define USE_DMA
 
 static bool running = false;
 static unsigned int nsamples;
@@ -60,6 +63,32 @@ void adc_init()
         scu_pinmux(P3_7, SCU_CONF_FUNCTION2 | SCU_SSP_IO); // MISO
         scu_pinmux(P1_16, SCU_CONF_FUNCTION4); // T0_MAT0 = STCONV
 
+#ifdef USE_DMA
+        // configure GPDMA channel
+        GPDMA_CONFIG = GPDMA_CONFIG_E(1);
+        GPDMA_INTTCCLEAR = 0xffffffff;
+        GPDMA_INTERRCLR = 0xffffffff;
+        GPDMA_C0SRCADDR = (uint32_t) &SSP0_DR;
+        GPDMA_C0DESTADDR = 0x0; // DESTADDR will be set in adc_set_buffers
+        GPDMA_C0LLI = 0;
+        GPDMA_C0CONTROL =
+                  GPDMA_CCONTROL_SBSIZE(0x2)  // source burst size = 8
+                | GPDMA_CCONTROL_DBSIZE(0x2)  // destination burst size = 8
+                | GPDMA_CCONTROL_TRANSFERSIZE(8)  
+                | GPDMA_CCONTROL_SWIDTH(0x1)  // halfword
+                | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
+                | GPDMA_CCONTROL_S(0x1)       // Master 1 can access peripheral
+                | GPDMA_CCONTROL_D(0x0)       // Master 0 can access memory
+                | GPDMA_CCONTROL_DI(0x1)      // Destination increment
+                ;
+        GPDMA_C0CONFIG =
+                  GPDMA_CCONFIG_SRCPERIPHERAL(0x9)  // SSP0 Rx
+                | GPDMA_CCONFIG_FLOWCNTRL(0x2)      // Memory to peripheral
+                //| GPDMA_CCONFIG_IE(0x1)             // Enable error interrupt
+                ;
+        SSP0_DMACR = SSP_DMACR_RXDMAE;
+#endif
+        
         // configure PINT0 = ADC_BUSY = GPIO1[13]
         nvic_enable_irq(NVIC_PIN_INT0_IRQ);
         SCU_PINTSEL0 = (SCU_PINTSEL0 & ~0xff) | 13 | (0x1 << 5);
@@ -74,6 +103,7 @@ void adc_set_buffers(unsigned int length, uint16_t *buffer1, uint16_t *buffer2)
         last_sample = NULL; // FIXME?
         head = 0;
         inactive_buffer = buffer2;
+        GPDMA_C0DESTADDR = (uint32_t) buffer;
 }
 
 void adc_set_streaming(bool on)
@@ -144,6 +174,8 @@ static void buffer_done()
                 tracker_usb_send_buffer(buffer, nsamples * sizeof(uint16_t));
 }
 
+static bool reconfigure_buffer;
+
 // ADC_BUSY fell: ADC sample ready
 void pin_int0_isr(void)
 {
@@ -154,10 +186,28 @@ void pin_int0_isr(void)
                 GPIO_PIN_INTERRUPT_IST = 0x1;
 
                 if (buffer == NULL) return;
+
+#ifdef USE_DMA
+                // Uh oh, we're going too fast
+                if (GPDMA_C0CONFIG & GPDMA_C0CONFIG_E(1)) while(1);
+
+                if (reconfigure_buffer) {
+                        GPDMA_C0DESTADDR = (uint32_t) buffer;
+                        reconfigure_buffer = false;
+                }
+
+                GPDMA_C0CONFIG |= GPDMA_C0CONFIG_E(0x1);
+                head += 8;
+                last_sample = &buffer[head - 2*8];
+#else
                 for (unsigned int i=0; i<8; i++, head++) 
                         buffer[head] = ssp_transfer(SSP0_NUM, 0);
                 last_sample = &buffer[head - 8];
-                if (head >= nsamples)
+#endif
+
+                if (head >= nsamples) {
                         buffer_done();
+                        reconfigure_buffer = true;
+                }
         }
 }
