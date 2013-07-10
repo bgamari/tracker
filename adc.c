@@ -102,8 +102,9 @@ void adc_set_buffers(unsigned int length, uint16_t *buffer1, uint16_t *buffer2)
         buffer = buffer1;
         last_sample = NULL; // FIXME?
         head = 0;
-        inactive_buffer = buffer2;
+#ifdef USE_DMA
         GPDMA_C0DESTADDR = (uint32_t) buffer;
+#endif
 }
 
 void adc_set_streaming(bool on)
