@@ -135,7 +135,7 @@ static void command_transfer_completed(
 
 static void start_command_transfer()
 {
-        usb_transfer_schedule(&usb_endpoint_bulk_cmd_out,
+        usb_transfer_schedule_block(&usb_endpoint_bulk_cmd_out,
                               command_buffer,
                               sizeof(command_buffer),
                               command_transfer_completed);
@@ -143,7 +143,7 @@ static void start_command_transfer()
 
 void send_reply(void *data, uint16_t length)
 {
-        usb_transfer_schedule(&usb_endpoint_bulk_cmd_in, data, length, NULL);
+        usb_transfer_schedule_block(&usb_endpoint_bulk_cmd_in, data, length, NULL);
 }
 
 volatile static unsigned int pending_buffers = 0;
