@@ -146,21 +146,13 @@ void send_reply(void *data, uint16_t length)
         usb_transfer_schedule_block(&usb_endpoint_bulk_cmd_in, data, length, NULL);
 }
 
-volatile static unsigned int pending_buffers = 0;
-static void buffer_transfer_done(usb_transfer_t* transfer, unsigned int transferred)
-{
-        pending_buffers--;
-}
-
 void tracker_usb_send_buffer(void *data, uint16_t length)
 {
-        if (pending_buffers) return;
-        pending_buffers++;
         int ret = usb_transfer_schedule(&usb_endpoint_bulk_data_in,
-                                        data, length,
-                                        buffer_transfer_done);
+                                        data, length, NULL);
+                                        
         if (ret) {
-                // fixme fail
+                while (1);
         }
 }
 
