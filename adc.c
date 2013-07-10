@@ -92,12 +92,14 @@ int adc_set_trigger_freq(uint32_t freq)
 
 int adc_trigger_start()
 {
+        running = true;
         TIMER0_TCR |= TIMER_TCR_CEN;
         return 0;
 }
 
 int adc_trigger_stop()
 {
+        running = false;
         TIMER0_TCR &= ~TIMER_TCR_CEN;
         return 0;
 }
