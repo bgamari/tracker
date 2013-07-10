@@ -75,12 +75,12 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
 
         case CMD_START_ADC_STREAM:
-                adc_set_streaming(true);
+                adc_streaming = true;
                 send_ack();
                 break;
 
         case CMD_STOP_ADC_STREAM:
-                adc_set_streaming(false);
+                adc_streaming = false;
                 send_ack();
                 break;
 

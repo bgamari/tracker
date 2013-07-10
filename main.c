@@ -8,6 +8,7 @@
 #include "pin.h"
 #include "clock.h"
 #include "tracker.h"
+#include "buffer.h"
 #include "adc.h"
 #include "dac.h"
 #include "uart.h"
@@ -107,7 +108,20 @@ static void init_clock()
                 | CGU_BASE_APB1_CLK_CLK_SEL(CGU_SRC_PLL1);
 }
 
-uint16_t b1[256], b2[256];
+buffer_t* active_buffer = NULL;
+
+uint16_t* buffer_full(uint16_t* buffer_data)
+{
+        buffer_t* buffer = (buffer_t*) buffer_data;
+        if (adc_streaming)
+                tracker_usb_send_buffer(buffer);
+        else
+                put_buffer(buffer);
+
+        buffer_t* active_buffer = take_buffer();
+        if (active_buffer == NULL) while (1); // uh oh
+        return active_buffer->data;
+}
 
 /* This example turns all 4 leds on and then off */
 int main(void) {
@@ -134,9 +148,12 @@ int main(void) {
 
         dac_init();
         adc_init();
+        buffers_init();
+        active_buffer = take_buffer();
+        if (active_buffer == NULL) while (1);
+        adc_start(BUFFER_SIZE/8, active_buffer->data, buffer_full);
         adc_set_trigger_freq(200);
-        adc_set_buffers(sizeof(b1) / sizeof(b1[0]), b1, b2);
-        adc_trigger_start();
+        adc_set_trigger_mode(TRIGGER_AUTO);
 
 #if 0
         feedback_init();

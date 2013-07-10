@@ -11,17 +11,17 @@
 #include "adc.h"
 #include "timer.h"
 #include "pin.h"
-#include "tracker_usb.h"
 
 //#define USE_DMA
 
+static enum trigger_mode trigger_mode = TRIGGER_OFF;
 static bool running = false;
+
 static unsigned int nsamples;
 static uint16_t *buffer;
+static adc_buffer_done_cb buffer_done = NULL;
 static unsigned int head; // index in buffer where next sample will be stored
-static uint16_t *inactive_buffer;
 static uint16_t *last_sample;
-static bool streaming = false;
 
 struct pin_t os1 = { .port = GPIO3, .pin = GPIOPIN7 };
 struct pin_t os2 = { .port = GPIO3, .pin = GPIOPIN6 };
@@ -96,10 +96,9 @@ void adc_init()
         GPIO_PIN_INTERRUPT_IENF |= 1 << 0; // Falling edge
 }
 
-void adc_set_buffers(unsigned int length, uint16_t *buffer1, uint16_t *buffer2)
+static void setup_buffer(uint16_t* buf)
 {
-        nsamples = length;
-        buffer = buffer1;
+        buffer = buf;
         last_sample = NULL; // FIXME?
         head = 0;
 #ifdef USE_DMA
@@ -107,49 +106,45 @@ void adc_set_buffers(unsigned int length, uint16_t *buffer1, uint16_t *buffer2)
 #endif
 }
 
-void adc_set_streaming(bool on)
+void adc_start(unsigned int samples, uint16_t* buf, adc_buffer_done_cb done)
 {
-        streaming = on;
+        buffer_done = done;
+        nsamples = samples;
+        setup_buffer(buf);
+        running = true;
+}
+
+void adc_set_trigger_mode(enum trigger_mode mode)
+{
+        trigger_mode = mode;
+        if (trigger_mode != TRIGGER_AUTO)
+                TIMER0_TCR &= ~TIMER_TCR_CEN;
+        else
+                TIMER0_TCR |= TIMER_TCR_CEN;
 }
 
 int adc_set_trigger_freq(uint32_t freq)
 {
         setup_periodic_timer(TIMER0, 2*freq);
         TIMER0_EMR |= (TIMER0_EMR & ~TIMER_EMR_EMC0_MASK) | (TIMER_EMR_EMC_TOGGLE << TIMER_EMR_EMC0_SHIFT);
-        if (running)
-                TIMER0_TCR |= TIMER_TCR_CEN;
+        adc_set_trigger_mode(trigger_mode);
         return 0;
 }
 
-int adc_trigger_start()
+int adc_manual_trigger()
 {
-        running = true;
-        TIMER0_TCR |= TIMER_TCR_CEN;
-        return 0;
-}
+        if (trigger_mode != TRIGGER_MANUAL)
+                return -1;
 
-int adc_trigger_stop()
-{
-        running = false;
-        TIMER0_TCR &= ~TIMER_TCR_CEN;
-        return 0;
-}
-
-void adc_manual_trigger()
-{
         TIMER0_EMR &= ~TIMER_EMR_EM0;
         // FIXME: delay?
         TIMER0_EMR |= TIMER_EMR_EM0;
+        return 0;
 }
 
 uint16_t *adc_get_active_buffer()
 {
         return buffer;
-}
-
-uint16_t *adc_get_inactive_buffer()
-{
-        return inactive_buffer;
 }
 
 uint16_t *adc_get_last_sample()
@@ -163,19 +158,6 @@ void adc_set_sample_time(enum adc_sample_time_t time)
         pin_set(&os2, time & 0x2);
         pin_set(&os3, time & 0x4);
 }
-
-static void buffer_done()
-{
-        uint16_t* buf = buffer;
-        buffer = inactive_buffer;
-        inactive_buffer = buf;
-        head = 0;
-
-        if (streaming)
-                tracker_usb_send_buffer(buffer, nsamples * sizeof(uint16_t));
-}
-
-static bool reconfigure_buffer;
 
 // ADC_BUSY fell: ADC sample ready
 void pin_int0_isr(void)
@@ -192,11 +174,6 @@ void pin_int0_isr(void)
                 // Uh oh, we're going too fast
                 if (GPDMA_C0CONFIG & GPDMA_C0CONFIG_E(1)) while(1);
 
-                if (reconfigure_buffer) {
-                        GPDMA_C0DESTADDR = (uint32_t) buffer;
-                        reconfigure_buffer = false;
-                }
-
                 GPDMA_C0CONFIG |= GPDMA_C0CONFIG_E(0x1);
                 head += 8;
                 last_sample = &buffer[head - 2*8];
@@ -207,8 +184,16 @@ void pin_int0_isr(void)
 #endif
 
                 if (head >= nsamples) {
-                        buffer_done();
-                        reconfigure_buffer = true;
+                        head = 0;
+                        if (buffer_done) {
+                                buffer = buffer_done(buffer);
+                        } else {
+                                buffer = NULL;
+                        }
+
+#ifdef USE_DMA
+                        GPDMA_C0DESTADDR = (uint32_t) buffer;
+#endif
                 }
         }
 }

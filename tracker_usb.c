@@ -12,6 +12,7 @@
 #include "hackrf_usb/usb_descriptor.h"
 #include "hackrf_usb/usb_standard_request.h"
 
+bool adc_streaming = false;
 struct cmd_frame_t cmd_frame;
 
 uint8_t command_buffer[512] = "hello world";
@@ -126,7 +127,7 @@ const usb_request_handlers_t usb_request_handlers = {
 static void start_command_transfer(void);
 
 static void command_transfer_completed(
-        usb_transfer_t* transfer,
+        void* user_data,
         unsigned int transferred
 ) {
         process_cmd((struct cmd_frame_t*) command_buffer);
@@ -136,24 +137,35 @@ static void command_transfer_completed(
 static void start_command_transfer()
 {
         usb_transfer_schedule_block(&usb_endpoint_bulk_cmd_out,
-                              command_buffer,
-                              sizeof(command_buffer),
-                              command_transfer_completed);
+                                    command_buffer,
+                                    sizeof(command_buffer),
+                                    command_transfer_completed, NULL);
 }
 
 void send_reply(void *data, uint16_t length)
 {
-        usb_transfer_schedule_block(&usb_endpoint_bulk_cmd_in, data, length, NULL);
+        usb_transfer_schedule_block(&usb_endpoint_bulk_cmd_in, data, length,
+                                    NULL, NULL);
 }
 
-void tracker_usb_send_buffer(void *data, uint16_t length)
+static void buffer_sent(void* user_data, unsigned int transferred)
+{
+        buffer_t* buffer = buffer_from_pointer(user_data);
+        put_buffer(buffer);
+}
+
+void tracker_usb_send_buffer(buffer_t* buffer)
 {
         int ret = usb_transfer_schedule(&usb_endpoint_bulk_data_in,
-                                        data, length, NULL);
+                                        buffer->data, BUFFER_SIZE,
+                                        buffer_sent, buffer);
                                         
-        if (ret == -1 || ret == 0) {
-                // Timeout or success
+        if (ret == 0) {
+                // success
                 return;
+        } if (ret == -1) {
+                // No transfers available
+                put_buffer(buffer);
         } else {
                 while (1);
         }
