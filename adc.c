@@ -12,7 +12,7 @@
 #include "timer.h"
 #include "pin.h"
 
-//#define USE_DMA
+#define USE_DMA
 
 static enum trigger_mode trigger_mode = TRIGGER_OFF;
 static bool running = false;
@@ -30,6 +30,51 @@ struct pin_t os3 = { .port = GPIO3, .pin = GPIOPIN5 };
 struct pin_t reset = { .port = GPIO5, .pin = GPIOPIN2 };
 struct pin_t range = { .port = GPIO5, .pin = GPIOPIN6 };
 struct pin_t standby = { .port = GPIO5, .pin = GPIOPIN0 }; // inverted
+
+#ifdef USE_DMA
+static void configure_rx_dma()
+{
+        GPDMA_C0SRCADDR = (uint32_t) &SSP0_DR;
+        GPDMA_C0DESTADDR = 0x0; // DESTADDR will be set in adc_set_buffers
+        GPDMA_C0LLI = 0;
+        GPDMA_C0CONTROL =
+                  GPDMA_CCONTROL_SBSIZE(0x2)  // source burst size = 8
+                | GPDMA_CCONTROL_DBSIZE(0x2)  // destination burst size = 8
+                | GPDMA_CCONTROL_SWIDTH(0x1)  // halfword
+                | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
+                | GPDMA_CCONTROL_S(0x1)       // master 1 can access peripheral
+                | GPDMA_CCONTROL_D(0x0)       // master 0 can access memory
+                | GPDMA_CCONTROL_DI(0x1)      // destination increment
+                ;
+        GPDMA_C0CONFIG =
+                  GPDMA_CCONFIG_SRCPERIPHERAL(0x9)  // SSP0 RX
+                | GPDMA_CCONFIG_FLOWCNTRL(0x2)      // peripheral to memory (DMA controller)
+                | GPDMA_CCONFIG_IE(0x1)
+                ;
+}
+
+static uint16_t dummy = 0;
+
+static void configure_tx_dma()
+{
+        GPDMA_C1SRCADDR = (uint32_t) &dummy;
+        GPDMA_C1DESTADDR = (uint32_t) &SSP0_DR;
+        GPDMA_C1LLI = 0;
+        GPDMA_C1CONTROL =
+                  GPDMA_CCONTROL_SBSIZE(0x2)  // source burst size = 8
+                | GPDMA_CCONTROL_DBSIZE(0x2)  // destination burst size = 8
+                | GPDMA_CCONTROL_SWIDTH(0x1)  // halfword
+                | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
+                | GPDMA_CCONTROL_S(0x0)       // master 0 can access memory
+                | GPDMA_CCONTROL_D(0x1)       // master 1 can access peripheral
+                ;
+        GPDMA_C1CONFIG =
+                  GPDMA_CCONFIG_DESTPERIPHERAL(0xA)  // SSP0 TX
+                | GPDMA_CCONFIG_FLOWCNTRL(0x1)      // memory to peripheral (DMA controller)
+                | GPDMA_CCONFIG_IE(0x1)
+                ;
+}
+#endif
 
 void adc_init()
 {
@@ -64,29 +109,14 @@ void adc_init()
         scu_pinmux(P1_16, SCU_CONF_FUNCTION4); // T0_MAT0 = STCONV
 
 #ifdef USE_DMA
-        // configure GPDMA channel
+        // enable SSP DMA
+        SSP0_DMACR = SSP_DMACR_RXDMAE | SSP_DMACR_TXDMAE;
+        // configure GPDMA channels
         GPDMA_CONFIG = GPDMA_CONFIG_E(1);
         GPDMA_INTTCCLEAR = 0xffffffff;
         GPDMA_INTERRCLR = 0xffffffff;
-        GPDMA_C0SRCADDR = (uint32_t) &SSP0_DR;
-        GPDMA_C0DESTADDR = 0x0; // DESTADDR will be set in adc_set_buffers
-        GPDMA_C0LLI = 0;
-        GPDMA_C0CONTROL =
-                  GPDMA_CCONTROL_SBSIZE(0x2)  // source burst size = 8
-                | GPDMA_CCONTROL_DBSIZE(0x2)  // destination burst size = 8
-                | GPDMA_CCONTROL_TRANSFERSIZE(8)  
-                | GPDMA_CCONTROL_SWIDTH(0x1)  // halfword
-                | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
-                | GPDMA_CCONTROL_S(0x1)       // Master 1 can access peripheral
-                | GPDMA_CCONTROL_D(0x0)       // Master 0 can access memory
-                | GPDMA_CCONTROL_DI(0x1)      // Destination increment
-                ;
-        GPDMA_C0CONFIG =
-                  GPDMA_CCONFIG_SRCPERIPHERAL(0x9)  // SSP0 Rx
-                | GPDMA_CCONFIG_FLOWCNTRL(0x2)      // Memory to peripheral
-                //| GPDMA_CCONFIG_IE(0x1)             // Enable error interrupt
-                ;
-        SSP0_DMACR = SSP_DMACR_RXDMAE;
+        configure_rx_dma();
+        configure_tx_dma();
 #endif
         
         // configure PINT0 = ADC_BUSY = GPIO1[13]
@@ -102,6 +132,8 @@ static void setup_buffer(uint16_t* buf)
         last_sample = NULL; // FIXME?
         head = 0;
 #ifdef USE_DMA
+        GPDMA_C0CONFIG &= ~GPDMA_CCONFIG_E(0x1);
+        GPDMA_C1CONFIG &= ~GPDMA_CCONFIG_E(0x1);
         GPDMA_C0DESTADDR = (uint32_t) buffer;
 #endif
 }
@@ -171,10 +203,13 @@ void pin_int0_isr(void)
                 if (buffer == NULL) return;
 
 #ifdef USE_DMA
-                // Uh oh, we're going too fast
-                if (GPDMA_C0CONFIG & GPDMA_C0CONFIG_E(1)) while(1);
+                GPDMA_C0CONFIG &= GPDMA_CCONFIG_E(0x1);
+                GPDMA_C1CONFIG &= GPDMA_CCONFIG_E(0x1);
+                GPDMA_C0CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(9); 
+                GPDMA_C1CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(9);
+                GPDMA_C0CONFIG |= GPDMA_CCONFIG_E(0x1);
+                GPDMA_C1CONFIG |= GPDMA_CCONFIG_E(0x1);
 
-                GPDMA_C0CONFIG |= GPDMA_C0CONFIG_E(0x1);
                 head += 8;
                 last_sample = &buffer[head - 2*8];
 #else
@@ -186,9 +221,10 @@ void pin_int0_isr(void)
                 if (head >= nsamples) {
                         head = 0;
                         if (buffer_done) {
-                                buffer = buffer_done(buffer);
+                                uint16_t *next_buffer = buffer_done(buffer);
+                                setup_buffer(next_buffer);
                         } else {
-                                buffer = NULL;
+                                setup_buffer(NULL);
                         }
 
 #ifdef USE_DMA
