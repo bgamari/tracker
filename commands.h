@@ -39,7 +39,6 @@ struct cmd_frame_t {
     uint8_t cmd;
     union {
         struct echo_cmd_t echo;
-        struct echo_cmd_t spi_echo;
         int32_t set_stage_gains[3][3];
         int32_t set_stage_setpoint[3];
         int32_t set_psd_gains[4][3];
