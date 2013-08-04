@@ -40,12 +40,12 @@ struct cmd_frame_t {
     union {
         struct echo_cmd_t echo;
         struct echo_cmd_t spi_echo;
-        signed int set_stage_gains[3][3];
-        signed int set_stage_setpoint[3];
-        signed int set_psd_gains[4][3];
-        signed int set_psd_setpoint[4];
-        unsigned int set_max_error;
-        signed int set_output_gains[3];
+        int32_t set_stage_gains[3][3];
+        int32_t set_stage_setpoint[3];
+        int32_t set_psd_gains[4][3];
+        int32_t set_psd_setpoint[4];
+        uint32_t set_max_error;
+        int32_t set_output_gains[3];
         struct run_scan_cmd_t run_scan;
         uint32_t set_feedback_freq;
         uint32_t set_adc_freq;
