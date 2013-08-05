@@ -19,7 +19,7 @@ struct path {
         uint16_t points[PATH_MAX_POINTS][3];
 };
 
-#define N_PATHS 16
+#define N_PATHS 8
 static struct path paths[N_PATHS] = {};
 static struct path* active_path = NULL;
 static unsigned int active_point;
@@ -46,7 +46,10 @@ int enqueue_points(uint16_t* points, unsigned int npts)
         struct path* path = take_path();
         if (path == NULL)
                 return -1;
-        memcpy(&path->points[0][0], points, 3*2*npts);
+
+        for (unsigned int i=0; i<npts; i++)
+                for (unsigned int j=0; j<3; j++)
+                        path->points[i][j] = points[3*i+j];
         path->npts = npts;
         path->next = NULL;
 
