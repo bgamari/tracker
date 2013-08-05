@@ -99,6 +99,11 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_CLEAR_PATH:
+                clear_path();
+                send_ack();
+                break;
+                
         case CMD_ENQUEUE_POINTS:
                 res = enqueue_points((uint16_t*) &cmd->enqueue_points.points, cmd->enqueue_points.npts);
                 if (res == 0) {

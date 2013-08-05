@@ -40,8 +40,9 @@ enum cmd_t {
     CMD_SET_FEEDBACK_FREQ     = 0x30,
     CMD_SET_FEEDBACK_MODE     = 0x31,
 
-    CMD_ENQUEUE_POINTS        = 0x40,
-    CMD_START_PATH            = 0x41,
+    CMD_CLEAR_PATH            = 0x40,
+    CMD_ENQUEUE_POINTS        = 0x41,
+    CMD_START_PATH            = 0x42,
 };
 
 struct cmd_frame_t {
