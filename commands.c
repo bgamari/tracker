@@ -11,33 +11,41 @@
 #include "dac.h"
 #include "uart.h"
 
-uint8_t reply_buffer[512];
+struct reply {
+        enum cmd_t cmd;
+        uint8_t status;
+        uint8_t data[490];
+};
+
+struct reply reply;
 
 #define ACK 0x06
 #define NACK 0x07
 
 static void send_ack(void)
 {
-        reply_buffer[0] = ACK;
-        send_reply(reply_buffer, 1);
+        reply.status = ACK;
+        send_reply(&reply, 5);
 }
 
 static void send_nack(void)
 {
-        reply_buffer[0] = NACK;
-        send_reply(reply_buffer, 1);
+        reply.status = NACK;
+        send_reply(&reply, 5);
 }
 
 void process_cmd(struct cmd_frame_t *cmd)
 {
         int res;
         
+        reply.cmd = cmd->cmd;
+
         switch (cmd->cmd) {
         case CMD_ECHO:
-                reply_buffer[0] = ACK;
-                reply_buffer[1] = cmd->echo.length;
-                memcpy(&reply_buffer[2], cmd->echo.data, cmd->echo.length);
-                send_reply(reply_buffer, cmd->echo.length+2);
+                reply.status = ACK;
+                reply.data[0] = cmd->echo.length;
+                memcpy(&reply.data[1], cmd->echo.data, cmd->echo.length);
+                send_reply(&reply, cmd->echo.length+6);
                 break;
 
         case CMD_SET_STAGE_GAINS:
