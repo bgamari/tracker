@@ -35,7 +35,7 @@ enum cmd_t {
     CMD_SET_ADC_FREQ          = 0x20,
     CMD_SET_ADC_TRIGGER_MODE  = 0x21,
     CMD_START_ADC_STREAM      = 0x22,
-    CMD_STOP_ADC_STREAM       = 0X23,
+    CMD_STOP_ADC_STREAM       = 0x23,
 
     CMD_SET_FEEDBACK_FREQ     = 0x30,
     CMD_SET_FEEDBACK_MODE     = 0x31,
