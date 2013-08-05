@@ -164,7 +164,7 @@ int main(void) {
         // This goes on indefinitely
         while (1) {
                 uart_print("Hello world!\n");
-#if 1
+#if 0
                 for (int i=0; i<0xffff; i+=100) {
                         struct dac_update_t updates = {broadcast, i};
                         delay_ms(1);
