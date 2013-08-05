@@ -21,7 +21,7 @@ static unsigned int nsamples; // length of buffer in uint16_t samples
 static uint16_t *buffer;
 static adc_buffer_done_cb buffer_done = NULL; // callback for when buffer has been filled
 static unsigned int head; // index in buffer where next sample will be stored
-static uint16_t *last_sample;
+static uint16_t *last_frame; // last 8-sample frame transferred
 
 struct pin_t os1 = { .port = GPIO3, .pin = GPIOPIN7 };
 struct pin_t os2 = { .port = GPIO3, .pin = GPIOPIN6 };
@@ -129,7 +129,7 @@ void adc_init()
 static void setup_buffer(uint16_t* buf)
 {
         buffer = buf;
-        last_sample = NULL; // FIXME?
+        last_frame = NULL; // FIXME?
         head = 0;
 #ifdef USE_DMA
         GPDMA_C0CONFIG &= ~GPDMA_CCONFIG_E(0x1);
@@ -179,9 +179,9 @@ uint16_t *adc_get_active_buffer()
         return buffer;
 }
 
-uint16_t *adc_get_last_sample()
+uint16_t *adc_get_last_frame()
 {
-        return last_sample;
+        return last_frame;
 }
 
 void adc_set_sample_time(enum adc_sample_time_t time)
@@ -212,11 +212,11 @@ void pin_int0_isr(void)
 
                 head += 8;
                 if (head > 2*8)
-                        last_sample = &buffer[head - 2*8];
+                        last_frame = &buffer[head - 2*8];
 #else
                 for (unsigned int i=0; i<8; i++, head++) 
                         buffer[head] = ssp_transfer(SSP0_NUM, 0);
-                last_sample = &buffer[head - 8];
+                last_frame = &buffer[head - 8];
 #endif
 
                 if (head >= nsamples) {
