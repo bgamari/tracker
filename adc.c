@@ -17,9 +17,9 @@
 static enum trigger_mode trigger_mode = TRIGGER_OFF;
 static bool running = false;
 
-static unsigned int nsamples;
+static unsigned int nsamples; // length of buffer in uint16_t samples
 static uint16_t *buffer;
-static adc_buffer_done_cb buffer_done = NULL;
+static adc_buffer_done_cb buffer_done = NULL; // callback for when buffer has been filled
 static unsigned int head; // index in buffer where next sample will be stored
 static uint16_t *last_sample;
 
