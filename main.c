@@ -151,7 +151,7 @@ int main(void) {
         buffers_init();
         active_buffer = take_buffer();
         if (active_buffer == NULL) while (1);
-        adc_start(BUFFER_SIZE/8, active_buffer->data, buffer_full);
+        adc_start(BUFFER_SIZE, active_buffer->data, buffer_full);
         adc_set_trigger_freq(200);
         adc_set_trigger_mode(TRIGGER_AUTO);
 
