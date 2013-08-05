@@ -43,7 +43,7 @@ int enqueue_points(uint16_t* points, unsigned int npts)
                 return -2;
         if (npts == 0)
                 return -3;
-        memcpy(path->points, points, 3*2*npts);
+        memcpy(&path->points[0][0], points, 3*2*npts);
         path->npts = npts;
         path->next = NULL;
 
