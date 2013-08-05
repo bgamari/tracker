@@ -110,7 +110,7 @@ static void init_clock()
 
 buffer_t* active_buffer = NULL;
 
-uint16_t* buffer_full(uint16_t* buffer_data)
+int16_t* buffer_full(int16_t* buffer_data)
 {
         buffer_t* buffer = (buffer_t*) buffer_data;
         if (adc_streaming)

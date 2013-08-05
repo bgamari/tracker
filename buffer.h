@@ -17,7 +17,7 @@ void put_buffer(buffer_t* buffer);
 #define BUFFER_SENTINEL 0xdeadbeef
 
 struct _buffer_t {
-        uint16_t data[BUFFER_SIZE];
+        int16_t data[BUFFER_SIZE];
 #ifdef BUFFER_SENTINEL
         uint32_t sentinel;
 #endif

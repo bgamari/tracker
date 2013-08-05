@@ -12,16 +12,16 @@
 #include "timer.h"
 #include "pin.h"
 
-#define USE_DMA
+//#define USE_DMA
 
 static enum trigger_mode trigger_mode = TRIGGER_OFF;
 static bool running = false;
 
-static unsigned int nsamples; // length of buffer in uint16_t samples
-static uint16_t *buffer;
+static unsigned int nsamples; // length of buffer in int16_t samples
+static int16_t *buffer;
 static adc_buffer_done_cb buffer_done = NULL; // callback for when buffer has been filled
 static unsigned int head; // index in buffer where next sample will be stored
-static uint16_t *last_frame; // last 8-sample frame transferred
+static int16_t *last_frame; // last 8-sample frame transferred
 
 struct pin_t os1 = { .port = GPIO3, .pin = GPIOPIN7 };
 struct pin_t os2 = { .port = GPIO3, .pin = GPIOPIN6 };
@@ -53,7 +53,7 @@ static void configure_rx_dma()
                 ;
 }
 
-static uint16_t dummy = 0;
+static int16_t dummy = 0;
 
 static void configure_tx_dma()
 {
@@ -126,7 +126,7 @@ void adc_init()
         GPIO_PIN_INTERRUPT_IENF |= 1 << 0; // Falling edge
 }
 
-static void setup_buffer(uint16_t* buf)
+static void setup_buffer(int16_t* buf)
 {
         buffer = buf;
         last_frame = NULL; // FIXME?
@@ -138,7 +138,7 @@ static void setup_buffer(uint16_t* buf)
 #endif
 }
 
-void adc_start(unsigned int samples, uint16_t* buf, adc_buffer_done_cb done)
+void adc_start(unsigned int samples, int16_t* buf, adc_buffer_done_cb done)
 {
         buffer_done = done;
         nsamples = samples;
@@ -174,12 +174,12 @@ int adc_manual_trigger()
         return 0;
 }
 
-uint16_t *adc_get_active_buffer()
+int16_t *adc_get_active_buffer()
 {
         return buffer;
 }
 
-uint16_t *adc_get_last_frame()
+int16_t *adc_get_last_frame()
 {
         return last_frame;
 }
@@ -222,7 +222,7 @@ void pin_int0_isr(void)
                 if (head >= nsamples) {
                         head = 0;
                         if (buffer_done) {
-                                uint16_t *next_buffer = buffer_done(buffer);
+                                int16_t *next_buffer = buffer_done(buffer);
                                 setup_buffer(next_buffer);
                         } else {
                                 setup_buffer(NULL);
