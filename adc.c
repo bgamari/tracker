@@ -12,7 +12,7 @@
 #include "timer.h"
 #include "pin.h"
 
-//#define USE_DMA
+#define USE_DMA
 
 static enum trigger_mode trigger_mode = TRIGGER_OFF;
 static bool running = false;
@@ -38,8 +38,8 @@ static void configure_rx_dma()
         GPDMA_C0DESTADDR = 0x0; // DESTADDR will be set in adc_set_buffers
         GPDMA_C0LLI = 0;
         GPDMA_C0CONTROL =
-                  GPDMA_CCONTROL_SBSIZE(0x2)  // source burst size = 8
-                | GPDMA_CCONTROL_DBSIZE(0x2)  // destination burst size = 8
+                  GPDMA_CCONTROL_SBSIZE(0x0)  // source burst size = 1
+                | GPDMA_CCONTROL_DBSIZE(0x0)  // destination burst size = 1
                 | GPDMA_CCONTROL_SWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_S(0x1)       // master 1 can access peripheral
@@ -61,8 +61,8 @@ static void configure_tx_dma()
         GPDMA_C1DESTADDR = (uint32_t) &SSP0_DR;
         GPDMA_C1LLI = 0;
         GPDMA_C1CONTROL =
-                  GPDMA_CCONTROL_SBSIZE(0x2)  // source burst size = 8
-                | GPDMA_CCONTROL_DBSIZE(0x2)  // destination burst size = 8
+                  GPDMA_CCONTROL_SBSIZE(0x0)  // source burst size = 1
+                | GPDMA_CCONTROL_DBSIZE(0x0)  // destination burst size = 1
                 | GPDMA_CCONTROL_SWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_S(0x0)       // master 0 can access memory
@@ -132,9 +132,13 @@ static void setup_buffer(int16_t* buf)
         last_frame = NULL; // FIXME?
         head = 0;
 #ifdef USE_DMA
+        while (GPDMA_ENBLDCHNS & 0x3);
         GPDMA_C0CONFIG &= ~GPDMA_CCONFIG_E(0x1);
         GPDMA_C1CONFIG &= ~GPDMA_CCONFIG_E(0x1);
-        GPDMA_C0DESTADDR = (uint32_t) buffer;
+        // We bump up DESTADDR by 2 before starting the transaction
+        // as the controller doesn't increment after the last transfer
+        // of a transaction
+        GPDMA_C0DESTADDR = (uint32_t) buffer - 2;
 #endif
 }
 
@@ -203,10 +207,14 @@ void pin_int0_isr(void)
                 if (buffer == NULL) return;
 
 #ifdef USE_DMA
+                while (GPDMA_ENBLDCHNS & 0x3);
                 GPDMA_C0CONFIG &= ~GPDMA_CCONFIG_E(0x1);
                 GPDMA_C1CONFIG &= ~GPDMA_CCONFIG_E(0x1);
-                GPDMA_C0CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(9); 
-                GPDMA_C1CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(9);
+                // DESTADDR wasn't incremented after the last
+                // transfer, therefore we bump it
+                GPDMA_C0DESTADDR += 2;
+                GPDMA_C0CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(8); 
+                GPDMA_C1CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(8);
                 GPDMA_C0CONFIG |= GPDMA_CCONFIG_E(0x1);
                 GPDMA_C1CONFIG |= GPDMA_CCONFIG_E(0x1);
 
