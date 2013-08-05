@@ -21,9 +21,9 @@ struct path {
 };
 
 #define N_PATHS 16
-struct path paths[N_PATHS] = {};
-struct path* active_path = NULL;
-unsigned int active_point;
+static struct path paths[N_PATHS] = {};
+static struct path* active_path = NULL;
+static unsigned int active_point;
 static struct event_t path_done;
 
 struct path* take_path()
