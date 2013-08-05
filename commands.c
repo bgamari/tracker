@@ -74,6 +74,11 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_SET_ADC_TRIGGER_MODE:
+                adc_set_trigger_mode(cmd->set_adc_trigger_mode);
+                send_ack();
+                break;
+
         case CMD_START_ADC_STREAM:
                 adc_streaming = true;
                 send_ack();

@@ -28,8 +28,9 @@ enum cmd_t {
     CMD_SET_OUTPUT_GAINS      = 0x15,
 
     CMD_SET_ADC_FREQ          = 0x20,
-    CMD_START_ADC_STREAM      = 0x21,
-    CMD_STOP_ADC_STREAM       = 0X22,
+    CMD_SET_ADC_TRIGGER_MODE  = 0x21,
+    CMD_START_ADC_STREAM      = 0x22,
+    CMD_STOP_ADC_STREAM       = 0X23,
 
     CMD_SET_FEEDBACK_FREQ     = 0x30,
     CMD_SET_FEEDBACK_MODE     = 0x31,
@@ -48,6 +49,7 @@ struct cmd_frame_t {
         struct run_scan_cmd_t run_scan;
         uint32_t set_feedback_freq;  // In Hz
         uint32_t set_adc_freq;
+        enum trigger_mode set_adc_trigger_mode;
         enum feedback_mode_t set_feedback_mode;
     };
 } __attribute__((packed));
