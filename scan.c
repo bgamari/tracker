@@ -5,6 +5,7 @@
 #include "scan.h"
 #include "event.h"
 #include "dac.h"
+#include "adc.h"
 
 static struct event_t scan_done;
 
@@ -27,7 +28,6 @@ void raster_scan(struct raster_scan_t *scan)
     event_wait(&scan_done);
 }
 
-// FIXME: Setup ADC
 void timer3_isr()
 {
     TIMER3_IR = 0xf;  // Clear interrupt
@@ -46,6 +46,8 @@ void timer3_isr()
     pos_x += cur_scan.step_x * idx_x;
     uint16_t pos_y = cur_scan.center_y;
     pos_y += cur_scan.step_y * idx_y;
+
+    adc_manual_trigger();
 
     struct dac_update_t updates[2];
     updates[0].channel = channel_a;
