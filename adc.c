@@ -211,7 +211,8 @@ void pin_int0_isr(void)
                 GPDMA_C1CONFIG |= GPDMA_CCONFIG_E(0x1);
 
                 head += 8;
-                last_sample = &buffer[head - 2*8];
+                if (head > 2*8)
+                        last_sample = &buffer[head - 2*8];
 #else
                 for (unsigned int i=0; i<8; i++, head++) 
                         buffer[head] = ssp_transfer(SSP0_NUM, 0);
