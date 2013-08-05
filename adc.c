@@ -226,10 +226,6 @@ void pin_int0_isr(void)
                         } else {
                                 setup_buffer(NULL);
                         }
-
-#ifdef USE_DMA
-                        GPDMA_C0DESTADDR = (uint32_t) buffer;
-#endif
                 }
         }
 }
