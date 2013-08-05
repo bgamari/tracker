@@ -23,6 +23,7 @@ buffer_t* take_buffer()
 
 void put_buffer(buffer_t* buffer)
 {
+        if (!buffer->allocated) while(1);
         buffer->allocated = false;
 }
 
