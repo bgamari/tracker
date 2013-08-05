@@ -28,9 +28,12 @@ static struct event_t path_done;
 
 struct path* take_path()
 {
-        for (unsigned int i=0; i<N_PATHS; i++)
-                if (!paths[i].queued)
+        for (unsigned int i=0; i<N_PATHS; i++) {
+                if (!paths[i].queued) {
+                        paths[i].queued = true;
                         return &paths[i];
+                }
+        }
         return NULL;
 }
 
@@ -56,7 +59,6 @@ int enqueue_points(uint16_t* points, unsigned int npts)
         } else {
                 active_path = path;
         }
-        path->queued = true;
         cm_enable_interrupts();
         return 0;
 }
