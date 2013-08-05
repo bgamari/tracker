@@ -4,10 +4,20 @@
 
 #include "feedback.h"
 #include "adc.h"
+#include "path.h"
 
-struct echo_cmd_t {
+struct echo_cmd {
     uint8_t length;
     uint8_t data[];
+} __attribute__((packed));
+
+struct enqueue_points {
+    uint8_t npts;
+    uint16_t points[80][3];
+} __attribute__((packed));
+
+struct start_path {
+    uint32_t freq;
 } __attribute__((packed));
 
 enum cmd_t {
@@ -29,12 +39,15 @@ enum cmd_t {
 
     CMD_SET_FEEDBACK_FREQ     = 0x30,
     CMD_SET_FEEDBACK_MODE     = 0x31,
+
+    CMD_ENQUEUE_POINTS        = 0x40,
+    CMD_START_PATH            = 0x41,
 };
 
 struct cmd_frame_t {
     uint8_t cmd;
     union {
-        struct echo_cmd_t echo;
+        struct echo_cmd echo;
         int32_t set_stage_gains[3][3];
         int32_t set_stage_setpoint[3];
         int32_t set_psd_gains[4][3];
@@ -45,6 +58,8 @@ struct cmd_frame_t {
         uint32_t set_adc_freq;
         enum trigger_mode set_adc_trigger_mode;
         enum feedback_mode_t set_feedback_mode;
+        struct enqueue_points enqueue_points;
+        struct start_path start_path;
     };
 } __attribute__((packed));
 

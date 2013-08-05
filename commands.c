@@ -8,10 +8,8 @@
 #include "pin.h"
 #include "clock.h"
 #include "tracker.h"
-#include "adc.h"
 #include "dac.h"
 #include "uart.h"
-#include "feedback.h"
 
 uint8_t reply_buffer[512];
 
@@ -24,8 +22,16 @@ static void send_ack(void)
         send_reply(reply_buffer, 1);
 }
 
+static void send_nack(void)
+{
+        reply_buffer[0] = NACK;
+        send_reply(reply_buffer, 1);
+}
+
 void process_cmd(struct cmd_frame_t *cmd)
 {
+        int res;
+        
         switch (cmd->cmd) {
         case CMD_ECHO:
                 reply_buffer[0] = ACK;
@@ -93,9 +99,25 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_ENQUEUE_POINTS:
+                res = enqueue_points((uint16_t*) &cmd->enqueue_points.points, cmd->enqueue_points.npts);
+                if (res == 0) {
+                        send_ack();
+                } else {
+                        send_nack();
+                }
+                break;
+
+        case CMD_START_PATH:
+                if (start_path(cmd->start_path.freq) == 0) {
+                        send_ack();
+                } else {
+                        send_nack();
+                }
+                break;
+
         default:
-                reply_buffer[0] = NACK;
-                send_reply(reply_buffer, 1);
+                send_nack();
                 return;
         }
 }
