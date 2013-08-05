@@ -46,7 +46,7 @@ struct cmd_frame_t {
         uint32_t set_max_error;
         int32_t set_output_gains[3];
         struct run_scan_cmd_t run_scan;
-        uint32_t set_feedback_freq;
+        uint32_t set_feedback_freq;  // In Hz
         uint32_t set_adc_freq;
         enum feedback_mode_t set_feedback_mode;
     };
