@@ -120,9 +120,8 @@ void timer3_isr()
         
         adc_manual_trigger();
 
-        const uint16_t* const p = active_path->points[active_point];
         active_point++;
         for (unsigned int i=0; i<3; i++)
-                updates[i].value = p[i];
+                updates[i].value = active_path->points[active_point][i];
         set_dac(3, updates);
 }
