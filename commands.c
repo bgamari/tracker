@@ -54,6 +54,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 memcpy(psd_fb_gains, cmd->set_psd_gains, sizeof(psd_fb_gains));
                 send_ack();
                 break;
+
         case CMD_SET_PSD_SETPOINT:
                 memcpy(psd_fb_setpoint, cmd->set_psd_setpoint, sizeof(psd_fb_setpoint));
                 send_ack();
