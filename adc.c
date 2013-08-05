@@ -220,7 +220,6 @@ void pin_int0_isr(void)
 #endif
 
                 if (head >= nsamples) {
-                        head = 0;
                         if (buffer_done) {
                                 int16_t *next_buffer = buffer_done(buffer);
                                 setup_buffer(next_buffer);
