@@ -38,8 +38,8 @@ static void configure_rx_dma()
         GPDMA_C0DESTADDR = 0x0; // DESTADDR will be set in adc_set_buffers
         GPDMA_C0LLI = 0;
         GPDMA_C0CONTROL =
-                  GPDMA_CCONTROL_SBSIZE(0x0)  // source burst size = 1
-                | GPDMA_CCONTROL_DBSIZE(0x0)  // destination burst size = 1
+                  GPDMA_CCONTROL_SBSIZE(0x2)  // source burst size = 8
+                | GPDMA_CCONTROL_DBSIZE(0x2)  // destination burst size = 8
                 | GPDMA_CCONTROL_SWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_S(0x1)       // master 1 can access peripheral
@@ -61,8 +61,8 @@ static void configure_tx_dma()
         GPDMA_C1DESTADDR = (uint32_t) &SSP0_DR;
         GPDMA_C1LLI = 0;
         GPDMA_C1CONTROL =
-                  GPDMA_CCONTROL_SBSIZE(0x0)  // source burst size = 1
-                | GPDMA_CCONTROL_DBSIZE(0x0)  // destination burst size = 1
+                  GPDMA_CCONTROL_SBSIZE(0x2)  // source burst size = 8
+                | GPDMA_CCONTROL_DBSIZE(0x2)  // destination burst size = 8
                 | GPDMA_CCONTROL_SWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_S(0x0)       // master 0 can access memory
