@@ -60,14 +60,18 @@ int enqueue_points(uint16_t* points, unsigned int npts)
         return 0;
 }
 
+static void put_path(struct path* path)
+{
+        path->next = NULL;
+        path->queued = false;
+}
+
 void clear_path()
 {
         cm_disable_interrupts();
         active_path = NULL;
-        for (unsigned int i=0; i<N_PATHS; i++) {
-                paths[i].queued = false;
-                paths[i].next = NULL;
-        }
+        for (unsigned int i=0; i<N_PATHS; i++)
+                put_path(&paths[i]);
         cm_enable_interrupts();
 }
 
@@ -101,12 +105,11 @@ static struct dac_update_t updates[3] = {
 void timer3_isr()
 {
         TIMER3_IR = 0xf;  // Clear interrupt
-        if (active_point > active_path->npts) {
+        if (active_point >= active_path->npts) {
                 struct path* old = active_path;
                 active_path = active_path->next;
-                old->queued = false;
-                old->next = NULL;
                 active_point = 0;
+                put_path(old);
         }
         if (active_path == NULL) {
                 timer_disable_counter(TIMER3);
