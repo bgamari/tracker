@@ -12,7 +12,7 @@
 #include "uart.h"
 
 struct reply {
-        enum cmd_t cmd;
+        uint8_t cmd;
         uint8_t status;
         uint8_t data[490];
 };
@@ -25,13 +25,13 @@ struct reply reply;
 static void send_ack(void)
 {
         reply.status = ACK;
-        send_reply(&reply, 5);
+        send_reply(&reply, 2);
 }
 
 static void send_nack(void)
 {
         reply.status = NACK;
-        send_reply(&reply, 5);
+        send_reply(&reply, 2);
 }
 
 void process_cmd(struct cmd_frame_t *cmd)
@@ -45,7 +45,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 reply.status = ACK;
                 reply.data[0] = cmd->echo.length;
                 memcpy(&reply.data[1], cmd->echo.data, cmd->echo.length);
-                send_reply(&reply, cmd->echo.length+6);
+                send_reply(&reply, cmd->echo.length+3);
                 break;
 
         case CMD_SET_STAGE_GAINS:
