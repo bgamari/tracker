@@ -33,7 +33,7 @@ tracker.srec : tracker.elf
 
 .PHONY : clean
 clean :
-	rm -f ${OBJECTS} tracker.elf tracker.bin
+	rm -f ${OBJECTS} tracker.elf tracker.bin *.d
 
 include $(wildcard *.d)
 
