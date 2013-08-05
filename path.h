@@ -8,4 +8,4 @@ void clear_path();
 
 int start_path(unsigned int freq);
 
-bool path_running();
+bool is_path_running();

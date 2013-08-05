@@ -11,7 +11,6 @@
 #include "adc.h"
 #include "timer.h"
 #include "path.h"
-#include "event.h"
 
 struct path {
         struct path* next;
@@ -24,7 +23,7 @@ struct path {
 static struct path paths[N_PATHS] = {};
 static struct path* active_path = NULL;
 static unsigned int active_point;
-static struct event_t path_done;
+static bool path_running = false;
 
 struct path* take_path()
 {
@@ -73,6 +72,7 @@ void clear_path()
 {
         cm_disable_interrupts();
         active_path = NULL;
+        path_running = false;
         for (unsigned int i=0; i<N_PATHS; i++)
                 put_path(&paths[i]);
         cm_enable_interrupts();
@@ -80,13 +80,13 @@ void clear_path()
 
 int start_path(unsigned int freq)
 {
-        if (path_running())
+        if (path_running)
                 return -1;
         if (active_path == NULL)
                 return -2;
 
-        init_event(&path_done);
         active_point = 0;
+        path_running = true;
         setup_periodic_timer(TIMER3, freq);
         nvic_enable_irq(NVIC_TIMER3_IRQ);
         TIMER3_MCR |= TIMER_MCR_MR3I;  // interrupt on overflow match
@@ -94,9 +94,9 @@ int start_path(unsigned int freq)
         return 0;
 }
 
-bool path_running()
+bool is_path_running()
 {
-        return active_path != NULL;
+        return path_running;
 }
 
 static struct dac_update_t updates[3] = {
@@ -116,7 +116,7 @@ void timer3_isr()
         }
         if (active_path == NULL) {
                 timer_disable_counter(TIMER3);
-                event_fire(&path_done);
+                path_running = false;
                 return;
         }
         
