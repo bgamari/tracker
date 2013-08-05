@@ -36,13 +36,14 @@ struct path* take_path()
 
 int enqueue_points(uint16_t* points, unsigned int npts)
 {
-        struct path* path = take_path();
-        if (path == NULL)
-                return -1;
         if (npts > PATH_MAX_POINTS)
                 return -2;
         if (npts == 0)
                 return -3;
+
+        struct path* path = take_path();
+        if (path == NULL)
+                return -1;
         memcpy(&path->points[0][0], points, 3*2*npts);
         path->npts = npts;
         path->next = NULL;
