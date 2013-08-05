@@ -7,7 +7,7 @@ OBJCOPY = arm-none-eabi-objcopy
 PROJECT = tracker
 
 USB_OBJECTS = usb.o usb_request.o usb_standard_request.o usb_queue.o
-OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o scan.o uart.o syscalls.o timer.o commands.o $(addprefix hackrf_usb/,$(USB_OBJECTS)) tracker_usb.o usb_descriptor.o buffer.o
+OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o uart.o syscalls.o timer.o commands.o $(addprefix hackrf_usb/,$(USB_OBJECTS)) tracker_usb.o usb_descriptor.o buffer.o
 
 FLAGS = -mthumb -mcpu=cortex-m4 -Ilibopencm3/include -Ihackrf_usb -g3 -O0 -Wall -Werror -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fno-common -MD -nostartfiles -DLPC43XX -DLPC43XX_M4
 CFLAGS = $(FLAGS) -std=gnu99

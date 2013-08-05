@@ -11,7 +11,6 @@
 #include "adc.h"
 #include "dac.h"
 #include "uart.h"
-#include "scan.h"
 #include "feedback.h"
 
 uint8_t reply_buffer[512];
@@ -33,11 +32,6 @@ void process_cmd(struct cmd_frame_t *cmd)
                 reply_buffer[1] = cmd->echo.length;
                 memcpy(&reply_buffer[2], cmd->echo.data, cmd->echo.length);
                 send_reply(reply_buffer, cmd->echo.length+2);
-                break;
-
-        case CMD_RUN_SCAN:
-                send_ack();
-                raster_scan(&cmd->run_scan.raster_scan);
                 break;
 
         case CMD_SET_STAGE_GAINS:

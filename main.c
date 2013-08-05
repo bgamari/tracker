@@ -12,7 +12,6 @@
 #include "adc.h"
 #include "dac.h"
 #include "uart.h"
-#include "scan.h"
 #include "feedback.h"
 #include "commands.h"
 #include "tracker_usb.h"
