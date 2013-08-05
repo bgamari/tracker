@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tracker.h"
+
 enum feedback_mode_t {
     NO_FEEDBACK = 0,
     PSD_FEEDBACK,
