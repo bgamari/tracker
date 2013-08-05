@@ -203,8 +203,8 @@ void pin_int0_isr(void)
                 if (buffer == NULL) return;
 
 #ifdef USE_DMA
-                GPDMA_C0CONFIG &= GPDMA_CCONFIG_E(0x1);
-                GPDMA_C1CONFIG &= GPDMA_CCONFIG_E(0x1);
+                GPDMA_C0CONFIG &= ~GPDMA_CCONFIG_E(0x1);
+                GPDMA_C1CONFIG &= ~GPDMA_CCONFIG_E(0x1);
                 GPDMA_C0CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(9); 
                 GPDMA_C1CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(9);
                 GPDMA_C0CONFIG |= GPDMA_CCONFIG_E(0x1);
