@@ -12,14 +12,6 @@
 #include "timer.h"
 #include "clock.h"
 
-#define BUFFER_DEPTH 1024
-
-static int16_t buffer[BUFFER_DEPTH][INPUTS] __attribute__((section (".dma_data"))) = { };
-
-static volatile unsigned int buffer_start_time = 0;
-
-//static int16_t pos_buffer[BUFFER_DEPTH][STAGE_INPUTS] __attribute__((section (".dma_data"))) = { };
-
 static enum feedback_mode_t feedback_mode = NO_FEEDBACK;
 
 signed int psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
@@ -69,7 +61,7 @@ void feedback_set_mode(enum feedback_mode_t mode)
 
         case PSD_FEEDBACK:
         case STAGE_FEEDBACK:
-                buffer[0][0] = buffer[1][1];
+                //buffer[0][0] = buffer[1][1]; // FIXME
                 timer_enable_counter(TIMER2);
         }
         feedback_mode = mode;
