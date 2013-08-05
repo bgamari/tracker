@@ -126,10 +126,16 @@ const usb_request_handlers_t usb_request_handlers = {
 
 static void start_command_transfer(void);
 
-static void command_transfer_completed(
-        void* user_data,
-        unsigned int transferred
+static void command_transfer_completed(unsigned int status,
+                                       unsigned int transferred,
+                                       void* user_data
 ) {
+        if (status & USB_TRANSFER_STATUS_FLUSHING) {
+                return;
+        } else if (status) {
+                while(1); // uh oh
+        }
+
         process_cmd((struct cmd_frame_t*) command_buffer);
         start_command_transfer();
 }
@@ -148,7 +154,7 @@ void send_reply(void *data, uint16_t length)
                                     NULL, NULL);
 }
 
-static void buffer_sent(void* user_data, unsigned int transferred)
+static void buffer_sent(unsigned int status, unsigned int transferred, void* user_data)
 {
         buffer_t* buffer = buffer_from_pointer(user_data);
         put_buffer(buffer);
