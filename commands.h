@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "feedback.h"
+#include "adc.h"
 
 struct echo_cmd_t {
     uint8_t length;
