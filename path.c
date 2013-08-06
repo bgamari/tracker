@@ -111,7 +111,7 @@ static struct dac_update_t updates[3] = {
 void timer3_isr()
 {
         TIMER3_IR = 0xf;  // Clear interrupt
-        if (active_point >= active_path->npts) {
+        if (active_point >= active_path->npts - 1) {
                 struct path* old = active_path;
                 active_path = active_path->next;
                 active_point = 0;
