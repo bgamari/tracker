@@ -153,9 +153,9 @@ int main(void) {
         adc_start(BUFFER_SIZE, active_buffer->data, buffer_full);
         adc_set_trigger_freq(200);
         adc_set_trigger_mode(TRIGGER_AUTO);
+        feedback_init();
 
 #if 0
-        feedback_init();
         feedback_start();
 #endif
 
@@ -164,13 +164,6 @@ int main(void) {
         // This goes on indefinitely
         while (1) {
                 uart_print("Hello world!\n");
-#if 0
-                for (int i=0; i<0xffff; i+=100) {
-                        struct dac_update_t updates = {broadcast, i};
-                        delay_ms(1);
-                        set_dac(1, &updates);
-                }
-#endif
 #if 1
                 for (int i = 0; i < NLEDS; i++) {
                         pin_on(&leds[i]);
