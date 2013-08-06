@@ -24,6 +24,7 @@ static struct path paths[N_PATHS] = {};
 static struct path* active_path = NULL;
 static unsigned int active_point;
 static bool path_running = false;
+static bool sync_trigger = false;
 
 struct path* take_path()
 {
@@ -81,19 +82,25 @@ void clear_path()
         cm_enable_interrupts();
 }
 
-int start_path(unsigned int freq)
+int start_path(unsigned int freq, bool synchronous_trigger)
 {
         if (path_running)
                 return -1;
         if (active_path == NULL)
                 return -2;
 
+        sync_trigger = synchronous_trigger;
         active_point = 0;
         path_running = true;
         setup_periodic_timer(TIMER3, freq);
         nvic_enable_irq(NVIC_TIMER3_IRQ);
         TIMER3_MCR |= TIMER_MCR_MR3I;  // interrupt on overflow match
         timer_enable_counter(TIMER3);
+        if (synchronous_trigger) {
+                adc_set_trigger_mode(TRIGGER_MANUAL);
+        } else {
+                adc_set_trigger_mode(TRIGGER_AUTO);
+        }
         return 0;
 }
 
@@ -120,6 +127,7 @@ void timer3_isr()
         if (active_path == NULL) {
                 timer_disable_counter(TIMER3);
                 path_running = false;
+                adc_set_trigger_mode(TRIGGER_OFF);
                 return;
         }
         

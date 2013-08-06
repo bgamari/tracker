@@ -123,7 +123,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
 
         case CMD_START_PATH:
-                if (start_path(cmd->start_path.freq) == 0) {
+                if (start_path(cmd->start_path.freq, false) == 0) {
                         send_ack();
                 } else {
                         send_nack();

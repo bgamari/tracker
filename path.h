@@ -6,6 +6,6 @@ int enqueue_points(uint16_t* points, unsigned int npts);
 
 void clear_path();
 
-int start_path(unsigned int freq);
+int start_path(unsigned int freq, bool synchronous_trigger);
 
 bool is_path_running();
