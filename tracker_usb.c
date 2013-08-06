@@ -137,7 +137,6 @@ static void command_transfer_completed(unsigned int status,
         }
 
         process_cmd((struct cmd_frame_t*) command_buffer);
-        start_command_transfer();
 }
 
 static void start_command_transfer()
@@ -148,10 +147,23 @@ static void start_command_transfer()
                                     command_transfer_completed, NULL);
 }
 
+static void reply_transfer_completed(unsigned status,
+                                     unsigned int transferred,
+                                     void* user_data)
+{
+        if (status & USB_TRANSFER_STATUS_FLUSHING) {
+                return;
+        } else if (status) {
+                while(1); // uh oh
+        }
+
+        start_command_transfer();
+}
+
 void send_reply(void *data, uint16_t length)
 {
         usb_transfer_schedule_block(&usb_endpoint_bulk_cmd_in, data, length,
-                                    NULL, NULL);
+                                    reply_transfer_completed, NULL);
 }
 
 static void buffer_sent(unsigned int status, unsigned int transferred, void* user_data)
