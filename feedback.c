@@ -41,7 +41,6 @@ void feedback_init()
 {
         nvic_set_priority(NVIC_TIMER2_IRQ, 10);
         nvic_enable_irq(NVIC_TIMER2_IRQ);
-
         feedback_set_loop_freq(10000);
 }
 
@@ -61,8 +60,8 @@ void feedback_set_mode(enum feedback_mode_t mode)
 
         case PSD_FEEDBACK:
         case STAGE_FEEDBACK:
-                //buffer[0][0] = buffer[1][1]; // FIXME
                 timer_enable_counter(TIMER2);
+                break;
         }
         feedback_mode = mode;
 }
