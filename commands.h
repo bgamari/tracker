@@ -18,6 +18,7 @@ struct enqueue_points {
 
 struct start_path {
     uint32_t freq;
+    uint8_t synchronous_adc;
 } __attribute__((packed));
 
 enum cmd_t {
