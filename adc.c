@@ -10,6 +10,7 @@
 
 #include "adc.h"
 #include "timer.h"
+#include "clock.h"
 #include "pin.h"
 
 #define USE_DMA
@@ -91,7 +92,11 @@ void adc_init()
 
         pin_on(&standby);
         pin_off(&range);
+        pin_off(&os1);
+        pin_off(&os2);
+        pin_off(&os3);
         pin_on(&reset);
+        delay_ms(1);
         pin_off(&reset);
 
         ssp_init(SSP0_NUM,
