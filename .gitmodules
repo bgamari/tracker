@@ -1,6 +1,6 @@
 [submodule "libopencm3"]
 	path = libopencm3
-	url = git://github.com/mossmann/libopencm3.git
+	url = git://github.com/libopencm3/libopencm3.git
 [submodule "hackrf"]
 	path = hackrf
-	url = git://github.com/mossmann/hackrf.git
+	url = git://github.com/bgamari/hackrf.git
