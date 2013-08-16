@@ -79,7 +79,7 @@ void do_feedback()
                         error[i] = psd_fb_setpoint[i] - tmp;
                 }
 
-        } else {
+        } else if (feedback_mode == STAGE_FEEDBACK) {
                 int16_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
                         signed int tmp = 0;
