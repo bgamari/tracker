@@ -115,6 +115,13 @@ static struct dac_update_t updates[3] = {
         {.channel = channel_c}
 };
 
+static void path_done()
+{
+        timer_disable_counter(TIMER3);
+        path_running = false;
+        adc_set_trigger_mode(TRIGGER_OFF);
+}
+
 void timer3_isr()
 {
         TIMER3_IR = 0xf;  // Clear interrupt
@@ -125,9 +132,7 @@ void timer3_isr()
                 put_path(old);
         }
         if (active_path == NULL) {
-                timer_disable_counter(TIMER3);
-                path_running = false;
-                adc_set_trigger_mode(TRIGGER_OFF);
+                path_done();
                 return;
         }
         
