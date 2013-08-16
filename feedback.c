@@ -85,7 +85,9 @@ void do_feedback()
 {
         signed int error[3];
 
-        if (feedback_mode == PSD_FEEDBACK) {
+        if (feedback_mode == NO_FEEDBACK) {
+                return;
+        } else if (feedback_mode == PSD_FEEDBACK) {
                 int16_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
                         unsigned int tmp = 0;
