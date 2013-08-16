@@ -40,6 +40,7 @@ enum cmd_t {
 
     CMD_SET_FEEDBACK_FREQ     = 0x30,
     CMD_SET_FEEDBACK_MODE     = 0x31,
+    CMD_SET_RAW_POS           = 0x32,
 
     CMD_CLEAR_PATH            = 0x40,
     CMD_ENQUEUE_POINTS        = 0x41,
@@ -60,6 +61,7 @@ struct cmd_frame_t {
         uint32_t set_adc_freq;
         enum trigger_mode set_adc_trigger_mode;
         enum feedback_mode_t set_feedback_mode;
+        uint16_t set_raw_pos[3];
         struct enqueue_points enqueue_points;
         struct start_path start_path;
     };

@@ -108,6 +108,14 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_SET_RAW_POS:
+                if (feedback_set_position(cmd->set_raw_pos) == 0) {
+                        send_ack();
+                } else {
+                        send_nack();
+                }
+                break;
+
         case CMD_CLEAR_PATH:
                 clear_path();
                 send_ack();
