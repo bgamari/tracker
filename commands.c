@@ -1,4 +1,5 @@
 #include <libopencm3/lpc43xx/uart.h>
+#include <libopencm3/cm3/nvic.h>
 
 #include "tracker_usb.h"
 
@@ -46,6 +47,14 @@ void process_cmd(struct cmd_frame_t *cmd)
                 reply.data[0] = cmd->echo.length;
                 memcpy(&reply.data[1], cmd->echo.data, cmd->echo.length);
                 send_reply(&reply, cmd->echo.length+3);
+                break;
+
+        case CMD_RESET:
+                if (cmd->reset_magic == RESET_MAGIC) {
+                        reset_handler();
+                } else {
+                        send_nack();
+                }
                 break;
 
         case CMD_SET_STAGE_GAINS:

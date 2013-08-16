@@ -11,6 +11,8 @@ struct echo_cmd {
     uint8_t data[];
 } __attribute__((packed));
 
+#define RESET_MAGIC 0xdeadbeef
+
 struct enqueue_points {
     uint8_t npts;
     uint16_t points[80][3];
@@ -23,6 +25,7 @@ struct start_path {
 
 enum cmd_t {
     CMD_ECHO                  = 0x0,
+    CMD_RESET                 = 0x1,
 
     CMD_SET_STAGE_GAINS       = 0x10,
     CMD_SET_STAGE_SETPOINT    = 0x11,
@@ -51,6 +54,7 @@ struct cmd_frame_t {
     uint8_t cmd;
     union {
         struct echo_cmd echo;
+        uint32_t reset_magic;
         int32_t set_stage_gains[3][3];
         int32_t set_stage_setpoint[3];
         int32_t set_psd_gains[4][3];
