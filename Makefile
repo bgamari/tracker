@@ -46,4 +46,4 @@ include $(wildcard *.d)
 	$(Q)rm -f _tmp.dfu _header.bin
 
 program : tracker.dfu
-	dfu-util -D $< -d 1fc9:000c
+	sudo dfu-util -D $< -d 1fc9:000c
