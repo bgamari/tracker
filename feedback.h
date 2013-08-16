@@ -14,6 +14,8 @@ void feedback_set_mode(enum feedback_mode_t mode);
 
 void feedback_set_loop_freq(unsigned int freq);
 
+int feedback_set_position(uint16_t setpoint[3]);
+
 extern signed int psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS];
 extern signed int psd_fb_setpoint[STAGE_OUTPUTS];
 

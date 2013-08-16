@@ -29,6 +29,21 @@ struct dac_update_t updates[] = {
         { channel_c, 0x4400 },
 };
 
+static void feedback_update()
+{
+        set_dac(STAGE_OUTPUTS, updates);
+}        
+
+int feedback_set_position(uint16_t setpoint[3])
+{
+        if (feedback_mode != NO_FEEDBACK)
+                return 1;
+        for (unsigned int i=0; i<3; i++)
+                updates[i].value = setpoint[i];
+        feedback_update();
+        return 0;
+}
+
 void feedback_set_loop_freq(unsigned int freq)
 {
         setup_periodic_timer(TIMER2, freq);
@@ -97,7 +112,7 @@ void do_feedback()
         // TODO: Put error into PID loop
         for (int i=0; i<STAGE_OUTPUTS; i++)
                 updates[i].value += output_gains[i] * error[i] / 0x1000;
-        set_dac(STAGE_OUTPUTS, updates);
+        feedback_update();
 }
 
 void timer2_isr(void)
