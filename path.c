@@ -7,8 +7,8 @@
 #include <libopencm3/cm3/cortex.h>
 #include <libopencm3/cm3/nvic.h>
 
-#include "dac.h"
 #include "adc.h"
+#include "feedback.h"
 #include "timer.h"
 #include "path.h"
 
@@ -89,6 +89,7 @@ int start_path(unsigned int freq, bool synchronous_trigger)
         if (active_path == NULL)
                 return -2;
 
+        feedback_set_mode(NO_FEEDBACK);
         sync_trigger = synchronous_trigger;
         active_point = 0;
         path_running = true;
@@ -108,12 +109,6 @@ bool is_path_running()
 {
         return path_running;
 }
-
-static struct dac_update_t updates[3] = {
-        {.channel = channel_a},
-        {.channel = channel_b},
-        {.channel = channel_c}
-};
 
 static void path_done()
 {
@@ -139,7 +134,5 @@ void timer3_isr()
         adc_manual_trigger();
 
         active_point++;
-        for (unsigned int i=0; i<3; i++)
-                updates[i].value = active_path->points[active_point][i];
-        set_dac(3, updates);
+        feedback_set_position(active_path->points[active_point]);
 }
