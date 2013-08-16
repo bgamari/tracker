@@ -155,10 +155,6 @@ int main(void) {
         adc_set_trigger_mode(TRIGGER_AUTO);
         feedback_init();
 
-#if 0
-        feedback_start();
-#endif
-
         // Turn all leds on and then off,
         // with a delay of 0.2s among operations.
         // This goes on indefinitely
