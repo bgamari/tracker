@@ -1,7 +1,8 @@
 #include <libopencm3/lpc43xx/uart.h>
 #include <libopencm3/lpc43xx/creg.h>
-#include <libopencm3/cm3/nvic.h>
+#include <libopencm3/cm3/scb.h>
 
+#include "hackrf_usb/usb.h"
 #include "tracker_usb.h"
 
 #include <string.h>
@@ -52,8 +53,9 @@ void process_cmd(struct cmd_frame_t *cmd)
 
         case CMD_RESET:
                 if (cmd->reset_magic == RESET_MAGIC) {
+                        usb_peripheral_reset();
                         CREG_M4MEMMAP = 0x10400000;
-                        reset_handler();
+                        scb_reset_system();
                 } else {
                         send_nack();
                 }
