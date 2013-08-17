@@ -120,7 +120,7 @@ static void path_done()
 void timer3_isr()
 {
         TIMER3_IR = 0xf;  // Clear interrupt
-        if (active_point >= active_path->npts - 1) {
+        if (active_point >= active_path->npts) {
                 struct path* old = active_path;
                 active_path = active_path->next;
                 active_point = 0;
@@ -131,8 +131,9 @@ void timer3_isr()
                 return;
         }
         
+        // This will be ignored until synchronous triggering is enabled
         adc_manual_trigger();
 
-        active_point++;
         feedback_set_position(active_path->points[active_point]);
+        active_point++;
 }
