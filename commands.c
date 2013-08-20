@@ -135,7 +135,9 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
                 
         case CMD_ENQUEUE_POINTS:
-                res = enqueue_points((uint16_t*) &cmd->enqueue_points.points, cmd->enqueue_points.npts);
+                res = 0;
+                if (cmd->enqueue_points.npts > 0)
+                        res = enqueue_points((uint16_t*) &cmd->enqueue_points.points, cmd->enqueue_points.npts);
                 if (res == 0) {
                         reply.status = ACK;
                         reply.data[0] = is_path_running();
