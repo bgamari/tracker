@@ -159,8 +159,7 @@ int main(void) {
         // with a delay of 0.2s among operations.
         // This goes on indefinitely
         while (1) {
-                uart_print("Hello world!\n");
-#if 1
+#if 0
                 for (int i = 0; i < NLEDS; i++) {
                         pin_on(&leds[i]);
                         delay_ms(200);
