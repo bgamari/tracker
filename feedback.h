@@ -31,7 +31,7 @@ extern fixed16_t output_gains[STAGE_OUTPUTS];
 struct excitation_buffer {
   unsigned int length;
   unsigned int offset;
-  int16_t* samples;
+  int16_t samples[512];
 };
 
 extern struct excitation_buffer excitations[STAGE_OUTPUTS];
