@@ -173,6 +173,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 if (se->length != 0) {
                     exc->samples = malloc(sizeof(uint16_t) * se->length);
                     memcpy(exc->samples, se->samples, sizeof(uint16_t) * se->length);
+                    exc->offset = 0;
                     exc->length = se->length;
                 }
                 send_ack();
