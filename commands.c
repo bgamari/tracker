@@ -5,6 +5,7 @@
 #include "hackrf_usb/usb.h"
 #include "tracker_usb.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "commands.h"
@@ -154,6 +155,29 @@ void process_cmd(struct cmd_frame_t *cmd)
                         send_nack();
                 }
                 break;
+
+        case CMD_SET_EXCITATION:
+        {
+                struct set_excitation* se = &cmd->set_excitation;
+                struct excitation_buffer* exc = &excitations[se->channel];
+
+                if (se->channel >= 3) {
+                        send_nack();
+                        break;
+                }
+                if (exc->length != 0) {
+                    exc->length = 0;
+                    free(exc->samples);
+                    exc->samples = NULL;
+                }
+                if (se->length != 0) {
+                    exc->samples = malloc(sizeof(uint16_t) * se->length);
+                    memcpy(exc->samples, se->samples, sizeof(uint16_t) * se->length);
+                    exc->length = se->length;
+                }
+                send_ack();
+                break;
+        }
 
         default:
                 send_nack();

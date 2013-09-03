@@ -23,6 +23,12 @@ struct start_path {
     uint8_t synchronous_adc;
 } __attribute__((packed));
 
+struct set_excitation {
+    uint8_t channel;
+    uint8_t length;
+    uint16_t samples[];
+} __attribute__((packed));
+
 enum cmd_t {
     CMD_ECHO                  = 0x0,
     CMD_RESET                 = 0x1,
@@ -35,6 +41,7 @@ enum cmd_t {
 
     CMD_SET_MAX_ERROR         = 0x14,
     CMD_SET_OUTPUT_GAINS      = 0x15,
+    CMD_SET_EXCITATION        = 0x16,
 
     CMD_SET_ADC_FREQ          = 0x20,
     CMD_SET_ADC_TRIGGER_MODE  = 0x21,
@@ -61,6 +68,7 @@ struct cmd_frame_t {
         int32_t set_psd_setpoint[4];
         uint32_t set_max_error;
         int32_t set_output_gains[3];
+        struct set_excitation set_excitation;
         uint32_t set_feedback_freq;  // In Hz
         uint32_t set_adc_freq;
         enum trigger_mode set_adc_trigger_mode;
