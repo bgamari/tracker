@@ -49,7 +49,8 @@ int feedback_set_position(uint16_t setpoint[3])
 void feedback_set_loop_freq(unsigned int freq)
 {
         setup_periodic_timer(TIMER2, freq);
-        TIMER2_IR |= TIMER_IR_MR0INT;
+        // interrupt on reset (match 3)
+        TIMER2_MCR |= TIMER_MCR_MR3I;
         if (feedback_mode != NO_FEEDBACK)
                 timer_enable_counter(TIMER2);
 }
