@@ -14,14 +14,14 @@
 
 static enum feedback_mode_t feedback_mode = NO_FEEDBACK;
 
-signed int psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
+fixed16_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
 signed int psd_fb_setpoint[STAGE_OUTPUTS] = { };
 
-signed int stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
+fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
 signed int stage_fb_setpoint[STAGE_OUTPUTS] = { };
 
 signed int max_error = 1000;
-signed int output_gains[STAGE_OUTPUTS] = { };
+fixed16_t output_gains[STAGE_OUTPUTS] = { };
 
 struct dac_update_t updates[] = {
         { channel_a, 0x4400 },
@@ -92,7 +92,7 @@ void do_feedback()
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
                         unsigned int tmp = 0;
                         for (unsigned int j=0; j<PSD_INPUTS; j++) 
-                                tmp += psd_fb_gains[j][i] * sample[j] / 0x1000;
+                                tmp += (psd_fb_gains[j][i] * sample[j]) >> 16;
                         error[i] = psd_fb_setpoint[i] - tmp;
                 }
 
@@ -101,7 +101,7 @@ void do_feedback()
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
                         signed int tmp = 0;
                         for (unsigned int j=0; j<STAGE_INPUTS; j++) 
-                                tmp += stage_fb_gains[j][i] * sample[j] / 0x1000;
+                                tmp += (stage_fb_gains[j][i] * sample[j]) >> 16;
                         error[i] = stage_fb_setpoint[i] - tmp;
                 }
         }
@@ -113,7 +113,7 @@ void do_feedback()
 
         // TODO: Put error into PID loop
         for (int i=0; i<STAGE_OUTPUTS; i++)
-                updates[i].value += output_gains[i] * error[i] / 0x1000;
+                updates[i].value += (output_gains[i] * error[i]) >> 16;
         feedback_update();
 }
 

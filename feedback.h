@@ -16,12 +16,15 @@ void feedback_set_loop_freq(unsigned int freq);
 
 int feedback_set_position(uint16_t setpoint[3]);
 
-extern signed int psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS];
+// 16.16 fixed point
+typedef int32_t fixed16_t;
+
+extern fixed16_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS];
 extern signed int psd_fb_setpoint[STAGE_OUTPUTS];
 
-extern signed int stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS];
+extern fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS];
 extern signed int stage_fb_setpoint[STAGE_OUTPUTS];
 
 extern signed int max_error;
-extern signed int output_gains[STAGE_OUTPUTS];
+extern fixed16_t output_gains[STAGE_OUTPUTS];
 
