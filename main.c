@@ -159,6 +159,7 @@ int main(void) {
         // with a delay of 0.2s among operations.
         // This goes on indefinitely
         while (1) {
+                __asm__("wfi");
 #if 0
                 for (int i = 0; i < NLEDS; i++) {
                         pin_on(&leds[i]);
