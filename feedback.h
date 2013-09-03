@@ -28,3 +28,10 @@ extern signed int stage_fb_setpoint[STAGE_OUTPUTS];
 extern signed int max_error;
 extern fixed16_t output_gains[STAGE_OUTPUTS];
 
+struct excitation_buffer {
+  unsigned int length;
+  unsigned int offset;
+  int16_t* samples;
+};
+
+extern struct excitation_buffer excitations[STAGE_OUTPUTS];

@@ -23,6 +23,8 @@ signed int stage_fb_setpoint[STAGE_OUTPUTS] = { };
 signed int max_error = 1000;
 fixed16_t output_gains[STAGE_OUTPUTS] = { };
 
+struct excitation_buffer excitations[STAGE_OUTPUTS];
+
 struct dac_update_t updates[] = {
         { channel_a, 0x4400 },
         { channel_b, 0x4400 },
@@ -107,13 +109,19 @@ void do_feedback()
         }
 
         for (int i=0; i<STAGE_OUTPUTS; i++) {
+                struct excitation_buffer* exc = &excitations[i];
+                if (exc->length > 0) {
+                        error[i] += exc->samples[exc->offset];
+                        exc->offset = (exc->offset+1) % exc->length;
+                }
+                
                 if (abs(error[i]) > max_error)
                         feedback_set_mode(NO_FEEDBACK);
+
+                // TODO: Put error into PID loop
+                updates[i].value += (output_gains[i] * error[i]) >> 16;
         }
 
-        // TODO: Put error into PID loop
-        for (int i=0; i<STAGE_OUTPUTS; i++)
-                updates[i].value += (output_gains[i] * error[i]) >> 16;
         feedback_update();
 }
 
