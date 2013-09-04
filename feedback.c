@@ -95,8 +95,8 @@ void do_feedback()
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
                         unsigned int tmp = 0;
                         for (unsigned int j=0; j<PSD_INPUTS; j++) 
-                                tmp += (psd_fb_gains[j][i] * sample[j]) >> 16;
-                        error[i] = psd_fb_setpoint[i] - tmp;
+                                tmp += psd_fb_gains[j][i] * sample[j];
+                        error[i] = psd_fb_setpoint[i] - (tmp >> 16);
                 }
 
         } else if (feedback_mode == STAGE_FEEDBACK) {
@@ -104,8 +104,8 @@ void do_feedback()
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
                         signed int tmp = 0;
                         for (unsigned int j=0; j<STAGE_INPUTS; j++) 
-                                tmp += (stage_fb_gains[j][i] * sample[j]) >> 16;
-                        error[i] = stage_fb_setpoint[i] - tmp;
+                                tmp += stage_fb_gains[j][i] * sample[j];
+                        error[i] = stage_fb_setpoint[i] - (tmp >> 16);
                 }
         }
 
