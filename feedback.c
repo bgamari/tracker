@@ -116,8 +116,10 @@ void do_feedback()
                         exc->offset = (exc->offset+1) % exc->length;
                 }
                 
-                if (abs(error[i]) > max_error)
+                if (abs(error[i]) > max_error) {
                         feedback_set_mode(NO_FEEDBACK);
+                        return;
+                }
 
                 // TODO: Put error into PID loop
                 updates[i].value += (output_gains[i] * error[i]) >> 16;
