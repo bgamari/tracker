@@ -86,14 +86,15 @@ void feedback_set_mode(enum feedback_mode_t mode)
     
 void do_feedback()
 {
-        signed int error[3];
+        int32_t error[3];
 
         if (feedback_mode == NO_FEEDBACK) {
                 return;
+
         } else if (feedback_mode == PSD_FEEDBACK) {
                 int16_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
-                        unsigned int tmp = 0;
+                        signed int tmp = 0;
                         for (unsigned int j=0; j<PSD_INPUTS; j++) 
                                 tmp += psd_fb_gains[j][i] * sample[j];
                         error[i] = psd_fb_setpoint[i] - (tmp >> 16);
@@ -122,7 +123,11 @@ void do_feedback()
                 }
 
                 // TODO: Put error into PID loop
-                updates[i].value += (output_gains[i] * error[i]) >> 16;
+                int32_t v = updates[i].value;
+                v += (output_gains[i] * error[i]) >> 16;
+                if (v < 0) v = 0;
+                else if (v > 0xffff) v = 0xffff;
+                updates[i].value = v;
         }
 
         feedback_update();
