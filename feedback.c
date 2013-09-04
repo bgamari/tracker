@@ -102,11 +102,8 @@ void do_feedback()
 
         } else if (feedback_mode == STAGE_FEEDBACK) {
                 int16_t *sample = adc_get_last_frame();
-                for (int i=0; i<STAGE_OUTPUTS; i++) {
-                        signed int tmp = 0;
-                        for (unsigned int j=0; j<STAGE_INPUTS; j++) 
-                                tmp += stage_fb_gains[j][i] * sample[j];
-                        error[i] = stage_fb_setpoint[i] - (tmp >> 16);
+                for (int i=0; i<STAGE_INPUTS; i++) {
+                        error[i] = ((stage_fb_setpoint[i] - sample[i]) * stage_fb_gains[i][i]) >> 16;
                 }
         }
 
