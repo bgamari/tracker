@@ -15,10 +15,10 @@
 static enum feedback_mode_t feedback_mode = NO_FEEDBACK;
 
 fixed16_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
-signed int psd_fb_setpoint[STAGE_OUTPUTS] = { };
+signed int psd_fb_setpoint[PSD_INPUTS] = { };
 
 fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
-signed int stage_fb_setpoint[STAGE_OUTPUTS] = { };
+signed int stage_fb_setpoint[STAGE_INPUTS] = { };
 
 signed int max_error = 1000;
 fixed16_t output_gains[STAGE_OUTPUTS] = { };
@@ -86,7 +86,7 @@ void feedback_set_mode(enum feedback_mode_t mode)
     
 void do_feedback()
 {
-        int32_t error[3];
+        int32_t error[STAGE_OUTPUTS];
 
         if (feedback_mode == NO_FEEDBACK) {
                 return;
@@ -94,10 +94,10 @@ void do_feedback()
         } else if (feedback_mode == PSD_FEEDBACK) {
                 int16_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
-                        signed int tmp = 0;
+                        error[i] = 0;
                         for (unsigned int j=0; j<PSD_INPUTS; j++) 
-                                tmp += psd_fb_gains[j][i] * sample[j];
-                        error[i] = psd_fb_setpoint[i] - (tmp >> 16);
+                                error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - sample[j+3]);
+                        error[i] >>= 16;
                 }
 
         } else if (feedback_mode == STAGE_FEEDBACK) {

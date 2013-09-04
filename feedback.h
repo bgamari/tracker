@@ -20,10 +20,10 @@ int feedback_set_position(uint16_t setpoint[3]);
 typedef int32_t fixed16_t;
 
 extern fixed16_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS];
-extern signed int psd_fb_setpoint[STAGE_OUTPUTS];
+extern signed int psd_fb_setpoint[PSD_INPUTS];
 
 extern fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS];
-extern signed int stage_fb_setpoint[STAGE_OUTPUTS];
+extern signed int stage_fb_setpoint[STAGE_INPUTS];
 
 extern signed int max_error;
 extern fixed16_t output_gains[STAGE_OUTPUTS];
