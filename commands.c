@@ -147,7 +147,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
 
         case CMD_GET_FEEDBACK_MODE:
-                reply.data[1] = feedback_get_mode();
+                reply.data[0] = feedback_get_mode();
                 send_reply(&reply, 3);
                 break;
 
