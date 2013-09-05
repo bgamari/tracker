@@ -33,15 +33,21 @@ enum cmd_t {
     CMD_ECHO                  = 0x0,
     CMD_RESET                 = 0x1,
 
-    CMD_SET_STAGE_GAINS       = 0x10,
-    CMD_SET_STAGE_SETPOINT    = 0x11,
+    CMD_GET_STAGE_GAINS       = 0x10,
+    CMD_SET_STAGE_GAINS       = 0x11,
+    CMD_GET_STAGE_SETPOINT    = 0x12,
+    CMD_SET_STAGE_SETPOINT    = 0x13,
 
-    CMD_SET_PSD_GAINS         = 0x12,
-    CMD_SET_PSD_SETPOINT      = 0x13,
+    CMD_GET_PSD_GAINS         = 0x14,
+    CMD_SET_PSD_GAINS         = 0x15,
+    CMD_GET_PSD_SETPOINT      = 0x16,
+    CMD_SET_PSD_SETPOINT      = 0x17,
 
-    CMD_SET_MAX_ERROR         = 0x14,
-    CMD_SET_OUTPUT_GAINS      = 0x15,
-    CMD_SET_EXCITATION        = 0x16,
+    CMD_GET_MAX_ERROR         = 0x18,
+    CMD_SET_MAX_ERROR         = 0x19,
+    CMD_GET_OUTPUT_GAINS      = 0x1a,
+    CMD_SET_OUTPUT_GAINS      = 0x1b,
+    CMD_SET_EXCITATION        = 0x1c,
 
     CMD_SET_ADC_FREQ          = 0x20,
     CMD_SET_ADC_TRIGGER_MODE  = 0x21,

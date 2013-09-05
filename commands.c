@@ -61,14 +61,29 @@ void process_cmd(struct cmd_frame_t *cmd)
                 }
                 break;
 
+        case CMD_GET_STAGE_GAINS:
+                memcpy(reply.data, stage_fb_gains, sizeof(stage_fb_gains));
+                send_reply(&reply, 2+sizeof(stage_fb_gains));
+                break;
+
         case CMD_SET_STAGE_GAINS:
                 memcpy(stage_fb_gains, cmd->set_stage_gains, sizeof(stage_fb_gains));
                 send_ack();
                 break;
                 
+        case CMD_GET_STAGE_SETPOINT:
+                memcpy(reply.data, stage_fb_setpoint, sizeof(stage_fb_setpoint));
+                send_reply(&reply, 2+sizeof(stage_fb_setpoint));
+                break;
+
         case CMD_SET_STAGE_SETPOINT:
                 memcpy(stage_fb_setpoint, cmd->set_stage_setpoint, sizeof(stage_fb_setpoint));
                 send_ack();
+                break;
+
+        case CMD_GET_PSD_GAINS:
+                memcpy(reply.data, psd_fb_gains, sizeof(psd_fb_gains));
+                send_reply(&reply, 2+sizeof(psd_fb_gains));
                 break;
 
         case CMD_SET_PSD_GAINS:
@@ -76,14 +91,29 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_GET_PSD_SETPOINT:
+                memcpy(reply.data, psd_fb_setpoint, sizeof(psd_fb_setpoint));
+                send_reply(&reply, 2+sizeof(psd_fb_setpoint));
+                break;
+
         case CMD_SET_PSD_SETPOINT:
                 memcpy(psd_fb_setpoint, cmd->set_psd_setpoint, sizeof(psd_fb_setpoint));
                 send_ack();
                 break;
         
+        case CMD_GET_MAX_ERROR:
+                memcpy(reply.data, &max_error, sizeof(max_error));
+                send_reply(&reply, 2+sizeof(max_error));
+                break;
+
         case CMD_SET_MAX_ERROR:
                 max_error = cmd->set_max_error;
                 send_ack();
+                break;
+
+        case CMD_GET_OUTPUT_GAINS:
+                memcpy(reply.data, output_gains, sizeof(output_gains));
+                send_reply(&reply, 2+sizeof(output_gains));
                 break;
 
         case CMD_SET_OUTPUT_GAINS:
