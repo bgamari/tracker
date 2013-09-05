@@ -55,8 +55,9 @@ enum cmd_t {
     CMD_STOP_ADC_STREAM       = 0x23,
 
     CMD_SET_FEEDBACK_FREQ     = 0x30,
-    CMD_SET_FEEDBACK_MODE     = 0x31,
-    CMD_SET_RAW_POS           = 0x32,
+    CMD_GET_FEEDBACK_MODE     = 0x31,
+    CMD_SET_FEEDBACK_MODE     = 0x32,
+    CMD_SET_RAW_POS           = 0x33,
 
     CMD_CLEAR_PATH            = 0x40,
     CMD_ENQUEUE_POINTS        = 0x41,

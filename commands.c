@@ -146,6 +146,11 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_GET_FEEDBACK_MODE:
+                reply.data[1] = feedback_get_mode();
+                send_reply(&reply, 3);
+                break;
+
         case CMD_SET_FEEDBACK_MODE:
                 feedback_set_mode(cmd->set_feedback_mode);
                 send_ack();
