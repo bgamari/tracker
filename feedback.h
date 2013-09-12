@@ -1,6 +1,8 @@
 #pragma once
 
 #include "tracker.h"
+#include "pid.h"
+#include "types.h"
 
 enum feedback_mode_t {
     NO_FEEDBACK = 0,
@@ -16,9 +18,6 @@ void feedback_set_loop_freq(unsigned int freq);
 
 int feedback_set_position(uint16_t setpoint[3]);
 
-// 16.16 fixed point
-typedef int32_t fixed16_t;
-
 extern fixed16_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS];
 extern signed int psd_fb_setpoint[PSD_INPUTS];
 
@@ -26,7 +25,7 @@ extern fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS];
 extern signed int stage_fb_setpoint[STAGE_INPUTS];
 
 extern signed int max_error;
-extern fixed16_t output_gains[STAGE_OUTPUTS];
+extern struct pi_channel stage_outputs[STAGE_OUTPUTS];
 
 struct excitation_buffer {
   unsigned int length;

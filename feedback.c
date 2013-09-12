@@ -21,7 +21,8 @@ fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
 signed int stage_fb_setpoint[STAGE_INPUTS] = { };
 
 signed int max_error = 1000;
-fixed16_t output_gains[STAGE_OUTPUTS] = { };
+
+struct pi_channel stage_outputs[STAGE_OUTPUTS];
 
 struct excitation_buffer excitations[STAGE_OUTPUTS];
 
@@ -60,6 +61,8 @@ void feedback_init()
         nvic_set_priority(NVIC_TIMER2_IRQ, 10);
         nvic_enable_irq(NVIC_TIMER2_IRQ);
         feedback_set_loop_freq(10000);
+        for (unsigned int i=0; i<STAGE_OUTPUTS; i++)
+                pi_reset(&stage_outputs[i]);
 }
 
 enum feedback_mode_t feedback_get_mode()
@@ -119,9 +122,8 @@ void do_feedback()
                         return;
                 }
 
-                // TODO: Put error into PID loop
-                int32_t v = updates[i].value;
-                v += (output_gains[i] * error[i]) >> 16;
+                pi_add_sample(&stage_outputs[i], error[i]);
+                int32_t v = updates[i].value + pi_get_response(&stage_outputs[i]);
                 if (v < 0) v = 0;
                 else if (v > 0xffff) v = 0xffff;
                 updates[i].value = v;

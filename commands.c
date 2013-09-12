@@ -13,6 +13,7 @@
 #include "tracker.h"
 #include "dac.h"
 #include "uart.h"
+#include "feedback.h"
 
 struct reply {
         uint8_t cmd;
@@ -112,14 +113,26 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
 
         case CMD_GET_OUTPUT_GAINS:
-                memcpy(reply.data, output_gains, sizeof(output_gains));
-                send_reply(&reply, 2+sizeof(output_gains));
+        {
+                fixed16_t* tmp = (fixed16_t*) reply.data;
+                for (unsigned int i=0; i<STAGE_OUTPUTS; i++) {
+                        *tmp = stage_outputs[i].p_gain; tmp++;
+                        *tmp = stage_outputs[i].i_gain; tmp++;
+                }
+                send_reply(&reply, 2+2*STAGE_OUTPUTS*sizeof(fixed16_t));
                 break;
+        }
 
         case CMD_SET_OUTPUT_GAINS:
-                memcpy(output_gains, cmd->set_output_gains, sizeof(output_gains));
+        {
+                fixed16_t* tmp = (fixed16_t*) reply.data;
+                for (unsigned int i=0; i<STAGE_OUTPUTS; i++) {
+                        stage_outputs[i].p_gain = *tmp; tmp++;
+                        stage_outputs[i].i_gain = *tmp; tmp++;
+                }
                 send_ack();
                 break;
+        }
 
         case CMD_SET_ADC_FREQ:
                 adc_set_trigger_freq(cmd->set_adc_freq);
