@@ -69,15 +69,15 @@ struct cmd_frame_t {
     union {
         struct echo_cmd echo;
         uint32_t reset_magic;
-        int32_t set_stage_gains[3][3];
+        fixed16_t set_stage_gains[3][3];
         int32_t set_stage_setpoint[3];
-        int32_t set_psd_gains[4][3];
+        fixed16_t set_psd_gains[4][3];
         int32_t set_psd_setpoint[4];
         uint32_t set_max_error;
-        int32_t set_output_gains[3];
+        fixed16_t set_output_gains[STAGE_OUTPUTS][2];
         struct set_excitation set_excitation;
-        uint32_t set_feedback_freq;  // In Hz
-        uint32_t set_adc_freq;
+        uint32_t set_feedback_freq;  // in Hz
+        uint32_t set_adc_freq;  // in Hz
         enum trigger_mode set_adc_trigger_mode;
         enum feedback_mode_t set_feedback_mode;
         uint16_t set_raw_pos[3];

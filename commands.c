@@ -125,10 +125,9 @@ void process_cmd(struct cmd_frame_t *cmd)
 
         case CMD_SET_OUTPUT_GAINS:
         {
-                fixed16_t* tmp = (fixed16_t*) reply.data;
                 for (unsigned int i=0; i<STAGE_OUTPUTS; i++) {
-                        stage_outputs[i].p_gain = *tmp; tmp++;
-                        stage_outputs[i].i_gain = *tmp; tmp++;
+                        stage_outputs[i].p_gain = cmd->set_output_gains[i][0];
+                        stage_outputs[i].i_gain = cmd->set_output_gains[i][1];
                 }
                 send_ack();
                 break;
