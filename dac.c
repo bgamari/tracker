@@ -1,5 +1,6 @@
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/scu.h>
+#include <libopencm3/lpc43xx/cgu.h>
 
 #include "dac.h"
 #include "pin.h"
@@ -54,6 +55,11 @@ void dac_init()
 
     pin_off(&nldac);
     pin_on(&cs);
+
+    /* use PLL1 as clock source */
+    CGU_BASE_SSP1_CLK =
+              CGU_BASE_SSP1_CLK_CLK_SEL(CGU_SRC_PLL1)
+            | CGU_BASE_SSP1_CLK_AUTOBLOCK;
 
     // DAC specified up to 50MHz
     // 204MHz / 4  == 51MHz
