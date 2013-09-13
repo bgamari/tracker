@@ -91,7 +91,7 @@ void adc_init()
         pin_setup_output(&standby);
 
         pin_on(&standby);
-        pin_off(&range);
+        adc_set_range(ADC_RANGE_PLUS_MINUS_5);
         adc_set_oversampling(ADC_OVERSAMPLE_NONE);
         pin_on(&reset);
         delay_ms(1);
@@ -198,6 +198,11 @@ void adc_set_oversampling(enum adc_oversampling_t os)
         pin_set(&os1, os & 0x1);
         pin_set(&os2, os & 0x2);
         pin_set(&os3, os & 0x4);
+}
+
+void adc_set_range(enum adc_range_t rng)
+{
+        pin_set(&range, rng);
 }
 
 // ADC_BUSY fell: ADC sample ready

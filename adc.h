@@ -19,6 +19,13 @@ enum adc_oversampling_t {
 
 void adc_set_oversampling(enum adc_oversampling_t os);
 
+enum adc_range_t {
+    ADC_RANGE_PLUS_MINUS_5  = 0,
+    ADC_RANGE_PLUS_MINUS_10 = 1,
+};
+
+void adc_set_range(enum adc_range_t range);
+
 // Streaming samples into buffer
 typedef int16_t* (*adc_buffer_done_cb)(int16_t*);
 void adc_start(unsigned int samples, int16_t* buf, adc_buffer_done_cb done);
