@@ -56,6 +56,7 @@ static void configure_rx_dma()
                 | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_S(0x1)       // master 1 can access peripheral
                 | GPDMA_CCONTROL_D(0x0)       // master 0 can access memory
+                | GPDMA_CCONTROL_DI(0x1)      // destination increment
                 ;
         GPDMA_C0CONFIG =
                   GPDMA_CCONFIG_SRCPERIPHERAL(0x9)  // SSP0 RX
