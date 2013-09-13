@@ -225,16 +225,21 @@ void process_cmd(struct cmd_frame_t *cmd)
                 struct set_excitation* const se = &cmd->set_excitation;
                 struct excitation_buffer* const exc = &excitations[se->channel];
 
-                if (se->channel >= 3) {
+                if ((se->length + se->offset > MAX_EXCITATION_LENGTH)
+                    || (se->channel >= 3))
+                {
                         send_nack();
                         break;
                 }
+
                 exc->length = 0;
+                exc->offset = 0;
                 if (se->length != 0) {
-                        memcpy(exc->samples, &se->samples, sizeof(uint16_t) * se->length);
-                        exc->offset = 0;
-                        exc->length = se->length;
+                        memcpy(&exc->samples[se->offset],
+                               &se->samples,
+                               sizeof(uint16_t) * se->length);
                 }
+                exc->length = se->total_length;
                 send_ack();
                 break;
         }

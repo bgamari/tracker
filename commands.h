@@ -25,7 +25,9 @@ struct start_path {
 
 struct set_excitation {
     uint8_t channel;
-    uint8_t length;
+    uint16_t total_length; // total length of excitation
+    uint16_t offset;  // offset within excitation buffer to write this packet at
+    uint8_t length;  // number of samples provided in this packet
     uint16_t samples[];
 } __attribute__((packed));
 

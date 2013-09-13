@@ -27,10 +27,11 @@ extern signed int stage_fb_setpoint[STAGE_INPUTS];
 extern signed int max_error;
 extern struct pi_channel stage_outputs[STAGE_OUTPUTS];
 
+#define MAX_EXCITATION_LENGTH 1024
 struct excitation_buffer {
         unsigned int length;
         unsigned int offset;
-        int16_t samples[512];
+        int16_t samples[MAX_EXCITATION_LENGTH];
 };
 
 extern struct excitation_buffer excitations[STAGE_OUTPUTS];
