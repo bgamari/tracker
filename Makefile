@@ -11,7 +11,7 @@ OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o uart.o syscalls.o timer.
 
 FLAGS = -mthumb -mcpu=cortex-m4 -Ilibopencm3/include -Ihackrf_usb -g3 -O3 -Wall -Werror -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fno-common -MD -nostartfiles -DLPC43XX -DLPC43XX_M4
 CFLAGS = $(FLAGS) -std=gnu99
-CXXFLAGS = $(FLAGS) -Ieigen -fno-exceptions -fno-rtti
+CXXFLAGS = $(FLAGS) -fno-exceptions -fno-rtti
 LDFLAGS = -Tmdaq.ld -Llibopencm3/lib
 
 opencm3_a = libopencm3/lib/libopencm3_lpc43xx.a
