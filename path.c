@@ -93,10 +93,10 @@ int start_path(unsigned int freq, bool synchronous_trigger)
         sync_trigger = synchronous_trigger;
         active_point = 0;
         path_running = true;
-        setup_periodic_timer(TIMER3, freq);
-        nvic_enable_irq(NVIC_TIMER3_IRQ);
-        TIMER3_MCR |= TIMER_MCR_MR3I;  // interrupt on overflow match
-        timer_enable_counter(TIMER3);
+        setup_periodic_timer(TIMER1, freq);
+        nvic_enable_irq(NVIC_TIMER1_IRQ);
+        TIMER1_MCR |= TIMER_MCR_MR3I;  // interrupt on overflow match
+        timer_enable_counter(TIMER1);
         if (synchronous_trigger) {
                 adc_set_trigger_mode(TRIGGER_MANUAL);
         } else {
@@ -112,14 +112,14 @@ bool is_path_running()
 
 static void path_done()
 {
-        timer_disable_counter(TIMER3);
+        timer_disable_counter(TIMER1);
         path_running = false;
         adc_set_trigger_mode(TRIGGER_OFF);
 }
 
-void timer3_isr()
+void timer1_isr()
 {
-        TIMER3_IR = 0xf;  // Clear interrupt
+        TIMER1_IR = 0xf;  // Clear interrupt
         if (active_point >= active_path->npts) {
                 struct path* old = active_path;
                 active_path = active_path->next;
