@@ -62,6 +62,14 @@ void process_cmd(struct cmd_frame_t *cmd)
                 }
                 break;
 
+        case CMD_GET_EVENT_COUNTERS:
+        {
+                struct event_counters counters = get_last_event_counters();
+                memcpy(reply.data, &counters, sizeof(struct event_counters));
+                send_reply(&reply, 2+sizeof(struct event_counters));
+                break;
+        }
+
         case CMD_GET_STAGE_GAINS:
                 memcpy(reply.data, stage_fb_gains, sizeof(stage_fb_gains));
                 send_reply(&reply, 2+sizeof(stage_fb_gains));

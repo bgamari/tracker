@@ -34,6 +34,7 @@ struct set_excitation {
 enum cmd_t {
     CMD_ECHO                  = 0x0,
     CMD_RESET                 = 0x1,
+    CMD_GET_EVENT_COUNTERS    = 0x2,
 
     CMD_GET_STAGE_GAINS       = 0x10,
     CMD_SET_STAGE_GAINS       = 0x11,
