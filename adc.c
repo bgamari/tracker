@@ -210,7 +210,11 @@ int16_t *adc_get_active_buffer()
 
 int16_t *adc_get_last_frame()
 {
+#ifdef USE_DMA
         return last_sample[!last_sample_idx];
+#else
+        return last_sample;
+#endif
 }
 
 void adc_set_oversampling(enum adc_oversampling_t os)
