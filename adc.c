@@ -236,6 +236,8 @@ void pin_int0_isr(void)
 
                 decimation_count--;
                 bool save_sample = buffer != NULL && decimation_count == 0;
+                if (save_sample)
+                        decimation_count = decimation_factor;
 
 #ifdef USE_DMA
                 // ensure previous transaction has completed
