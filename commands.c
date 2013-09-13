@@ -133,6 +133,24 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
         }
 
+        case CMD_GET_OUTPUT_TAUS:
+        {
+                for (unsigned int i=0; i<STAGE_OUTPUTS; i++) {
+                        reply.data[i] = pi_get_tau(&stage_outputs[i]);
+                }
+                send_ack();
+                break;
+        }
+
+        case CMD_SET_OUTPUT_TAUS:
+        {
+                for (unsigned int i=0; i<STAGE_OUTPUTS; i++) {
+                        pi_set_tau(&stage_outputs[i], cmd->set_output_taus[i]);
+                }
+                send_ack();
+                break;
+        }
+
         case CMD_SET_ADC_FREQ:
                 adc_set_trigger_freq(cmd->set_adc_freq);
                 send_ack();

@@ -47,7 +47,9 @@ enum cmd_t {
     CMD_SET_MAX_ERROR         = 0x19,
     CMD_GET_OUTPUT_GAINS      = 0x1a,
     CMD_SET_OUTPUT_GAINS      = 0x1b,
-    CMD_SET_EXCITATION        = 0x1c,
+    CMD_GET_OUTPUT_TAUS       = 0x1c,
+    CMD_SET_OUTPUT_TAUS       = 0x1d,
+    CMD_SET_EXCITATION        = 0x1e,
 
     CMD_SET_ADC_FREQ          = 0x20,
     CMD_SET_ADC_TRIGGER_MODE  = 0x21,
@@ -75,6 +77,7 @@ struct cmd_frame_t {
         int32_t set_psd_setpoint[4];
         uint32_t set_max_error;
         fixed16_t set_output_gains[STAGE_OUTPUTS][2];
+        uint8_t set_output_taus[STAGE_OUTPUTS];
         struct set_excitation set_excitation;
         uint32_t set_feedback_freq;  // in Hz
         uint32_t set_adc_freq;  // in Hz
