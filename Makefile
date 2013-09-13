@@ -6,21 +6,22 @@ OBJCOPY = arm-none-eabi-objcopy
 
 PROJECT = tracker
 
+LIBOPENCM3=./libopencm3
 USB_OBJECTS = usb.o usb_request.o usb_standard_request.o usb_queue.o
 OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o uart.o syscalls.o timer.o commands.o $(addprefix hackrf_usb/,$(USB_OBJECTS)) tracker_usb.o usb_descriptor.o buffer.o path.o
 
-FLAGS = -mthumb -mcpu=cortex-m4 -Ilibopencm3/include -Ihackrf_usb -g3 -O3 -Wall -Werror -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fno-common -MD -nostartfiles -DLPC43XX -DLPC43XX_M4
+FLAGS = -mthumb -mcpu=cortex-m4 -I$(LIBOPENCM3)/include -Ihackrf_usb -g3 -O3 -Wall -Werror -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fno-common -MD -nostartfiles -DLPC43XX -DLPC43XX_M4
 CFLAGS = $(FLAGS) -std=gnu99
 CXXFLAGS = $(FLAGS) -fno-exceptions -fno-rtti
-LDFLAGS = -Tmdaq.ld -Llibopencm3/lib
+LDFLAGS = -Tmdaq.ld -L$(LIBOPENCM3)/lib
 
-opencm3_a = libopencm3/lib/libopencm3_lpc43xx.a
+opencm3_a = $(LIBOPENCM3)/lib/libopencm3_lpc43xx.a
 
 all : tracker.bin tracker.dfu
 
 .PHONY : $(opencm3_a)
 $(opencm3_a) :
-	make -Clibopencm3 lib
+	make -C$(LIBOPENCM3) lib
 
 tracker.elf : ${OBJECTS} $(opencm3_a)
 	$(CC) $(CFLAGS) $+ $(LDFLAGS) -o $@
