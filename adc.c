@@ -32,6 +32,8 @@ struct pin_t reset = { .port = GPIO5, .pin = GPIOPIN2 };
 struct pin_t range = { .port = GPIO5, .pin = GPIOPIN6 };
 struct pin_t standby = { .port = GPIO5, .pin = GPIOPIN0 }; // inverted
 
+unsigned int adc_sample_counter = 0;
+
 #ifdef USE_DMA
 static void configure_rx_dma()
 {
@@ -245,5 +247,7 @@ void pin_int0_isr(void)
                                 setup_buffer(NULL);
                         }
                 }
+
+                increment_event_counter(adc_sample_counter);
         }
 }

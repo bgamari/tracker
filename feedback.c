@@ -130,6 +130,7 @@ void do_feedback()
         }
 
         feedback_update();
+        increment_event_counter(feedback_counter);
 }
 
 void timer2_isr(void)
