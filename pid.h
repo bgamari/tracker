@@ -25,7 +25,10 @@ static inline void pi_reset(struct pi_channel* const pi)
 
 static inline void pi_add_sample(struct pi_channel* const pi, int32_t s)
 {
-        pi->tail = (pi->tail + 1) % pi->tau;
+        if (pi->tau == 0)
+                pi->tail = 0;
+        else
+                pi->tail = (pi->tail + 1) % pi->tau;
         int32_t* tail = &pi->history[pi->tail];
         pi->sum = pi->sum - *tail + s;
         *tail = s;
