@@ -13,6 +13,3 @@ MEMORY
 	ram_ahb2   (rwx) : ORIGIN = 0x2000C000, LENGTH =  16K
 }
 
-/* Include the common ld script. */
-/*INCLUDE lpc43xx/m4/libopencm3_lpc43xx_ram_only.ld*/
-INCLUDE lpc43xx/m4/libopencm3_lpc43xx.ld
