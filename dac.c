@@ -55,12 +55,14 @@ void dac_init()
     pin_off(&nldac);
     pin_on(&cs);
 
+    // DAC specified up to 50MHz
+    // 204MHz / 4  == 51MHz
     ssp_init(SSP1_NUM,
              SSP_DATA_8BITS,
              SSP_FRAME_SPI,
              SSP_CPOL_0_CPHA_1, 
              0,
-             2,
+             4,
              SSP_MODE_NORMAL,
              SSP_MASTER,
              SSP_SLAVE_OUT_DISABLE);
