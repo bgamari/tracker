@@ -186,7 +186,7 @@ int adc_set_decimation(const unsigned int _decimation_factor)
 
 int adc_set_trigger_freq(uint32_t freq)
 {
-        setup_periodic_timer(TIMER0, 2*freq);
+        setup_periodic_timer(TIMER0, freq);
         TIMER0_EMR |= (TIMER0_EMR & ~TIMER_EMR_EMC0_MASK) | (TIMER_EMR_EMC_TOGGLE << TIMER_EMR_EMC0_SHIFT);
         adc_set_trigger_mode(trigger_mode);
         return 0;
