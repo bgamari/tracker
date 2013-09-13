@@ -42,11 +42,11 @@ void process_cmd(struct cmd_frame_t *cmd)
 {
         int res;
         
+        reply.status = ACK; // change to NACK as necessary
         reply.cmd = cmd->cmd;
 
         switch (cmd->cmd) {
         case CMD_ECHO:
-                reply.status = ACK;
                 reply.data[0] = cmd->echo.length;
                 memcpy(&reply.data[1], cmd->echo.data, cmd->echo.length);
                 send_reply(&reply, cmd->echo.length+3);
@@ -204,7 +204,6 @@ void process_cmd(struct cmd_frame_t *cmd)
                 if (cmd->enqueue_points.npts > 0)
                         res = enqueue_points((uint16_t*) &cmd->enqueue_points.points, cmd->enqueue_points.npts);
                 if (res == 0) {
-                        reply.status = ACK;
                         reply.data[0] = is_path_running();
                         send_reply(&reply, 3);
                 } else {
