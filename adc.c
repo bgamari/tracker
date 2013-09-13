@@ -99,12 +99,14 @@ void adc_init()
         delay_ms(1);
         pin_off(&reset);
 
+        // ADC specified up to 20MHz
+        // 204MHz / 10 == 20.4MHz
         ssp_init(SSP0_NUM,
                  SSP_DATA_16BITS,
                  SSP_FRAME_SPI,
                  SSP_CPOL_1_CPHA_1,
                  0,
-                 2, // FIXME
+                 10,
                  SSP_MODE_NORMAL,
                  SSP_MASTER,
                  SSP_SLAVE_OUT_DISABLE);
