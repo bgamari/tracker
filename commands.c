@@ -138,7 +138,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 for (unsigned int i=0; i<STAGE_OUTPUTS; i++) {
                         reply.data[i] = pi_get_tau(&stage_outputs[i]);
                 }
-                send_ack();
+                send_reply(&reply, 2+3);
                 break;
         }
 
