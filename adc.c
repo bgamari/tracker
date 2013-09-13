@@ -22,7 +22,8 @@ static unsigned int nsamples; // length of buffer in int16_t samples
 static int16_t *buffer;
 static adc_buffer_done_cb buffer_done = NULL; // callback for when buffer has been filled
 static unsigned int head; // index in buffer where next sample will be stored
-static int16_t *last_frame; // last 8-sample frame transferred
+static unsigned int decimation_count = 1;
+static unsigned int decimation_factor = 1;
 
 struct pin_t os1 = { .port = GPIO3, .pin = GPIOPIN7 };
 struct pin_t os2 = { .port = GPIO3, .pin = GPIOPIN6 };
@@ -32,7 +33,15 @@ struct pin_t reset = { .port = GPIO5, .pin = GPIOPIN2 };
 struct pin_t range = { .port = GPIO5, .pin = GPIOPIN6 };
 struct pin_t standby = { .port = GPIO5, .pin = GPIOPIN0 }; // inverted
 
-unsigned int adc_sample_counter = 0;
+#ifdef USE_DMA
+// This is where samples get placed
+int16_t last_sample[2][8] = { };
+// index of last_sample buffer which is currently being filled by DMA engine
+uint8_t last_sample_idx = 0;
+#else
+// This is where samples get placed
+int16_t last_sample[8] = { };
+#endif
 
 #ifdef USE_DMA
 static void configure_rx_dma()
@@ -47,7 +56,6 @@ static void configure_rx_dma()
                 | GPDMA_CCONTROL_DWIDTH(0x1)  // halfword
                 | GPDMA_CCONTROL_S(0x1)       // master 1 can access peripheral
                 | GPDMA_CCONTROL_D(0x0)       // master 0 can access memory
-                | GPDMA_CCONTROL_DI(0x1)      // destination increment
                 ;
         GPDMA_C0CONFIG =
                   GPDMA_CCONFIG_SRCPERIPHERAL(0x9)  // SSP0 RX
@@ -136,16 +144,12 @@ void adc_init()
 static void setup_buffer(int16_t* buf)
 {
         buffer = buf;
-        last_frame = NULL; // FIXME?
         head = 0;
 #ifdef USE_DMA
         while (GPDMA_ENBLDCHNS & 0x3);
         GPDMA_C0CONFIG &= ~GPDMA_CCONFIG_E(0x1);
         GPDMA_C1CONFIG &= ~GPDMA_CCONFIG_E(0x1);
-        // We bump up DESTADDR by 2 before starting the transaction
-        // as the controller doesn't increment after the last transfer
-        // of a transaction
-        GPDMA_C0DESTADDR = (uint32_t) buffer - 2;
+        GPDMA_C0DESTADDR = (uint32_t) last_sample[last_sample_idx];
 #endif
 }
 
@@ -164,6 +168,20 @@ void adc_set_trigger_mode(enum trigger_mode mode)
                 TIMER0_TCR &= ~TIMER_TCR_CEN;
         else
                 TIMER0_TCR |= TIMER_TCR_CEN;
+}
+
+unsigned int adc_get_decimation()
+{
+        return decimation_factor;
+}
+
+#define MAX(x,y) (x > y ? x : y)
+
+int adc_set_decimation(const unsigned int _decimation_factor)
+{
+        decimation_factor = MAX(1, _decimation_factor);
+        decimation_count = decimation_factor;
+        return 0;
 }
 
 int adc_set_trigger_freq(uint32_t freq)
@@ -192,7 +210,7 @@ int16_t *adc_get_active_buffer()
 
 int16_t *adc_get_last_frame()
 {
-        return last_frame;
+        return last_sample[!last_sample_idx];
 }
 
 void adc_set_oversampling(enum adc_oversampling_t os)
@@ -216,30 +234,36 @@ void pin_int0_isr(void)
                 GPIO_PIN_INTERRUPT_RISE = 0x1;
                 GPIO_PIN_INTERRUPT_IST = 0x1;
 
-                if (buffer == NULL) return;
+                decimation_count--;
+                bool save_sample = buffer != NULL && decimation_count == 0;
 
 #ifdef USE_DMA
+                // ensure previous transaction has completed
                 while (GPDMA_ENBLDCHNS & 0x3);
+                if (save_sample) {
+                        for (unsigned int i=0; i<8; i++, head++)
+                                buffer[head] = last_sample[last_sample_idx][i];
+                }
+                last_sample_idx = !last_sample_idx;
+                
                 GPDMA_C0CONFIG &= ~GPDMA_CCONFIG_E(0x1);
                 GPDMA_C1CONFIG &= ~GPDMA_CCONFIG_E(0x1);
-                // DESTADDR wasn't incremented after the last
-                // transfer, therefore we bump it
-                GPDMA_C0DESTADDR += 2;
+                GPDMA_C0DESTADDR = (uint32_t) last_sample[last_sample_idx];
                 GPDMA_C0CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(8); 
                 GPDMA_C1CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(8);
                 GPDMA_C0CONFIG |= GPDMA_CCONFIG_E(0x1);
                 GPDMA_C1CONFIG |= GPDMA_CCONFIG_E(0x1);
-
-                head += 8;
-                if (head > 2*8)
-                        last_frame = &buffer[head - 2*8];
 #else
-                for (unsigned int i=0; i<8; i++, head++) 
-                        buffer[head] = ssp_transfer(SSP0_NUM, 0);
-                last_frame = &buffer[head - 8];
+                for (unsigned int i=0; i<8; i++) {
+                        last_sample[i] = ssp_transfer(SSP0_NUM, 0);
+                        if (save_sample) {
+                                buffer[head] = last_sample[i];
+                                head++;
+                        }
+                }
 #endif
-
-                if (head >= nsamples) {
+                        
+                if (buffer != NULL && head >= nsamples) {
                         if (buffer_done) {
                                 int16_t *next_buffer = buffer_done(buffer);
                                 setup_buffer(next_buffer);
