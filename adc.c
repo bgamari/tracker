@@ -1,5 +1,6 @@
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/lpc43xx/timer.h>
+#include <libopencm3/lpc43xx/cgu.h>
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/creg.h>
@@ -107,6 +108,11 @@ void adc_init()
         pin_on(&reset);
         delay_ms(1);
         pin_off(&reset);
+
+	/* use PLL1 as clock source */
+	CGU_BASE_SSP0_CLK =
+		  CGU_BASE_SSP0_CLK_CLK_SEL(CGU_SRC_PLL1)
+		| CGU_BASE_SSP0_CLK_AUTOBLOCK;
 
         // ADC specified up to 20MHz
         // 204MHz / 10 == 20.4MHz
