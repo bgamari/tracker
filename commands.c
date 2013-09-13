@@ -179,6 +179,22 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_GET_ADC_DECIMATION:
+        {
+                uint32_t* r = (uint32_t*) reply.data;
+                r[0] = adc_get_decimation();
+                send_reply(&reply, 2+4);
+                break;
+        }
+                
+        case CMD_SET_ADC_DECIMATION:
+                if (adc_set_decimation(cmd->set_adc_decimation) == 0) {
+                        send_ack();
+                } else {
+                        send_nack();
+                }
+                break;
+
         case CMD_SET_FEEDBACK_FREQ:
                 feedback_set_loop_freq(cmd->set_feedback_freq);
                 send_ack();
