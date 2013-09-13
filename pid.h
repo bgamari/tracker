@@ -23,6 +23,20 @@ static inline void pi_reset(struct pi_channel* const pi)
         pi->tail = 0;
 }
 
+static inline uint8_t pi_get_tau(struct pi_channel* const pi)
+{
+        return pi->tau;
+}
+
+static inline int pi_set_tau(struct pi_channel* const pi, uint8_t tau)
+{
+        if (tau > PI_MAX_HISTORY)
+                return -1;
+        pi->tau = tau;
+        pi_reset(pi);
+        return 0;
+}
+
 static inline void pi_add_sample(struct pi_channel* const pi, int32_t s)
 {
         if (pi->tau == 0)
