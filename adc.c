@@ -92,9 +92,7 @@ void adc_init()
 
         pin_on(&standby);
         pin_off(&range);
-        pin_off(&os1);
-        pin_off(&os2);
-        pin_off(&os3);
+        adc_set_oversampling(ADC_OVERSAMPLE_NONE);
         pin_on(&reset);
         delay_ms(1);
         pin_off(&reset);
@@ -195,11 +193,11 @@ int16_t *adc_get_last_frame()
         return last_frame;
 }
 
-void adc_set_sample_time(enum adc_sample_time_t time)
+void adc_set_oversampling(enum adc_oversampling_t os)
 {
-        pin_set(&os1, time & 0x1);
-        pin_set(&os2, time & 0x2);
-        pin_set(&os3, time & 0x4);
+        pin_set(&os1, os & 0x1);
+        pin_set(&os2, os & 0x2);
+        pin_set(&os3, os & 0x4);
 }
 
 // ADC_BUSY fell: ADC sample ready

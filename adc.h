@@ -7,11 +7,17 @@
 // Subsystem initialization and configuration
 void adc_init();
 
-enum adc_sample_time_t {
-    SAMPLE_TIME_8CYC = 0x0,
+enum adc_oversampling_t {
+    ADC_OVERSAMPLE_NONE = 0x0,
+    ADC_OVERSAMPLE_2    = 0x1,
+    ADC_OVERSAMPLE_4    = 0x2,
+    ADC_OVERSAMPLE_8    = 0x3,
+    ADC_OVERSAMPLE_16   = 0x4,
+    ADC_OVERSAMPLE_32   = 0x5,
+    ADC_OVERSAMPLE_64   = 0x6,
 };
 
-void adc_set_sample_time(enum adc_sample_time_t time);
+void adc_set_oversampling(enum adc_oversampling_t os);
 
 // Streaming samples into buffer
 typedef int16_t* (*adc_buffer_done_cb)(int16_t*);
