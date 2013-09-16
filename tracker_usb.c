@@ -93,7 +93,7 @@ usb_endpoint_t usb_endpoint_bulk_data_in = {
 	.setup_complete = 0,
 	.transfer_complete = usb_queue_transfer_complete,
 };
-USB_DEFINE_QUEUE(usb_endpoint_bulk_data_in, 4);
+USB_DEFINE_QUEUE(usb_endpoint_bulk_data_in, 8);
 
 static const usb_request_handler_fn vendor_request_handler[] = {
 	NULL,
