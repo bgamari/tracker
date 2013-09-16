@@ -14,6 +14,7 @@
 
 bool adc_streaming = false;
 struct cmd_frame_t cmd_frame;
+unsigned int dropped_buffers = 0;
 
 uint8_t command_buffer[512] = "hello world";
 
@@ -184,6 +185,7 @@ void tracker_usb_send_buffer(buffer_t* buffer)
         } if (ret == -1) {
                 // No transfers available
                 put_buffer(buffer);
+                dropped_buffers++;
         } else {
                 while (1);
         }
