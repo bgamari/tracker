@@ -113,8 +113,9 @@ bool is_path_running()
 static void path_done()
 {
         timer_disable_counter(TIMER1);
-        path_running = false;
         adc_set_trigger_mode(TRIGGER_OFF);
+        adc_flush();
+        path_running = false;
 }
 
 void timer1_isr()
