@@ -35,6 +35,7 @@ int adc_set_decimation(const unsigned int decimation_factor);
 
 // Triggering
 enum trigger_mode { TRIGGER_OFF, TRIGGER_AUTO, TRIGGER_MANUAL };
+enum trigger_mode adc_get_trigger_mode();
 void adc_set_trigger_mode(enum trigger_mode mode);
 int adc_set_trigger_freq(uint32_t freq);
 int adc_manual_trigger();

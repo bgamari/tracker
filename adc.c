@@ -184,6 +184,11 @@ void adc_start(unsigned int samples, int16_t* buf, adc_buffer_done_cb done)
         running = true;
 }
 
+enum trigger_mode adc_get_trigger_mode()
+{
+        return trigger_mode;
+}
+
 void adc_set_trigger_mode(enum trigger_mode mode)
 {
         trigger_mode = mode;
