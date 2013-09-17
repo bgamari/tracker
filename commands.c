@@ -180,6 +180,7 @@ void process_cmd(struct cmd_frame_t *cmd)
 
         case CMD_STOP_ADC_STREAM:
                 adc_streaming = false;
+                adc_flush();
                 send_ack();
                 break;
 
