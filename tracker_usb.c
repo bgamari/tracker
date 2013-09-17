@@ -173,10 +173,10 @@ static void buffer_sent(unsigned int status, unsigned int transferred, void* use
         put_buffer(buffer);
 }
 
-void tracker_usb_send_buffer(buffer_t* buffer)
+void tracker_usb_send_buffer(buffer_t* buffer, unsigned int nsamples)
 {
         int ret = usb_transfer_schedule(&usb_endpoint_bulk_data_in,
-                                        buffer->data, sizeof(uint16_t)*BUFFER_SIZE,
+                                        buffer->data, sizeof(uint16_t)*nsamples,
                                         buffer_sent, buffer);
                                         
         if (ret == 0) {

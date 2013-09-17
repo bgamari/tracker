@@ -160,6 +160,22 @@ static void setup_buffer(int16_t* buf)
 #endif
 }
 
+// We finished filling the buffer
+int adc_flush()
+{
+        if (buffer == NULL) {
+                return -1;
+        }
+
+        if (buffer_done) {
+                int16_t *next_buffer = buffer_done(buffer, head);
+                setup_buffer(next_buffer);
+        } else {
+                setup_buffer(NULL);
+        }
+        return 0;
+}
+
 void adc_start(unsigned int samples, int16_t* buf, adc_buffer_done_cb done)
 {
         buffer_done = done;
@@ -276,14 +292,8 @@ void pin_int0_isr(void)
                 }
 #endif
                         
-                if (buffer != NULL && head >= nsamples) {
-                        if (buffer_done) {
-                                int16_t *next_buffer = buffer_done(buffer);
-                                setup_buffer(next_buffer);
-                        } else {
-                                setup_buffer(NULL);
-                        }
-                }
+                if (buffer != NULL && head >= nsamples)
+                        adc_flush();
 
                 increment_event_counter(adc_sample_counter);
         }

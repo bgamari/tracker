@@ -109,11 +109,11 @@ static void init_clock()
 
 buffer_t* active_buffer = NULL;
 
-int16_t* buffer_full(int16_t* buffer_data)
+int16_t* buffer_full(int16_t* buffer_data, unsigned int nsamples)
 {
         buffer_t* buffer = (buffer_t*) buffer_data;
         if (adc_streaming)
-                tracker_usb_send_buffer(buffer);
+                tracker_usb_send_buffer(buffer, nsamples);
         else
                 put_buffer(buffer);
 
