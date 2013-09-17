@@ -18,8 +18,12 @@
 struct reply {
         uint8_t cmd;
         uint8_t status;
-        uint8_t data[490];
-};
+        union {
+                uint8_t data[490];
+                uint16_t data16[245];
+                uint32_t data32[122];
+        };
+} __attribute__((packed));
 
 struct reply reply;
 
@@ -181,8 +185,7 @@ void process_cmd(struct cmd_frame_t *cmd)
 
         case CMD_GET_ADC_DECIMATION:
         {
-                uint32_t* r = (uint32_t*) reply.data;
-                r[0] = adc_get_decimation();
+                reply.data32[0] = adc_get_decimation();
                 send_reply(&reply, 2+4);
                 break;
         }
