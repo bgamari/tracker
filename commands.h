@@ -54,12 +54,16 @@ enum cmd_t {
     CMD_SET_OUTPUT_TAUS       = 0x1d,
     CMD_SET_EXCITATION        = 0x1e,
 
-    CMD_SET_ADC_FREQ          = 0x20,
-    CMD_SET_ADC_TRIGGER_MODE  = 0x21,
-    CMD_START_ADC_STREAM      = 0x22,
-    CMD_STOP_ADC_STREAM       = 0x23,
+    CMD_GET_ADC_FREQ          = 0x20,
+    CMD_SET_ADC_FREQ          = 0x21,
+    CMD_GET_ADC_TRIGGER_MODE  = 0x22,
+    CMD_SET_ADC_TRIGGER_MODE  = 0x23,
     CMD_GET_ADC_DECIMATION    = 0x24,
     CMD_SET_ADC_DECIMATION    = 0x25,
+
+    CMD_START_ADC_STREAM      = 0x2a,
+    CMD_STOP_ADC_STREAM       = 0x2b,
+    CMD_FLUSH_ADC_STREAM      = 0x2c,
 
     CMD_SET_FEEDBACK_FREQ     = 0x30,
     CMD_GET_FEEDBACK_MODE     = 0x31,
