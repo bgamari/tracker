@@ -100,6 +100,8 @@ void do_feedback()
 {
         int32_t error[STAGE_OUTPUTS];
 
+        if (adc_get_trigger_mode() == TRIGGER_OFF) return;
+
         if (feedback_mode == NO_FEEDBACK) {
                 return;
 
