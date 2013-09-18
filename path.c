@@ -89,7 +89,6 @@ int start_path(unsigned int freq, bool synchronous_trigger)
         if (active_path == NULL)
                 return -2;
 
-        feedback_set_mode(NO_FEEDBACK);
         sync_trigger = synchronous_trigger;
         active_point = 0;
         path_running = true;
