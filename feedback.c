@@ -39,12 +39,21 @@ static void feedback_update()
 
 int feedback_set_position(uint16_t setpoint[3])
 {
-        if (feedback_mode != NO_FEEDBACK)
+        switch (feedback_mode) {
+        case NO_FEEDBACK:
+                for (unsigned int i=0; i<STAGE_OUTPUTS; i++)
+                        updates[i].value = setpoint[i];
+                feedback_update();
+                return 0;
+
+        case STAGE_FEEDBACK:
+                for (unsigned int i=0; i<STAGE_INPUTS; i++)
+                        stage_fb_setpoint[i] = setpoint[i];
+                return 0;
+
+        default:
                 return 1;
-        for (unsigned int i=0; i<3; i++)
-                updates[i].value = setpoint[i];
-        feedback_update();
-        return 0;
+        }
 }
 
 void feedback_set_loop_freq(unsigned int freq)
