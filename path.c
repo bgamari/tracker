@@ -133,8 +133,8 @@ void timer1_isr()
                 return;
         }
         
-        // This will be ignored until synchronous triggering is enabled
-        adc_manual_trigger();
+        if (sync_trigger)
+                adc_manual_trigger();
 
         feedback_set_position(active_path->points[active_point]);
         active_point++;
