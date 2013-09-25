@@ -21,9 +21,9 @@ struct path {
 
 #define N_PATHS 8
 static struct path paths[N_PATHS] = {};
-static struct path* active_path = NULL;
-static unsigned int active_point;
-static bool path_running = false;
+static struct path* volatile active_path = NULL;
+static volatile unsigned int active_point;
+static volatile bool path_running = false;
 static bool sync_trigger = false;
 
 struct path* take_path()
@@ -56,7 +56,7 @@ int enqueue_points(uint16_t* points, unsigned int npts)
 
         cm_disable_interrupts();
         if (active_path) {
-                struct path* tail = active_path;
+                volatile struct path* tail = active_path;
                 while (tail->next != NULL) tail = tail->next;
                 tail->next = path;
         } else {
@@ -123,7 +123,7 @@ void timer1_isr()
 {
         TIMER1_IR = 0xf;  // Clear interrupt
         if (active_point >= active_path->npts) {
-                struct path* old = active_path;
+                struct path* volatile old = active_path;
                 active_path = active_path->next;
                 active_point = 0;
                 put_path(old);
