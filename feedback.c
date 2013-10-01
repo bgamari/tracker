@@ -14,7 +14,7 @@
 
 static enum feedback_mode_t feedback_mode = NO_FEEDBACK;
 
-fixed16_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
+fixed24_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
 signed int psd_fb_setpoint[PSD_INPUTS] = { };
 
 fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
@@ -111,7 +111,7 @@ void do_feedback()
                         error[i] = 0;
                         for (unsigned int j=0; j<PSD_INPUTS; j++) 
                                 error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - (int32_t) (*sample)[j+3]);
-                        error[i] >>= 16;
+                        error[i] >>= 24;
                 }
 
         } else if (feedback_mode == STAGE_FEEDBACK) {
