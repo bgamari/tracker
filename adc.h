@@ -41,5 +41,5 @@ int adc_set_trigger_freq(uint32_t freq);
 int adc_manual_trigger();
 
 // Accessing sample buffers
-int16_t *adc_get_last_frame();
+adc_frame_t *adc_get_last_frame();
 int16_t *adc_get_active_buffer();

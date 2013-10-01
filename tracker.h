@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include "types.h"
 
 #define PSD_INPUTS 4
 #define STAGE_INPUTS 3

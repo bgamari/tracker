@@ -36,12 +36,12 @@ struct pin_t standby = { .port = GPIO5, .pin = GPIOPIN0 }; // inverted
 
 #ifdef USE_DMA
 // This is where samples get placed
-int16_t last_sample[2][8] = { };
+adc_frame_t last_sample[2] = { };
 // index of last_sample buffer which is currently being filled by DMA engine
 uint8_t last_sample_idx = 0;
 #else
 // This is where samples get placed
-int16_t last_sample[8] = { };
+adc_frame_t last_sample = { };
 #endif
 
 #ifdef USE_DMA
@@ -236,12 +236,12 @@ int16_t *adc_get_active_buffer()
         return buffer;
 }
 
-int16_t *adc_get_last_frame()
+adc_frame_t *adc_get_last_frame()
 {
 #ifdef USE_DMA
-        return last_sample[!last_sample_idx];
+        return &last_sample[!last_sample_idx];
 #else
-        return last_sample;
+        return &last_sample;
 #endif
 }
 
