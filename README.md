@@ -25,3 +25,8 @@ Samples from the ADC are assumed to have the following channel mapping,
    4    =   PSD x difference
    5    =   PSD y sum
    6    =   PSD y difference
+
+## todo
+
+stage_fb_gains should be one-dimensional
+
