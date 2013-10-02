@@ -111,13 +111,14 @@ void do_feedback()
                         error[i] = 0;
                         for (unsigned int j=0; j<PSD_INPUTS; j++) 
                                 error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - (int32_t) (*sample)[j+3]);
-                        error[i] >>= 24;
+                        error[i] /= 1<<24;
                 }
 
         } else if (feedback_mode == STAGE_FEEDBACK) {
                 adc_frame_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_INPUTS; i++) {
-                        error[i] = ((stage_fb_setpoint[i] - (int32_t) (*sample)[i]) * stage_fb_gains[i][i]) >> 16;
+                        error[i] = (stage_fb_setpoint[i] - (int32_t) (*sample)[i]) * stage_fb_gains[i][i];
+                        error[i] /= 1<<16;
                 }
         }
 
