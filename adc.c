@@ -109,10 +109,10 @@ void adc_init()
         delay_ms(1);
         pin_off(&reset);
 
-	/* use PLL1 as clock source */
-	CGU_BASE_SSP0_CLK =
-		  CGU_BASE_SSP0_CLK_CLK_SEL(CGU_SRC_PLL1)
-		| CGU_BASE_SSP0_CLK_AUTOBLOCK;
+        /* use PLL1 as clock source */
+        CGU_BASE_SSP0_CLK =
+                  CGU_BASE_SSP0_CLK_CLK_SEL(CGU_SRC_PLL1)
+                | CGU_BASE_SSP0_CLK_AUTOBLOCK(1);
 
         // ADC specified up to 20MHz
         // 204MHz / 10 == 20.4MHz
@@ -140,7 +140,7 @@ void adc_init()
         configure_rx_dma();
         configure_tx_dma();
 #endif
-        
+
         // configure PINT0 = ADC_BUSY = GPIO1[13]
         nvic_enable_irq(NVIC_PIN_INT0_IRQ);
         SCU_PINTSEL0 = (SCU_PINTSEL0 & ~0xff) | 13 | (0x1 << 5);
@@ -279,11 +279,11 @@ void pin_int0_isr(void)
                                 buffer[head] = last_sample[last_sample_idx][i];
                 }
                 last_sample_idx = !last_sample_idx;
-                
+
                 GPDMA_C0CONFIG &= ~GPDMA_CCONFIG_E(0x1);
                 GPDMA_C1CONFIG &= ~GPDMA_CCONFIG_E(0x1);
                 GPDMA_C0DESTADDR = (uint32_t) last_sample[last_sample_idx];
-                GPDMA_C0CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(8); 
+                GPDMA_C0CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(8);
                 GPDMA_C1CONTROL |= GPDMA_CCONTROL_TRANSFERSIZE(8);
                 GPDMA_C0CONFIG |= GPDMA_CCONFIG_E(0x1);
                 GPDMA_C1CONFIG |= GPDMA_CCONFIG_E(0x1);
@@ -296,7 +296,7 @@ void pin_int0_isr(void)
                         }
                 }
 #endif
-                        
+
                 if (buffer != NULL && head >= nsamples)
                         adc_flush();
 

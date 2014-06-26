@@ -34,16 +34,16 @@ void frame_recvd(unsigned int length, uint8_t *frame)
 static void init_clock()
 {
         /* set xtal oscillator to low frequency mode */
-        CGU_XTAL_OSC_CTRL &= ~CGU_XTAL_OSC_CTRL_HF;
+        CGU_XTAL_OSC_CTRL &= ~CGU_XTAL_OSC_CTRL_HF_MASK;
 
         /* power on the oscillator and wait until stable */
-        CGU_XTAL_OSC_CTRL &= ~CGU_XTAL_OSC_CTRL_ENABLE; /* power on oscillator */
+        CGU_XTAL_OSC_CTRL &= ~CGU_XTAL_OSC_CTRL_ENABLE_MASK; /* power on oscillator */
 
         /* use XTAL_OSC as clock source for BASE_M4_CLK (CPU) */
         CGU_BASE_M4_CLK = CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_XTAL);
 
         /* use XTAL_OSC as clock source for APB1 */
-        CGU_BASE_APB1_CLK = CGU_BASE_APB1_CLK_AUTOBLOCK
+        CGU_BASE_APB1_CLK = CGU_BASE_APB1_CLK_AUTOBLOCK(1)
                 | CGU_BASE_APB1_CLK_CLK_SEL(CGU_SRC_XTAL);
 
         /* use XTAL_OSC as clock source for PLL1 */
@@ -52,11 +52,11 @@ static void init_clock()
                 | CGU_PLL1_CTRL_PSEL(1)
                 | CGU_PLL1_CTRL_NSEL(0)
                 | CGU_PLL1_CTRL_MSEL(16)
-                | CGU_PLL1_CTRL_PD;
+          | CGU_PLL1_CTRL_PD(1);
 
         /* power on PLL1 and wait until stable */
-        CGU_PLL1_CTRL &= ~CGU_PLL1_CTRL_PD;
-        while (!(CGU_PLL1_STAT & CGU_PLL1_STAT_LOCK));
+        CGU_PLL1_CTRL &= ~CGU_PLL1_CTRL_PD_MASK;
+        while (!(CGU_PLL1_STAT & CGU_PLL1_STAT_LOCK_MASK));
 
         /* use PLL1 as clock source for BASE_M4_CLK (CPU) */
         CGU_BASE_M4_CLK = CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_PLL1);
@@ -66,41 +66,41 @@ static void init_clock()
                 | CGU_PLL1_CTRL_PSEL(0)
                 | CGU_PLL1_CTRL_NSEL(0)
                 | CGU_PLL1_CTRL_MSEL(16)
-                | CGU_PLL1_CTRL_FBSEL;
+                | CGU_PLL1_CTRL_FBSEL(1);
         //| CGU_PLL1_CTRL_DIRECT;
 
         /* wait until stable */
-        while (!(CGU_PLL1_STAT & CGU_PLL1_STAT_LOCK));
+        while (!(CGU_PLL1_STAT & CGU_PLL1_STAT_LOCK_MASK));
 
         /* use XTAL_OSC as clock source for PLL0USB */
-        CGU_PLL0USB_CTRL = CGU_PLL0USB_CTRL_PD
-                | CGU_PLL0USB_CTRL_AUTOBLOCK
+        CGU_PLL0USB_CTRL = CGU_PLL0USB_CTRL_PD(1)
+                | CGU_PLL0USB_CTRL_AUTOBLOCK(1)
                 | CGU_PLL0USB_CTRL_CLK_SEL(CGU_SRC_XTAL);
-        while (CGU_PLL0USB_STAT & CGU_PLL0USB_STAT_LOCK);
+        while (CGU_PLL0USB_STAT & CGU_PLL0USB_STAT_LOCK_MASK);
 
         /* configure PLL0USB to produce 480 MHz clock from 12 MHz XTAL_OSC */
         /* Values from User Manual v1.4 Table 94, for 12MHz oscillator. */
         CGU_PLL0USB_MDIV = 0x06167FFA;
         CGU_PLL0USB_NP_DIV = 0x00302062;
-        CGU_PLL0USB_CTRL |= (CGU_PLL0USB_CTRL_PD
-                             | CGU_PLL0USB_CTRL_DIRECTI
-                             | CGU_PLL0USB_CTRL_DIRECTO
-                             | CGU_PLL0USB_CTRL_CLKEN);
+        CGU_PLL0USB_CTRL |= (CGU_PLL0USB_CTRL_PD(1)
+                             | CGU_PLL0USB_CTRL_DIRECTI(1)
+                             | CGU_PLL0USB_CTRL_DIRECTO(1)
+                             | CGU_PLL0USB_CTRL_CLKEN(1));
 
         /* power on PLL0USB and wait until stable */
-        CGU_PLL0USB_CTRL &= ~CGU_PLL0USB_CTRL_PD;
-        while (!(CGU_PLL0USB_STAT & CGU_PLL0USB_STAT_LOCK));
+        CGU_PLL0USB_CTRL &= ~CGU_PLL0USB_CTRL_PD_MASK;
+        while (!(CGU_PLL0USB_STAT & CGU_PLL0USB_STAT_LOCK_MASK));
 
         /* use PLL0USB as clock source for USB0 */
-        CGU_BASE_USB0_CLK = CGU_BASE_USB0_CLK_AUTOBLOCK
+        CGU_BASE_USB0_CLK = CGU_BASE_USB0_CLK_AUTOBLOCK(1)
                 | CGU_BASE_USB0_CLK_CLK_SEL(CGU_SRC_PLL0USB);
 
         /* Switch peripheral clock over to use PLL1 (204MHz) */
-        CGU_BASE_PERIPH_CLK = CGU_BASE_PERIPH_CLK_AUTOBLOCK
+        CGU_BASE_PERIPH_CLK = CGU_BASE_PERIPH_CLK_AUTOBLOCK(1)
                 | CGU_BASE_PERIPH_CLK_CLK_SEL(CGU_SRC_PLL1);
 
         /* Switch APB1 clock over to use PLL1 (204MHz) */
-        CGU_BASE_APB1_CLK = CGU_BASE_APB1_CLK_AUTOBLOCK
+        CGU_BASE_APB1_CLK = CGU_BASE_APB1_CLK_AUTOBLOCK(1)
                 | CGU_BASE_APB1_CLK_CLK_SEL(CGU_SRC_PLL1);
 }
 

@@ -59,7 +59,7 @@ void dac_init()
     /* use PLL1 as clock source */
     CGU_BASE_SSP1_CLK =
               CGU_BASE_SSP1_CLK_CLK_SEL(CGU_SRC_PLL1)
-            | CGU_BASE_SSP1_CLK_AUTOBLOCK;
+            | CGU_BASE_SSP1_CLK_AUTOBLOCK(1);
 
     // DAC specified up to 50MHz
     // 204MHz / 4  == 51MHz
