@@ -1,6 +1,6 @@
 #include "buffer.h"
 
-buffer_t buffers[16] = {};
+buffer_t buffers[32] = {};
 const unsigned int n_buffers = sizeof(buffers) / sizeof(buffers[0]);
 
 void buffers_init() {
