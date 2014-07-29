@@ -35,7 +35,7 @@ struct dac_update_t updates[] = {
 static void feedback_update()
 {
         set_dac(STAGE_OUTPUTS, updates);
-}        
+}
 
 int feedback_set_position(uint16_t setpoint[3])
 {
@@ -86,37 +86,16 @@ void feedback_set_mode(enum feedback_mode_t mode)
         }
         feedback_mode = mode;
 }
-    
-void do_feedback()
+
+static void pid_update(int32_t error[STAGE_OUTPUTS])
 {
-        int32_t error[STAGE_OUTPUTS];
-
-        if (feedback_mode == NO_FEEDBACK) {
-                return;
-
-        } else if (feedback_mode == PSD_FEEDBACK) {
-                int16_t *sample = adc_get_last_frame();
-                for (int i=0; i<STAGE_OUTPUTS; i++) {
-                        error[i] = 0;
-                        for (unsigned int j=0; j<PSD_INPUTS; j++) 
-                                error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - sample[j+3]);
-                        error[i] >>= 16;
-                }
-
-        } else if (feedback_mode == STAGE_FEEDBACK) {
-                int16_t *sample = adc_get_last_frame();
-                for (int i=0; i<STAGE_INPUTS; i++) {
-                        error[i] = ((stage_fb_setpoint[i] - sample[i]) * stage_fb_gains[i][i]) >> 16;
-                }
-        }
-
         for (int i=0; i<STAGE_OUTPUTS; i++) {
                 struct excitation_buffer* exc = &excitations[i];
                 if (exc->length > 0) {
                         error[i] += exc->samples[exc->offset];
                         exc->offset = (exc->offset+1) % exc->length;
                 }
-                
+
                 if (abs(error[i]) > max_error) {
                         feedback_set_mode(NO_FEEDBACK);
                         return;
@@ -133,9 +112,34 @@ void do_feedback()
         increment_event_counter(feedback_counter);
 }
 
+void do_feedback()
+{
+        if (feedback_mode == NO_FEEDBACK) {
+                return;
+
+        } else if (feedback_mode == PSD_FEEDBACK) {
+                int32_t error[STAGE_OUTPUTS];
+                int16_t *sample = adc_get_last_frame();
+                for (int i=0; i<STAGE_OUTPUTS; i++) {
+                        error[i] = 0;
+                        for (unsigned int j=0; j<PSD_INPUTS; j++)
+                                error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - sample[j+3]);
+                        error[i] >>= 16;
+                }
+                pid_update(error);
+
+        } else if (feedback_mode == STAGE_FEEDBACK) {
+                int32_t error[STAGE_OUTPUTS];
+                int16_t *sample = adc_get_last_frame();
+                for (int i=0; i<STAGE_INPUTS; i++) {
+                        error[i] = ((stage_fb_setpoint[i] - sample[i]) * stage_fb_gains[i][i]) >> 16;
+                }
+                pid_update(error);
+        }
+}
+
 void timer2_isr(void)
 {
         TIMER2_IR |= TIMER_IR_MR0INT;
         do_feedback();
 }
-
