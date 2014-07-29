@@ -21,9 +21,9 @@ struct path {
 
 #define N_PATHS 8
 static struct path paths[N_PATHS] = {};
-static struct path* active_path = NULL;
-static unsigned int active_point;
-static bool path_running = false;
+static struct path* volatile active_path = NULL;
+static volatile unsigned int active_point;
+static volatile bool path_running = false;
 static bool sync_trigger = false;
 
 struct path* take_path()
@@ -56,7 +56,7 @@ int enqueue_points(uint16_t* points, unsigned int npts)
 
         cm_disable_interrupts();
         if (active_path) {
-                struct path* tail = active_path;
+                volatile struct path* tail = active_path;
                 while (tail->next != NULL) tail = tail->next;
                 tail->next = path;
         } else {
@@ -88,8 +88,9 @@ int start_path(unsigned int freq, bool synchronous_trigger)
                 return -1;
         if (active_path == NULL)
                 return -2;
+        if (synchronous_trigger && feedback_get_mode() != NO_FEEDBACK)
+                return -3;
 
-        feedback_set_mode(NO_FEEDBACK);
         sync_trigger = synchronous_trigger;
         active_point = 0;
         path_running = true;
@@ -113,15 +114,16 @@ bool is_path_running()
 static void path_done()
 {
         timer_disable_counter(TIMER1);
-        path_running = false;
         adc_set_trigger_mode(TRIGGER_OFF);
+        adc_flush();
+        path_running = false;
 }
 
 void timer1_isr()
 {
         TIMER1_IR = 0xf;  // Clear interrupt
         if (active_point >= active_path->npts) {
-                struct path* old = active_path;
+                struct path* volatile old = active_path;
                 active_path = active_path->next;
                 active_point = 0;
                 put_path(old);
@@ -131,8 +133,8 @@ void timer1_isr()
                 return;
         }
         
-        // This will be ignored until synchronous triggering is enabled
-        adc_manual_trigger();
+        if (sync_trigger)
+                adc_manual_trigger();
 
         feedback_set_position(active_path->points[active_point]);
         active_point++;

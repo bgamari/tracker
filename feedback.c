@@ -15,7 +15,7 @@
 static enum feedback_mode_t feedback_mode = NO_FEEDBACK;
 
 // PSD feedback parameters
-fixed16_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
+fixed24_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
 signed int psd_fb_setpoint[PSD_INPUTS] = { };
 
 // stage feedback parameters
@@ -44,12 +44,21 @@ static void feedback_update()
 
 int feedback_set_position(uint16_t setpoint[3])
 {
-        if (feedback_mode != NO_FEEDBACK)
+        switch (feedback_mode) {
+        case NO_FEEDBACK:
+                for (unsigned int i=0; i<STAGE_OUTPUTS; i++)
+                        updates[i].value = setpoint[i];
+                feedback_update();
+                return 0;
+
+        case STAGE_FEEDBACK:
+                for (unsigned int i=0; i<STAGE_INPUTS; i++)
+                        stage_fb_setpoint[i] = setpoint[i];
+                return 0;
+
+        default:
                 return 1;
-        for (unsigned int i=0; i<3; i++)
-                updates[i].value = setpoint[i];
-        feedback_update();
-        return 0;
+        }
 }
 
 void feedback_set_loop_freq(unsigned int freq)
@@ -131,8 +140,8 @@ void do_feedback()
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
                         error[i] = 0;
                         for (unsigned int j=0; j<PSD_INPUTS; j++)
-                                error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - sample[j+3]);
-                        error[i] >>= 16;
+                                error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - (uint32_t) (*sample)[j+3]);
+                        error[i] /= 1<<24;
                 }
                 pid_update(error);
                 return;
@@ -185,7 +194,8 @@ void do_feedback()
                 int32_t error[STAGE_OUTPUTS];
                 int16_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_INPUTS; i++) {
-                        error[i] = ((stage_fb_setpoint[i] - sample[i]) * stage_fb_gains[i][i]) >> 16;
+                        error[i] = ((stage_fb_setpoint[i] - (int32_t) (*sample)[i]) * stage_fb_gains[i][i]);
+                        error[i] /= 1<<16;
                 }
                 pid_update(error);
                 return;

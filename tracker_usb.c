@@ -9,8 +9,8 @@
 #include "hackrf_usb/usb_type.h"
 #include "hackrf_usb/usb_queue.h"
 #include "hackrf_usb/usb_request.h"
-#include "hackrf_usb/usb_descriptor.h"
 #include "hackrf_usb/usb_standard_request.h"
+#include "usb_descriptor.h"
 
 bool adc_streaming = false;
 struct cmd_frame_t cmd_frame;
@@ -127,16 +127,9 @@ const usb_request_handlers_t usb_request_handlers = {
 
 static void start_command_transfer(void);
 
-static void command_transfer_completed(unsigned int status,
-                                       unsigned int transferred,
-                                       void* user_data
-) {
-        if (status & USB_TRANSFER_STATUS_FLUSHING) {
-                return;
-        } else if (status) {
-                while(1); // uh oh
-        }
-
+static void command_transfer_completed(void* user_data,
+                                       unsigned int transferred)
+{
         process_cmd((struct cmd_frame_t*) command_buffer);
 }
 
@@ -148,16 +141,9 @@ static void start_command_transfer()
                                     command_transfer_completed, NULL);
 }
 
-static void reply_transfer_completed(unsigned status,
-                                     unsigned int transferred,
-                                     void* user_data)
+static void reply_transfer_completed(void *user_data,
+                                     unsigned int transferred)
 {
-        if (status & USB_TRANSFER_STATUS_FLUSHING) {
-                return;
-        } else if (status) {
-                while(1); // uh oh
-        }
-
         start_command_transfer();
 }
 
@@ -167,16 +153,16 @@ void send_reply(void *data, uint16_t length)
                                     reply_transfer_completed, NULL);
 }
 
-static void buffer_sent(unsigned int status, unsigned int transferred, void* user_data)
+static void buffer_sent(void* user_data, unsigned int transferred)
 {
         buffer_t* buffer = buffer_from_pointer(user_data);
         put_buffer(buffer);
 }
 
-void tracker_usb_send_buffer(buffer_t* buffer)
+void tracker_usb_send_buffer(buffer_t* buffer, unsigned int nsamples)
 {
         int ret = usb_transfer_schedule(&usb_endpoint_bulk_data_in,
-                                        buffer->data, sizeof(uint16_t)*BUFFER_SIZE,
+                                        buffer->data, sizeof(uint16_t)*nsamples,
                                         buffer_sent, buffer);
                                         
         if (ret == 0) {

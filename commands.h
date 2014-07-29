@@ -54,12 +54,16 @@ enum cmd_t {
     CMD_SET_OUTPUT_TAUS       = 0x1d,
     CMD_SET_EXCITATION        = 0x1e,
 
-    CMD_SET_ADC_FREQ          = 0x20,
-    CMD_SET_ADC_TRIGGER_MODE  = 0x21,
-    CMD_START_ADC_STREAM      = 0x22,
-    CMD_STOP_ADC_STREAM       = 0x23,
+    CMD_GET_ADC_FREQ          = 0x20,
+    CMD_SET_ADC_FREQ          = 0x21,
+    CMD_GET_ADC_TRIGGER_MODE  = 0x22,
+    CMD_SET_ADC_TRIGGER_MODE  = 0x23,
     CMD_GET_ADC_DECIMATION    = 0x24,
     CMD_SET_ADC_DECIMATION    = 0x25,
+
+    CMD_START_ADC_STREAM      = 0x2a,
+    CMD_STOP_ADC_STREAM       = 0x2b,
+    CMD_FLUSH_ADC_STREAM      = 0x2c,
 
     CMD_SET_FEEDBACK_FREQ     = 0x30,
     CMD_GET_FEEDBACK_MODE     = 0x31,
@@ -89,9 +93,9 @@ struct cmd_frame_t {
         struct set_excitation set_excitation;
         uint32_t set_feedback_freq;  // in Hz
         uint32_t set_adc_freq;  // in Hz
-        enum trigger_mode set_adc_trigger_mode;
+        uint32_t set_adc_trigger_mode; // enum trigger_mode
         uint32_t set_adc_decimation;
-        enum feedback_mode_t set_feedback_mode;
+        uint32_t set_feedback_mode; // enum feedback_mode
         uint16_t set_raw_pos[3];
         struct enqueue_points enqueue_points;
         struct start_path start_path;

@@ -18,8 +18,12 @@
 struct reply {
         uint8_t cmd;
         uint8_t status;
-        uint8_t data[490];
-};
+        union {
+                uint8_t data[490];
+                uint16_t data16[245];
+                uint32_t data32[122];
+        };
+} __attribute__((packed));
 
 struct reply reply;
 
@@ -159,9 +163,19 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
         }
 
+        case CMD_GET_ADC_FREQ:
+                reply.data32[0] = 0; //TODO adc_get_trigger_freq();
+                send_reply(&reply, 2+4);
+                break;
+
         case CMD_SET_ADC_FREQ:
                 adc_set_trigger_freq(cmd->set_adc_freq);
                 send_ack();
+                break;
+                
+        case CMD_GET_ADC_TRIGGER_MODE:
+                reply.data[0] = adc_get_trigger_mode();
+                send_reply(&reply, 2+1);
                 break;
 
         case CMD_SET_ADC_TRIGGER_MODE:
@@ -176,13 +190,21 @@ void process_cmd(struct cmd_frame_t *cmd)
 
         case CMD_STOP_ADC_STREAM:
                 adc_streaming = false;
+                adc_flush();
                 send_ack();
+                break;
+
+        case CMD_FLUSH_ADC_STREAM:
+                if (adc_flush() == 0) {
+                        send_ack();
+                } else {
+                        send_nack();
+                }
                 break;
 
         case CMD_GET_ADC_DECIMATION:
         {
-                uint32_t* r = (uint32_t*) reply.data;
-                r[0] = adc_get_decimation();
+                reply.data32[0] = adc_get_decimation();
                 send_reply(&reply, 2+4);
                 break;
         }

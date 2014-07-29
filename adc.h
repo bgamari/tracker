@@ -27,17 +27,19 @@ enum adc_range_t {
 void adc_set_range(enum adc_range_t range);
 
 // Streaming samples into buffer
-typedef int16_t* (*adc_buffer_done_cb)(int16_t*);
+typedef int16_t* (*adc_buffer_done_cb)(int16_t* buffer, unsigned int nsamples);
 void adc_start(unsigned int samples, int16_t* buf, adc_buffer_done_cb done);
+int adc_flush();
 unsigned int adc_get_decimation();
 int adc_set_decimation(const unsigned int decimation_factor);
 
 // Triggering
 enum trigger_mode { TRIGGER_OFF, TRIGGER_AUTO, TRIGGER_MANUAL };
+enum trigger_mode adc_get_trigger_mode();
 void adc_set_trigger_mode(enum trigger_mode mode);
 int adc_set_trigger_freq(uint32_t freq);
 int adc_manual_trigger();
 
 // Accessing sample buffers
-int16_t *adc_get_last_frame();
+adc_frame_t *adc_get_last_frame();
 int16_t *adc_get_active_buffer();
