@@ -14,11 +14,16 @@
 
 static enum feedback_mode_t feedback_mode = NO_FEEDBACK;
 
+// PSD feedback parameters
 fixed16_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
 signed int psd_fb_setpoint[PSD_INPUTS] = { };
 
+// stage feedback parameters
 fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
 signed int stage_fb_setpoint[STAGE_INPUTS] = { };
+
+// search feedback parameters
+uint16_t search_fb_step[STAGE_OUTPUTS] = { 40, 40, 40 };
 
 signed int max_error = 1000;
 
@@ -81,6 +86,7 @@ void feedback_set_mode(enum feedback_mode_t mode)
 
         case PSD_FEEDBACK:
         case STAGE_FEEDBACK:
+        case SEARCH_FEEDBACK:
                 timer_enable_counter(TIMER2);
                 break;
         }
@@ -114,10 +120,12 @@ static void pid_update(int32_t error[STAGE_OUTPUTS])
 
 void do_feedback()
 {
-        if (feedback_mode == NO_FEEDBACK) {
+        switch (feedback_mode) {
+        case NO_FEEDBACK:
                 return;
 
-        } else if (feedback_mode == PSD_FEEDBACK) {
+        case PSD_FEEDBACK:
+        {
                 int32_t error[STAGE_OUTPUTS];
                 int16_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
@@ -127,14 +135,61 @@ void do_feedback()
                         error[i] >>= 16;
                 }
                 pid_update(error);
+                return;
+        }
 
-        } else if (feedback_mode == STAGE_FEEDBACK) {
+        case SEARCH_FEEDBACK:
+        {
+                static int32_t last_sum = 0;
+                static unsigned int axis = 0;
+                static unsigned int phase = 0;
+
+                int16_t *sample = adc_get_last_frame();
+                const int32_t sum = (sample[2] - sample[3]) / 2;
+
+                switch (phase) {
+                default:
+                case 0: // entering feedback
+                        axis = 0; // start with X
+
+                case 1: // try moving positive first
+                        stage_fb_setpoint[axis] += search_fb_step[axis];
+                        last_sum = sum;
+                        phase = 2;
+                        break;
+
+                case 2:
+                        // wait until we've reached position
+                        if (10 * abs(sample[axis] - stage_fb_setpoint[axis]) > 9*search_fb_step[axis])
+                                break;
+
+                        if (sum > last_sum) {
+                                // accept step
+                                axis = (axis + 1) % STAGE_OUTPUTS;
+                                phase = 1;
+                        } else {
+                                // try other direction
+                                stage_fb_setpoint[axis] -= 2 * search_fb_step[axis];
+                                phase = 3;
+                        }
+                        break;
+
+                case 3:
+                        phase = 1;
+                        break;
+                }
+                // fall through to STAGE_FEEDBACK
+        }
+        case STAGE_FEEDBACK:
+        {
                 int32_t error[STAGE_OUTPUTS];
                 int16_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_INPUTS; i++) {
                         error[i] = ((stage_fb_setpoint[i] - sample[i]) * stage_fb_gains[i][i]) >> 16;
                 }
                 pid_update(error);
+                return;
+        }
         }
 }
 

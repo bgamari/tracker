@@ -267,6 +267,16 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
         }
 
+        case CMD_GET_SEARCH_STEP:
+                memcpy(reply.data, search_fb_step, sizeof(search_fb_step));
+                send_reply(&reply, 2+sizeof(search_fb_step));
+                break;
+
+        case CMD_SET_SEARCH_STEP:
+                memcpy(search_fb_step, cmd->set_search_step, sizeof(search_fb_step));
+                send_ack();
+                break;
+
         default:
                 send_nack();
                 return;

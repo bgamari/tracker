@@ -5,9 +5,10 @@
 #include "types.h"
 
 enum feedback_mode_t {
-    NO_FEEDBACK = 0,
-    PSD_FEEDBACK,
-    STAGE_FEEDBACK,
+        NO_FEEDBACK = 0, // open loop
+        PSD_FEEDBACK,    // linear feedback on PSD input
+        STAGE_FEEDBACK,  // linear feedback on stage input
+        SEARCH_FEEDBACK, // maximize PSD sum signal
 };
 
 void feedback_init();
@@ -23,6 +24,8 @@ extern signed int psd_fb_setpoint[PSD_INPUTS];
 
 extern fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS];
 extern signed int stage_fb_setpoint[STAGE_INPUTS];
+
+extern uint16_t search_fb_step[STAGE_OUTPUTS];
 
 extern signed int max_error;
 extern struct pi_channel stage_outputs[STAGE_OUTPUTS];
