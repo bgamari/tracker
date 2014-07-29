@@ -114,7 +114,7 @@ int16_t* buffer_full(int16_t* buffer_data, unsigned int nsamples)
         else
                 put_buffer(buffer);
 
-        buffer_t* active_buffer = take_buffer();
+        active_buffer = take_buffer();
         if (active_buffer == NULL) while (1); // uh oh
         return active_buffer->data;
 }
