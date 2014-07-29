@@ -73,6 +73,9 @@ enum cmd_t {
     CMD_CLEAR_PATH            = 0x40,
     CMD_ENQUEUE_POINTS        = 0x41,
     CMD_START_PATH            = 0x42,
+
+    CMD_GET_SEARCH_STEP       = 0x43,
+    CMD_SET_SEARCH_STEP       = 0x44,
 };
 
 struct cmd_frame_t {
@@ -96,6 +99,7 @@ struct cmd_frame_t {
         uint16_t set_raw_pos[3];
         struct enqueue_points enqueue_points;
         struct start_path start_path;
+        uint16_t set_search_step[3];
     };
 } __attribute__((packed));
 
