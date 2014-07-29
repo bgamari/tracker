@@ -136,7 +136,7 @@ void do_feedback()
         case PSD_FEEDBACK:
         {
                 int32_t error[STAGE_OUTPUTS];
-                int16_t *sample = adc_get_last_frame();
+                adc_frame_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_OUTPUTS; i++) {
                         error[i] = 0;
                         for (unsigned int j=0; j<PSD_INPUTS; j++)
@@ -153,7 +153,7 @@ void do_feedback()
                 static unsigned int axis = 0;
                 static unsigned int phase = 0;
 
-                int16_t *sample = adc_get_last_frame();
+                adc_frame_t *sample = adc_get_last_frame();
                 const int32_t sum = (sample[2] - sample[3]) / 2;
 
                 switch (phase) {
@@ -169,7 +169,7 @@ void do_feedback()
 
                 case 2:
                         // wait until we've reached position
-                        if (10 * abs(sample[axis] - stage_fb_setpoint[axis]) > 9*search_fb_step[axis])
+                        if (10 * abs((*sample)[axis] - stage_fb_setpoint[axis]) > 9*search_fb_step[axis])
                                 break;
 
                         if (sum > last_sum) {
@@ -192,7 +192,7 @@ void do_feedback()
         case STAGE_FEEDBACK:
         {
                 int32_t error[STAGE_OUTPUTS];
-                int16_t *sample = adc_get_last_frame();
+                adc_frame_t *sample = adc_get_last_frame();
                 for (int i=0; i<STAGE_INPUTS; i++) {
                         error[i] = ((stage_fb_setpoint[i] - (int32_t) (*sample)[i]) * stage_fb_gains[i][i]);
                         error[i] /= 1<<16;
