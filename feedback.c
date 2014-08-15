@@ -23,7 +23,8 @@ fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
 signed int stage_fb_setpoint[STAGE_INPUTS] = { };
 
 // search feedback parameters
-uint16_t search_fb_step[STAGE_OUTPUTS] = { 40, 40, 40 };
+fixed16_t search_obj_gains[PSD_INPUTS] = { 0, 0, 0x7fff, 0 };
+uint16_t search_fb_step[STAGE_OUTPUTS] = { 10, 10, 10 };
 
 signed int max_error = 1000;
 
@@ -52,6 +53,7 @@ int feedback_set_position(uint16_t setpoint[3])
                 return 0;
 
         case STAGE_FEEDBACK:
+        case SEARCH_FEEDBACK:
                 for (unsigned int i=0; i<STAGE_INPUTS; i++)
                         stage_fb_setpoint[i] = setpoint[i];
                 return 0;
@@ -127,6 +129,66 @@ static void pid_update(int32_t error[STAGE_OUTPUTS])
         increment_event_counter(feedback_counter);
 }
 
+void search_feedback()
+{
+        static int32_t last_obj = 0;
+        static unsigned int axis = 0;
+        static unsigned int phase = 0;
+        static unsigned int count = 0; // delay counter
+        const unsigned int delay_count = 200;
+
+        adc_frame_t *sample = adc_get_last_frame();
+        int thresh = 10;
+        int32_t obj = 0; // objective function
+        for (unsigned int i=0; i<PSD_INPUTS; i++)
+          obj += (search_obj_gains[i] * (*sample)[i]) >> 16;
+
+        switch (phase) {
+        default:
+        case 0: // enter feedback
+                axis = 0; // start with X
+                // fall-through
+        case 1: // try moving positive first
+                stage_fb_setpoint[axis] += search_fb_step[axis];
+                last_obj = obj;
+                phase = 2;
+                count = delay_count;
+                break;
+
+        case 2:
+                // wait until we've reached position
+                count--;
+                if (count > 0)
+                        break;
+                if (1 || 1 * abs((*sample)[axis] - stage_fb_setpoint[axis]) < search_fb_step[axis]) {
+                        if (obj > last_obj + thresh) {
+                                // accept step
+                                axis = (axis + 1) % STAGE_OUTPUTS;
+                                phase = 1;
+                        } else {
+                                // try other direction
+                                stage_fb_setpoint[axis] -= 2 * search_fb_step[axis];
+                                count = delay_count;
+                                phase = 3;
+                        }
+                }
+                break;
+
+        case 3:
+                // wait until we've reached position
+                count--;
+                if (count > 0)
+                        break;
+                if (1 || 1 * abs((*sample)[axis] - stage_fb_setpoint[axis]) < search_fb_step[axis]) {
+                        // if we see no change move back
+                        if (obj < last_obj + thresh)
+                                stage_fb_setpoint[axis] += search_fb_step[axis];
+                        axis = (axis + 1) % STAGE_OUTPUTS;
+                        phase = 1;
+                }
+        }
+}
+
 void do_feedback()
 {
         switch (feedback_mode) {
@@ -148,51 +210,12 @@ void do_feedback()
         }
 
         case SEARCH_FEEDBACK:
-        {
-                static int32_t last_sum = 0;
-                static unsigned int axis = 0;
-                static unsigned int phase = 0;
-
-                adc_frame_t *sample = adc_get_last_frame();
-                const int32_t sum = (sample[2] - sample[3]) / 2;
-
-                switch (phase) {
-                default:
-                case 0: // entering feedback
-                        axis = 0; // start with X
-
-                case 1: // try moving positive first
-                        stage_fb_setpoint[axis] += search_fb_step[axis];
-                        last_sum = sum;
-                        phase = 2;
-                        break;
-
-                case 2:
-                        // wait until we've reached position
-                        if (10 * abs((*sample)[axis] - stage_fb_setpoint[axis]) > 9*search_fb_step[axis])
-                                break;
-
-                        if (sum > last_sum) {
-                                // accept step
-                                axis = (axis + 1) % STAGE_OUTPUTS;
-                                phase = 1;
-                        } else {
-                                // try other direction
-                                stage_fb_setpoint[axis] -= 2 * search_fb_step[axis];
-                                phase = 3;
-                        }
-                        break;
-
-                case 3:
-                        phase = 1;
-                        break;
-                }
+                search_feedback();
                 // fall through to STAGE_FEEDBACK
-        }
         case STAGE_FEEDBACK:
         {
-                int32_t error[STAGE_OUTPUTS];
                 adc_frame_t *sample = adc_get_last_frame();
+                int32_t error[STAGE_OUTPUTS];
                 for (int i=0; i<STAGE_INPUTS; i++) {
                         error[i] = ((stage_fb_setpoint[i] - (int32_t) (*sample)[i]) * stage_fb_gains[i][i]);
                         error[i] /= 1<<16;
