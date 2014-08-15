@@ -290,22 +290,26 @@ void process_cmd(struct cmd_frame_t *cmd)
         }
 
         case CMD_GET_SEARCH_STEP:
-                memcpy(reply.data, search_fb_step, sizeof(search_fb_step));
+                memcpy(reply.data, search_fb_step,
+                       sizeof(search_fb_step));
                 send_reply(&reply, 2+sizeof(search_fb_step));
                 break;
 
         case CMD_SET_SEARCH_STEP:
-                memcpy(search_fb_step, cmd->set_search_step, sizeof(search_fb_step));
+                memcpy(search_fb_step, cmd->set_search_step,
+                       sizeof(search_fb_step));
                 send_ack();
                 break;
 
         case CMD_GET_SEARCH_OBJ_GAINS:
-                memcpy(reply.data, search_obj_gains, sizeof(search_obj_gains));
+                memcpy(reply.data, search_obj_gains,
+                       sizeof(search_obj_gains));
                 send_reply(&reply, 2+sizeof(search_obj_gains));
                 break;
 
         case CMD_SET_SEARCH_OBJ_GAINS:
-                memcpy(search_obj_gains, cmd->set_search_step, sizeof(search_obj_gains));
+                memcpy(search_obj_gains, cmd->set_search_step,
+                       sizeof(search_obj_gains));
                 send_ack();
                 break;
 
