@@ -189,40 +189,48 @@ void search_feedback()
         }
 }
 
+void psd_feedback()
+{
+        int32_t error[STAGE_OUTPUTS];
+        adc_frame_t *sample = adc_get_last_frame();
+        for (int i=0; i<STAGE_OUTPUTS; i++) {
+                error[i] = 0;
+                for (unsigned int j=0; j<PSD_INPUTS; j++)
+                        error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - (uint32_t) (*sample)[j+3]);
+                error[i] /= 1<<24;
+        }
+        pid_update(error);
+}
+
+void stage_feedback()
+{
+        adc_frame_t *sample = adc_get_last_frame();
+        int32_t error[STAGE_OUTPUTS];
+        for (int i=0; i<STAGE_INPUTS; i++) {
+                error[i] = ((stage_fb_setpoint[i] - (int32_t) (*sample)[i]) * stage_fb_gains[i][i]);
+                error[i] /= 1<<16;
+        }
+        pid_update(error);
+}
+
 void do_feedback()
 {
         switch (feedback_mode) {
         case NO_FEEDBACK:
-                return;
+                break;
 
         case PSD_FEEDBACK:
-        {
-                int32_t error[STAGE_OUTPUTS];
-                adc_frame_t *sample = adc_get_last_frame();
-                for (int i=0; i<STAGE_OUTPUTS; i++) {
-                        error[i] = 0;
-                        for (unsigned int j=0; j<PSD_INPUTS; j++)
-                                error[i] += psd_fb_gains[j][i] * (psd_fb_setpoint[j] - (uint32_t) (*sample)[j+3]);
-                        error[i] /= 1<<24;
-                }
-                pid_update(error);
-                return;
-        }
+                psd_feedback();
+                break;
 
         case SEARCH_FEEDBACK:
                 search_feedback();
-                // fall through to STAGE_FEEDBACK
+                stage_feedback();
+                break;
+
         case STAGE_FEEDBACK:
-        {
-                adc_frame_t *sample = adc_get_last_frame();
-                int32_t error[STAGE_OUTPUTS];
-                for (int i=0; i<STAGE_INPUTS; i++) {
-                        error[i] = ((stage_fb_setpoint[i] - (int32_t) (*sample)[i]) * stage_fb_gains[i][i]);
-                        error[i] /= 1<<16;
-                }
-                pid_update(error);
-                return;
-        }
+                stage_feedback();
+                break;
         }
 }
 
