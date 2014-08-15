@@ -76,6 +76,9 @@ enum cmd_t {
 
     CMD_GET_SEARCH_STEP       = 0x43,
     CMD_SET_SEARCH_STEP       = 0x44,
+
+    CMD_GET_SEARCH_OBJ_GAINS  = 0x45,
+    CMD_SET_SEARCH_OBJ_GAINS  = 0x46,
 };
 
 struct cmd_frame_t {
@@ -100,6 +103,7 @@ struct cmd_frame_t {
         struct enqueue_points enqueue_points;
         struct start_path start_path;
         uint16_t set_search_step[3];
+        uint16_t set_search_obj_gains[PSD_INPUTS];
     };
 } __attribute__((packed));
 

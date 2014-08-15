@@ -25,6 +25,7 @@ extern signed int psd_fb_setpoint[PSD_INPUTS];
 extern fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS];
 extern signed int stage_fb_setpoint[STAGE_INPUTS];
 
+extern fixed16_t search_obj_gains[PSD_INPUTS];
 extern uint16_t search_fb_step[STAGE_OUTPUTS];
 
 extern signed int max_error;
