@@ -103,7 +103,7 @@ struct cmd_frame_t {
         struct enqueue_points enqueue_points;
         struct start_path start_path;
         uint16_t set_search_step[3];
-        uint16_t set_search_obj_gains[PSD_INPUTS];
+        fixed16_t set_search_obj_gains[PSD_INPUTS];
     };
 } __attribute__((packed));
 
