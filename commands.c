@@ -308,7 +308,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 break;
 
         case CMD_SET_SEARCH_OBJ_GAINS:
-                memcpy(search_obj_gains, cmd->set_search_step,
+                memcpy(search_obj_gains, cmd->set_search_obj_gains,
                        sizeof(search_obj_gains));
                 send_ack();
                 break;
