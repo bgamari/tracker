@@ -313,6 +313,17 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_GET_SEARCH_OBJ_THRESH:
+                memcpy(reply.data, &search_obj_thresh,
+                       sizeof(search_obj_thresh));
+                send_reply(&reply, 2+sizeof(search_obj_thresh));
+                break;
+
+        case CMD_SET_SEARCH_OBJ_THRESH:
+                search_obj_thresh = cmd->set_search_obj_thresh,
+                send_ack();
+                break;
+
         default:
                 send_nack();
                 return;
