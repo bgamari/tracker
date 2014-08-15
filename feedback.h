@@ -27,6 +27,7 @@ extern signed int stage_fb_setpoint[STAGE_INPUTS];
 
 extern fixed16_t search_obj_gains[PSD_INPUTS];
 extern uint16_t search_fb_step[STAGE_OUTPUTS];
+extern uint16_t search_obj_thresh;
 
 extern signed int max_error;
 extern struct pi_channel stage_outputs[STAGE_OUTPUTS];

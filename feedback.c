@@ -25,6 +25,7 @@ signed int stage_fb_setpoint[STAGE_INPUTS] = { };
 // search feedback parameters
 fixed16_t search_obj_gains[PSD_INPUTS] = { 0, 0, 0x7fff, 0 };
 uint16_t search_fb_step[STAGE_OUTPUTS] = { 10, 10, 10 };
+uint16_t search_obj_thresh = 10;
 
 signed int max_error = 1000;
 
@@ -138,7 +139,6 @@ void search_feedback()
         const unsigned int delay_count = 200;
 
         adc_frame_t *sample = adc_get_last_frame();
-        int thresh = 10;
         int32_t obj = 0; // objective function
         for (unsigned int i=0; i<PSD_INPUTS; i++)
           obj += (search_obj_gains[i] * (*sample)[i]) >> 16;
@@ -161,7 +161,7 @@ void search_feedback()
                 if (count > 0)
                         break;
                 if (1 || 1 * abs((*sample)[axis] - stage_fb_setpoint[axis]) < search_fb_step[axis]) {
-                        if (obj > last_obj + thresh) {
+                        if (obj > last_obj + search_obj_thresh) {
                                 // accept step
                                 axis = (axis + 1) % STAGE_OUTPUTS;
                                 phase = 1;
@@ -181,11 +181,12 @@ void search_feedback()
                         break;
                 if (1 || 1 * abs((*sample)[axis] - stage_fb_setpoint[axis]) < search_fb_step[axis]) {
                         // if we see no change move back
-                        if (obj < last_obj + thresh)
+                        if (obj < last_obj + search_obj_thresh)
                                 stage_fb_setpoint[axis] += search_fb_step[axis];
                         axis = (axis + 1) % STAGE_OUTPUTS;
                         phase = 1;
                 }
+                break;
         }
 }
 
