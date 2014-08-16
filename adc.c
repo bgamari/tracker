@@ -39,6 +39,8 @@ struct pin_t standby = { .port = GPIO5, .pin = GPIOPIN0 }; // inverted
 adc_frame_t last_sample[2] = { };
 // index of last_sample buffer which is currently being filled by DMA engine
 uint8_t last_sample_idx = 0;
+// Average samples
+adc_avg_frame_t avg_sample = { };
 #else
 // This is where samples get placed
 adc_frame_t last_sample = { };
@@ -245,6 +247,16 @@ adc_frame_t *adc_get_last_frame()
 #endif
 }
 
+adc_avg_frame_t *adc_get_average_frame()
+{
+#ifdef USE_DMA
+        return &avg_sample;
+#else
+        // TODO: implement
+        while(0);
+#endif
+}
+        
 void adc_set_oversampling(enum adc_oversampling_t os)
 {
         pin_set(&os1, os & 0x1);
@@ -266,6 +278,11 @@ void pin_int0_isr(void)
                 GPIO_PIN_INTERRUPT_RISE = 0x1;
                 GPIO_PIN_INTERRUPT_IST = 0x1;
 
+                // update average (new sample carries 12.5% weight)
+                for (unsigned int i=0; i < 7; i++)
+                        avg_sample[i] = (7*avg_sample[i] + (last_sample[last_sample_idx][i] << 8)) / 8;
+
+                // drop if decimated
                 decimation_count--;
                 bool save_sample = buffer != NULL && decimation_count == 0;
                 if (save_sample)

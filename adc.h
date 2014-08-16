@@ -43,3 +43,6 @@ int adc_manual_trigger();
 // Accessing sample buffers
 adc_frame_t *adc_get_last_frame();
 int16_t *adc_get_active_buffer();
+
+// Sample averaging
+adc_avg_frame_t *adc_get_average_frame();
