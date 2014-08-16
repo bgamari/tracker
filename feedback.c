@@ -136,12 +136,12 @@ void search_feedback()
         static unsigned int axis = 0;
         static unsigned int phase = 0;
         static unsigned int count = 0; // delay counter
-        const unsigned int delay_count = 200;
+        const unsigned int delay_count = 1000;
 
-        adc_frame_t *sample = adc_get_last_frame();
+        adc_avg_frame_t *sample = adc_get_average_frame();
         int32_t obj = 0; // objective function
         for (unsigned int i=0; i<PSD_INPUTS; i++)
-          obj += (search_obj_gains[i] * (*sample)[i]) >> 16;
+                obj += (search_obj_gains[i] * (*sample)[i]) >> 24;
 
         switch (phase) {
         default:
