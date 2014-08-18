@@ -27,6 +27,9 @@ fixed16_t search_obj_gains[PSD_INPUTS] = { 0, 0, 0x7fff, 0 };
 uint16_t search_fb_step[STAGE_OUTPUTS] = { 10, 10, 10 };
 uint16_t search_obj_thresh = 10;
 
+// coarse feedback parameters
+struct coarse_fb_channel coarse_fb_channels[3] = { };
+
 signed int max_error = 1000;
 
 struct pi_channel stage_outputs[STAGE_OUTPUTS];
@@ -96,9 +99,7 @@ void feedback_set_mode(enum feedback_mode_t mode)
                 timer_disable_counter(TIMER2);
                 break;
 
-        case PSD_FEEDBACK:
-        case STAGE_FEEDBACK:
-        case SEARCH_FEEDBACK:
+        default:
                 timer_enable_counter(TIMER2);
                 break;
         }
@@ -214,6 +215,26 @@ void stage_feedback()
         pid_update(error);
 }
 
+void coarse_feedback()
+{
+        adc_frame_t *sample = adc_get_last_frame();
+        for (int i=0; i<STAGE_OUTPUTS; i++) {
+                struct coarse_fb_channel *ch = &coarse_fb_channels[i];
+                uint16_t* step = NULL;
+                if ((*sample)[i] > psd_fb_setpoint[i] + ch->tol) {
+                        step = ch->step_high;
+                } else if ((*sample)[i] < psd_fb_setpoint[i] - ch->tol) {
+                        step = ch->step_low;
+                } else {
+                        continue;
+                }
+
+                for (int j=0; j<STAGE_OUTPUTS; j++) {
+                        stage_fb_setpoint[j] += step[j];
+                }
+        }
+}
+
 void do_feedback()
 {
         switch (feedback_mode) {
@@ -230,6 +251,11 @@ void do_feedback()
                 break;
 
         case STAGE_FEEDBACK:
+                stage_feedback();
+                break;
+
+        case COARSE_FEEDBACK:
+                coarse_feedback();
                 stage_feedback();
                 break;
         }
