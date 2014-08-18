@@ -80,6 +80,9 @@ enum cmd_t {
         CMD_SET_SEARCH_OBJ_GAINS  = 0x46,
         CMD_GET_SEARCH_OBJ_THRESH = 0x47,
         CMD_SET_SEARCH_OBJ_THRESH = 0x48,
+
+        CMD_GET_COARSE_FB_PARAMS  = 0X49,
+        CMD_SET_COARSE_FB_PARAMS  = 0X4a,
 };
 
 struct cmd_frame_t {
@@ -106,6 +109,7 @@ struct cmd_frame_t {
                 uint16_t set_search_step[3];
                 fixed16_t set_search_obj_gains[PSD_INPUTS];
                 uint16_t set_search_obj_thresh;
+                struct coarse_fb_channel set_coarse_fb_params[3];
         };
 } __attribute__((packed));
 

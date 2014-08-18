@@ -324,6 +324,18 @@ void process_cmd(struct cmd_frame_t *cmd)
                 send_ack();
                 break;
 
+        case CMD_GET_COARSE_FB_PARAMS:
+                memcpy(reply.data, &coarse_fb_channels,
+                       sizeof(coarse_fb_channels));
+                send_reply(&reply, 2+sizeof(coarse_fb_channels));
+                break;
+
+        case CMD_SET_COARSE_FB_PARAMS:
+                memcpy(coarse_fb_channels, cmd->set_coarse_fb_params,
+                       sizeof(coarse_fb_channels));
+                send_ack();
+                break;
+
         default:
                 send_nack();
                 return;
