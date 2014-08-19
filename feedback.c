@@ -231,6 +231,10 @@ void coarse_feedback()
 
                 for (int j=0; j<STAGE_OUTPUTS; j++) {
                         stage_fb_setpoint[j] += step[j];
+                        if (stage_fb_setpoint[j] < -0x7fff)
+                                stage_fb_setpoint[j] = -0x7fff;
+                        else if (stage_fb_setpoint[j] > 0x7fff)
+                                stage_fb_setpoint[j] = 0x7fff;
                 }
         }
 }
