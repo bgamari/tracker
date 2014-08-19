@@ -35,12 +35,12 @@ extern uint16_t search_obj_thresh;
 
 // coarse feedback parameters
 struct coarse_fb_channel {
-        uint16_t step_high[3];
-        uint16_t step_low[3];
+        uint16_t step_high[STAGE_OUTPUTS];
+        uint16_t step_low[STAGE_OUTPUTS];
         uint16_t tol;
 };
 
-extern struct coarse_fb_channel coarse_fb_channels[3];
+extern struct coarse_fb_channel coarse_fb_channels[PSD_INPUTS];
 
 // other feedback
 extern signed int max_error;

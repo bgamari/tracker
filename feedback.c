@@ -28,7 +28,7 @@ uint16_t search_fb_step[STAGE_OUTPUTS] = { 10, 10, 10 };
 uint16_t search_obj_thresh = 10;
 
 // coarse feedback parameters
-struct coarse_fb_channel coarse_fb_channels[3] = { };
+struct coarse_fb_channel coarse_fb_channels[PSD_INPUTS] = { };
 
 signed int max_error = 1000;
 
@@ -218,7 +218,7 @@ void stage_feedback()
 void coarse_feedback()
 {
         adc_frame_t *sample = adc_get_last_frame();
-        for (int i=0; i<STAGE_OUTPUTS; i++) {
+        for (int i=0; i<PSD_INPUTS; i++) {
                 struct coarse_fb_channel *ch = &coarse_fb_channels[i];
                 uint16_t* step = NULL;
                 if ((*sample)[i] > psd_fb_setpoint[i] + ch->tol) {
