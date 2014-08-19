@@ -142,7 +142,7 @@ void search_feedback()
         adc_avg_frame_t *sample = adc_get_average_frame();
         int32_t obj = 0; // objective function
         for (unsigned int i=0; i<PSD_INPUTS; i++)
-                obj += (search_obj_gains[i] * (*sample)[i]) >> 24;
+                obj += (search_obj_gains[i] * (*sample)[i+3]) >> 24;
 
         switch (phase) {
         default:
@@ -221,9 +221,9 @@ void coarse_feedback()
         for (int i=0; i<PSD_INPUTS; i++) {
                 struct coarse_fb_channel *ch = &coarse_fb_channels[i];
                 int16_t* step = NULL;
-                if ((*sample)[i] > psd_fb_setpoint[i] + ch->tol) {
+                if ((*sample)[i+3] > psd_fb_setpoint[i] + ch->tol) {
                         step = ch->step_high;
-                } else if ((*sample)[i] < psd_fb_setpoint[i] - ch->tol) {
+                } else if ((*sample)[i+3] < psd_fb_setpoint[i] - ch->tol) {
                         step = ch->step_low;
                 } else {
                         continue;
