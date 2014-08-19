@@ -220,7 +220,7 @@ void coarse_feedback()
         adc_frame_t *sample = adc_get_last_frame();
         for (int i=0; i<PSD_INPUTS; i++) {
                 struct coarse_fb_channel *ch = &coarse_fb_channels[i];
-                uint16_t* step = NULL;
+                int16_t* step = NULL;
                 if ((*sample)[i] > psd_fb_setpoint[i] + ch->tol) {
                         step = ch->step_high;
                 } else if ((*sample)[i] < psd_fb_setpoint[i] - ch->tol) {
