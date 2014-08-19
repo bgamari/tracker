@@ -23,7 +23,7 @@ fixed16_t stage_fb_gains[STAGE_INPUTS][STAGE_OUTPUTS] = { };
 signed int stage_fb_setpoint[STAGE_INPUTS] = { };
 
 // search feedback parameters
-// this gain is now effectively one bit due to averaging
+// this gain is now effectively int16_t due to averaging
 fixed16_t search_obj_gains[PSD_INPUTS] = { 0, 0, 0x7fff, 0 };
 uint16_t search_fb_step[STAGE_OUTPUTS] = { 10, 10, 10 };
 uint16_t search_obj_thresh = 10;
