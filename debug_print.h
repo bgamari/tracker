@@ -2,7 +2,7 @@
 
 #ifdef SEMIHOSTING
 #include <stdio.h>
-#define dbg_printf(fmt, ...) printf(fmt, __VA_ARGS__)
+#define dbg_printf(...) printf(__VA_ARGS__)
 #else
-#define dbg_printf(fmt, ...)
+#define dbg_printf(...)
 #endif
