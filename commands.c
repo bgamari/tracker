@@ -249,9 +249,10 @@ void process_cmd(struct cmd_frame_t *cmd)
                 res = 0;
                 if (cmd->enqueue_points.npts > 0)
                         res = enqueue_points((uint16_t*) &cmd->enqueue_points.points, cmd->enqueue_points.npts);
-                if (res == 0) {
-                        reply.data[0] = is_path_running();
-                        send_reply(&reply, 3);
+                if (res == -1 || res == 0) {
+                        reply.data[0] = res == -1; // were the points added?
+                        reply.data[1] = is_path_running();
+                        send_reply(&reply, 4);
                 } else {
                         send_nack();
                 }

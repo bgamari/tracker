@@ -45,6 +45,7 @@ int enqueue_points(uint16_t* points, unsigned int npts)
                 return -3;
 
         struct path* path = take_path();
+        // there are no available path segments, fail
         if (path == NULL)
                 return -1;
 
