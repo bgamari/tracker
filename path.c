@@ -122,6 +122,10 @@ static void path_done()
 void timer1_isr()
 {
         TIMER1_IR = 0xf;  // Clear interrupt
+        if (!path_running) {
+                // otherwise we get spurious path_done() calls
+                return;
+        }
         if (active_point >= active_path->npts) {
                 struct path* volatile old = active_path;
                 active_path = active_path->next;
