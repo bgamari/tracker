@@ -28,12 +28,15 @@ static bool sync_trigger = false;
 
 struct path* take_path()
 {
+        cm_disable_interrupts();
         for (unsigned int i=0; i<N_PATHS; i++) {
                 if (!paths[i].queued) {
                         paths[i].queued = true;
+                        cm_enable_interrupts();
                         return &paths[i];
                 }
         }
+        cm_enable_interrupts();
         return NULL;
 }
 
