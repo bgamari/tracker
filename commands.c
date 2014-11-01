@@ -8,7 +8,6 @@
 #include <string.h>
 
 #include "commands.h"
-#include "debug_print.h"
 #include "pin.h"
 #include "clock.h"
 #include "tracker.h"
@@ -49,7 +48,6 @@ void process_cmd(struct cmd_frame_t *cmd)
         
         reply.status = ACK; // change to NACK as necessary
         reply.cmd = cmd->cmd;
-        dbg_printf("Saw command %x\n", cmd->cmd);
 
         switch (cmd->cmd) {
         case CMD_ECHO:
