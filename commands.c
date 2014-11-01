@@ -258,7 +258,7 @@ void process_cmd(struct cmd_frame_t *cmd)
                 if (cmd->enqueue_points.npts > 0)
                         res = enqueue_points((uint16_t*) &cmd->enqueue_points.points, cmd->enqueue_points.npts);
                 if (res == -1 || res == 0) {
-                        reply.data[0] = res == -1; // were the points added?
+                        reply.data[0] = res != -1; // were the points added?
                         reply.data[1] = is_path_running();
                         send_reply(&reply, 4);
                 } else {
