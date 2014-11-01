@@ -220,7 +220,7 @@ void process_cmd(struct cmd_frame_t *cmd)
         case CMD_GET_FEEDBACK_FREQ:
         {
                 unsigned int freq = feedback_get_loop_freq();
-                memcpy(reply.data, &freq, sizeof(freq));
+                reply.data32[0] = freq;
                 send_reply(&reply, 2+4);
                 break;
         }
