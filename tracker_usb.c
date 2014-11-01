@@ -168,7 +168,7 @@ void tracker_usb_send_buffer(buffer_t* buffer, unsigned int nsamples)
         if (ret == 0) {
                 // success
                 return;
-        } if (ret == -1) {
+        } else if (ret == -1) {
                 // No transfers available
                 put_buffer(buffer);
                 dropped_buffers++;
