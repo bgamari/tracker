@@ -1,7 +1,7 @@
 #!/usr/bin/make
 
 # Set to "yes" to enable semihosted debug output
-SEMIHOSTING = yes
+#SEMIHOSTING = yes
 
 CC      = arm-none-eabi-gcc
 CXX     = arm-none-eabi-gcc
