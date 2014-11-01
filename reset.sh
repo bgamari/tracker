@@ -1,4 +1,4 @@
 #!/bin/sh
 
-openocd -f openocd.cfg -c init -c reset
+sudo openocd -f openocd.cfg -c init -c reset -c exit
 make program

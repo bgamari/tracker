@@ -16,6 +16,7 @@ void feedback_init();
 enum feedback_mode_t feedback_get_mode();
 void feedback_set_mode(enum feedback_mode_t mode);
 
+unsigned int feedback_get_loop_freq();
 void feedback_set_loop_freq(unsigned int freq);
 
 int feedback_set_position(uint16_t setpoint[3]);

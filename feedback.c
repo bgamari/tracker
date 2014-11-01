@@ -13,6 +13,7 @@
 #include "clock.h"
 
 static enum feedback_mode_t feedback_mode = NO_FEEDBACK;
+static unsigned int update_freq = 0;
 
 // PSD feedback parameters
 fixed24_t psd_fb_gains[PSD_INPUTS][STAGE_OUTPUTS] = { };
@@ -68,8 +69,14 @@ int feedback_set_position(uint16_t setpoint[3])
         }
 }
 
+unsigned int feedback_get_loop_freq()
+{
+        return update_freq;
+}
+
 void feedback_set_loop_freq(unsigned int freq)
 {
+        update_freq = freq;
         setup_periodic_timer(TIMER2, freq/2); // HACK: division by two
         // interrupt on reset (match 3)
         TIMER2_MCR |= TIMER_MCR_MR3I;
