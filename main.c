@@ -119,11 +119,20 @@ int16_t* buffer_full(int16_t* buffer_data, unsigned int nsamples)
         return active_buffer->data;
 }
 
+#ifdef SEMIHOSTING
+// provided by newlib
+extern void  initialise_monitor_handles(void);
+#endif
+
 /* This example turns all 4 leds on and then off */
 int main(void) {
         CREG_FLASHCFGA = (CREG_FLASHCFGA & ~CREG_FLASHCFGA_FLASHTIM_MASK) | CREG_FLASHCFGA_FLASHTIM(0x9);
         CREG_FLASHCFGB = (CREG_FLASHCFGB & ~CREG_FLASHCFGB_FLASHTIM_MASK) | CREG_FLASHCFGB_FLASHTIM(0x9);
-    
+
+#ifdef SEMIHOSTING
+        initialise_monitor_handles();
+#endif
+
         init_clock();
         init_systick();
         usb_init();

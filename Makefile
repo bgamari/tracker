@@ -1,5 +1,8 @@
 #!/usr/bin/make
 
+# Set to "yes" to enable semihosted debug output
+SEMIHOSTING = yes
+
 CC      = arm-none-eabi-gcc
 CXX     = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
@@ -8,12 +11,20 @@ PROJECT = tracker
 
 LIBOPENCM3=./libopencm3
 USB_OBJECTS = usb.o usb_request.o usb_standard_request.o usb_queue.o
-OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o uart.o syscalls.o timer.o commands.o $(addprefix hackrf_usb/,$(USB_OBJECTS)) tracker_usb.o usb_descriptor.o buffer.o path.o
+OBJECTS = main.o clock.o dac.o feedback.o adc.o event.o uart.o timer.o commands.o $(addprefix hackrf_usb/,$(USB_OBJECTS)) tracker_usb.o usb_descriptor.o buffer.o path.o
 
 FLAGS = -mthumb -mcpu=cortex-m4 -I$(LIBOPENCM3)/include -Ihackrf_usb -g3 -O3 -Wall -Werror -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fno-common -MD -nostartfiles -DLPC43XX -DLPC43XX_M4
 CFLAGS = $(FLAGS) -std=gnu99
 CXXFLAGS = $(FLAGS) -fno-exceptions -fno-rtti
 LDFLAGS = -Tmdaq-m4.ld -L$(LIBOPENCM3)/lib
+
+ifdef SEMIHOSTING
+# see https://plus.google.com/+AndreyYurovsky/posts/5rupuziHKGC
+LDFLAGS += --specs=rdimon.specs -lrdimon
+FLAGS += -DSEMIHOSTING
+else
+LDFLAGS += -lnosys
+endif
 
 opencm3_a = $(LIBOPENCM3)/lib/libopencm3_lpc43xx.a
 
@@ -48,3 +59,7 @@ include $(wildcard *.d)
 
 program : tracker.dfu
 	sudo dfu-util -D $< -d 1fc9:000c
+
+debug : 
+	arm-none-eabi-gdb tracker.elf -ex 'target extended-remote localhost:3333'
+
